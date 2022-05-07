@@ -1,0 +1,7 @@
+<ngt-group *ngIf="textures$ | async as textures" [scale]="0.005" [position]="startingPositionVector"
+           [rotation]="startingRotationVector"
+           (beforeRender)="updatePlane($event)">
+  <ngt-mesh *ngFor="let child of textures.model" castShadow receiveShadow [geometry]="child.geometry"
+            [material]="child.material">
+  </ngt-mesh>
+</ngt-group>
