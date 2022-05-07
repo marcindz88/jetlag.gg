@@ -1,7 +1,7 @@
 <ngt-mesh *ngIf="textures$ | async as textures"
           [receiveShadow]="true">
   <ngt-sphere-geometry
-    [args]="[30, 70, 70]">
+    [args]="[EARTH_RADIUS, 70, 70]">
   </ngt-sphere-geometry>
   <ngt-mesh-physical-material
     [map]="textures.map"
