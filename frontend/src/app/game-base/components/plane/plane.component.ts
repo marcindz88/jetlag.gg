@@ -35,6 +35,7 @@ export class PlaneComponent {
   private currentDirection: number = DEFAULT_PLANE_STATE.direction;
 
   readonly textures$ = this.textureModelsService.planeTextures$;
+
   readonly MOVING_RADIUS = EARTH_RADIUS + 1;
   readonly MOVING_CIRCUMFERENCE = calculateCircumference(this.MOVING_RADIUS);
 
@@ -44,20 +45,28 @@ export class PlaneComponent {
   constructor(private textureModelsService: TextureModelsService) {}
 
   updatePlane(event: { state: NgtRenderState; object: Group }) {
+    this.updatePlaneDirection(event.object);
+    this.movePlaneForward(event.object);
+  }
+
+  private updatePlaneDirection(plane: Group) {
     // Update direction gradually
     const currentDirectionDifference = this.currentDirection - this.lastDirection;
     // Rotate according to difference
     if (Math.abs(currentDirectionDifference) > 0.1) {
       const currentDifference = currentDirectionDifference / 30; // Divide change into 30 frames
-      event.object.rotateZ(degToRad(currentDifference));
+      plane.rotateZ(degToRad(currentDifference));
       this.lastDirection += currentDifference;
     } else {
       // If difference very small - update lastdirection and make dinal rotation
-      event.object.rotateZ(degToRad(currentDirectionDifference));
+      plane.rotateZ(degToRad(currentDirectionDifference));
       this.lastDirection = this.currentDirection;
     }
+  }
+
+  private movePlaneForward(plane: Group) {
     // Move forward by speed and rotate downward to continue nosing down with curvature of earth
-    event.object.rotateX(degToRad(((this.speed * MAP_SCALE) / this.MOVING_CIRCUMFERENCE) * 360));
-    event.object.translateY(this.speed * MAP_SCALE);
+    plane.rotateX(degToRad(((this.speed * MAP_SCALE) / this.MOVING_CIRCUMFERENCE) * 360));
+    plane.translateY(this.speed * MAP_SCALE);
   }
 }
