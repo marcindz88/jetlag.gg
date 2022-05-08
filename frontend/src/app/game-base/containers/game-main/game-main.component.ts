@@ -8,26 +8,25 @@ import { auditTime, filter, fromEvent, Subject, takeUntil } from 'rxjs';
 @Component({
   selector: 'pg-game-main',
   templateUrl: './game-main.component.html',
-  styleUrls: ['./game-main.component.scss']
+  styleUrls: ['./game-main.component.scss'],
 })
 export class GameMainComponent implements OnDestroy {
   readonly cameraOptions: NgtCameraOptions = {
     zoom: 1,
-    position: [0, 15, 50]
+    position: [0, 15, 50],
   };
   readonly rendererOptions: NgtGLOptions = {
     physicallyCorrectLights: true,
   };
   readonly shadowOptions: Partial<WebGLShadowMap> = {
     enabled: true,
-    type: PCFSoftShadowMap
+    type: PCFSoftShadowMap,
   };
 
   myPlaneState: PlaneState = DEFAULT_PLANE_STATE;
 
   private destroy$ = new Subject<void>();
   private keyDownEvent$ = fromEvent<KeyboardEvent>(document, 'keydown').pipe(takeUntil(this.destroy$));
-
 
   constructor() {
     this.setupDirectionChangeHandling();
@@ -39,10 +38,12 @@ export class GameMainComponent implements OnDestroy {
     this.destroy$.complete();
   }
 
-
   private setupDirectionChangeHandling() {
     this.keyDownEvent$
-      .pipe(filter(e => e.key === 'ArrowLeft'), auditTime(100))
+      .pipe(
+        filter(e => e.key === 'ArrowLeft'),
+        auditTime(100)
+      )
       .subscribe(() => {
         this.myPlaneState.direction -= DIRECTION.step;
         if (this.myPlaneState.direction < DIRECTION.min) {
@@ -50,7 +51,10 @@ export class GameMainComponent implements OnDestroy {
         }
       });
     this.keyDownEvent$
-      .pipe(filter(e => e.key === 'ArrowRight'), auditTime(100))
+      .pipe(
+        filter(e => e.key === 'ArrowRight'),
+        auditTime(100)
+      )
       .subscribe(() => {
         this.myPlaneState.direction += DIRECTION.step;
         this.myPlaneState.direction %= DIRECTION.max;
@@ -59,14 +63,20 @@ export class GameMainComponent implements OnDestroy {
 
   private setupSpeedChangeHandling() {
     this.keyDownEvent$
-      .pipe(filter(e => e.key === 'ArrowUp'), auditTime(100))
+      .pipe(
+        filter(e => e.key === 'ArrowUp'),
+        auditTime(100)
+      )
       .subscribe(() => {
         if (this.myPlaneState.speed + SPEED.step <= SPEED.max) {
           this.myPlaneState.speed += SPEED.step;
         }
       });
     this.keyDownEvent$
-      .pipe(filter(e => e.key === 'ArrowDown'), auditTime(100))
+      .pipe(
+        filter(e => e.key === 'ArrowDown'),
+        auditTime(100)
+      )
       .subscribe(() => {
         if (this.myPlaneState.speed - SPEED.step >= SPEED.min) {
           this.myPlaneState.speed -= SPEED.step;

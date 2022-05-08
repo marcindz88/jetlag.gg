@@ -5,7 +5,7 @@ import { GameMainComponent } from './containers/game-main/game-main.component';
 const routes: Routes = [
   {
     path: '',
-    component: GameMainComponent
+    component: GameMainComponent,
   },
   {
     path: '**',
@@ -17,5 +17,4 @@ const routes: Routes = [
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule],
 })
-export class GameBaseRoutingModule {
-}
+export class GameBaseRoutingModule {}
