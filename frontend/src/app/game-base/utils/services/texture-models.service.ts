@@ -16,19 +16,16 @@ export class TextureModelsService {
     shareReplay(1)
   );
 
-  planeTextures$: Observable<{ trail: Texture, model: Mesh[] }> = combineLatest([
+  planeTextures$: Observable<{ trail: Texture; model: Mesh[] }> = combineLatest([
     this.ngtLoader.use(TextureLoader, 'assets/mask.png'),
-    this.ngtLoader.use(GLTFLoader, 'assets/plane/scene.glb')
-      .pipe(
-        map(scene => scene.scene.children[0].children as Mesh[]),
-      ),
+    this.ngtLoader
+      .use(GLTFLoader, 'assets/plane/scene.glb')
+      .pipe(map(scene => scene.scene.children[0].children as Mesh[])),
   ]).pipe(
     filter(textures => textures.every(Boolean)),
     map(([trail, model]) => ({ trail, model })),
     shareReplay(1)
   );
 
-  constructor(private ngtLoader: NgtLoader) {
-  }
-
+  constructor(private ngtLoader: NgtLoader) {}
 }
