@@ -11,7 +11,7 @@ game_session = GameSession()
 
 
 @app.get("/api/game/players/")
-def add_player():
+def list_players():
     return game_session.player_list()
 
 
@@ -28,7 +28,7 @@ def add_player(body: AddPlayerRequestBody):
     except exceptions.PlayerLimitExceeded:
         raise HTTPException(status_code=400, detail="Lobby is full")
 
-    return {"player_id": player.id, "token": player.token}
+    return {"id": player.id, "token": player.token}
 
 
 def validate_connection(ws_session: WebSocketSession) -> bool:
