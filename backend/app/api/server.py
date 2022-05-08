@@ -11,7 +11,7 @@ game_session = GameSession()
 
 
 @app.get("/api/game/players/")
-def add_player():
+def list_players():
     return game_session.player_list()
 
 

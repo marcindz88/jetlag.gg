@@ -40,6 +40,14 @@ class Player:
     def is_connected(self) -> bool:
         return bool(self.session_id)
 
+    @property
+    def serialized(self) -> dict:
+        return {
+            "id": self.id,
+            "nickname": self.nickname,
+            "connected": self.is_connected,
+        }
+
 
 class GameSession:
     MAX_PLAYERS = 10
@@ -77,10 +85,7 @@ class GameSession:
         return player
 
     def player_list(self) -> List[dict]:
-        return [
-            {"id": p.id, "nickname": p.nickname, "connected": p.is_connected}
-            for p in self._players.values()
-        ]
+        return [p.serialized for p in self._players.values()]
 
     def remove_idle_players(self):
         logging.info(f"remove_idle_players")
@@ -114,7 +119,7 @@ class GameSession:
                 raise PlayerInvalidNickname
         player = Player(nickname=nickname)
         self._players[player.id] = player
-        event = Event(type=EventType.PLAYER_REGISTERED, data={"id": player.id, "nickname": player.nickname})
+        event = Event(type=EventType.PLAYER_REGISTERED, data=player.serialized)
         self.broadcast_event(event=event, everyone_except=[player])
         logging.info(f"add_player {nickname} added {player.id}")
         return player
@@ -125,7 +130,7 @@ class GameSession:
             raise PlayerAlreadyConnected
         self._sessions[ws_session.id] = (ws_session, player)
         player.session_id = ws_session.id
-        event = Event(type=EventType.PLAYER_CONNECTED, data={"id": player.id, "nickname": player.nickname})
+        event = Event(type=EventType.PLAYER_CONNECTED, data=player.serialized)
         self.broadcast_event(event=event, everyone_except=[player])
 
     def remove_session(self, ws_session: WebSocketSession):
@@ -135,7 +140,7 @@ class GameSession:
         player = self.get_player(player_id=ws_session.player_id)
         player.session_id = None
         player._disconnected_since = datetime.datetime.now()
-        event = Event(type=EventType.PLAYER_DISCONNECTED, data={"id": player.id, "nickname": player.nickname})
+        event = Event(type=EventType.PLAYER_DISCONNECTED, data=player.serialized)
         self.broadcast_event(event=event, everyone_except=[player])
 
     def remove_player(self, player: Player):
@@ -147,7 +152,7 @@ class GameSession:
             pass
         try:
             self._players.pop(player.id)
-            event = Event(type=EventType.PLAYER_REMOVED, data={"id": player.id, "nickname": player.nickname})
+            event = Event(type=EventType.PLAYER_REMOVED, data=player.serialized)
             self.broadcast_event(event=event, everyone_except=[player])
         except KeyError:
             pass
