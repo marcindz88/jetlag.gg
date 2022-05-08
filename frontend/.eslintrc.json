@@ -38,7 +38,18 @@
             "style": "kebab-case"
           }
         ],
-        "object-property-newline": "off"
+        "object-property-newline": "off",
+        "@typescript-eslint/no-unused-vars": [
+          "warn", // or error
+          {
+            "argsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "caughtErrorsIgnorePattern": "^_"
+          }
+        ],
+        "@typescript-eslint/unbound-method": [
+          "off"
+        ]
       }
     },
     {
