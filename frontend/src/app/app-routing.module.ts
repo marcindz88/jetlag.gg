@@ -9,12 +9,11 @@ const routes: Routes = [
   },
   {
     path: 'intro',
-    loadChildren: () => import('./intro/intro.module').then((m) => m.IntroModule),
+    loadChildren: () => import('./intro/intro.module').then(m => m.IntroModule),
   },
   {
     path: 'game',
-    loadChildren: () =>
-      import('./game-base/game-base.module').then((m) => m.GameBaseModule),
+    loadChildren: () => import('./game-base/game-base.module').then(m => m.GameBaseModule),
   },
   {
     path: '**',
@@ -26,5 +25,4 @@ const routes: Routes = [
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
 })
-export class AppRoutingModule {
-}
+export class AppRoutingModule {}

@@ -5,7 +5,7 @@ import { StartComponent } from './containers/start/start.component';
 const routes: Routes = [
   {
     path: '',
-    component: StartComponent
+    component: StartComponent,
   },
   {
     path: '**',
@@ -17,5 +17,4 @@ const routes: Routes = [
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule],
 })
-export class IntroRoutingModule {
-}
+export class IntroRoutingModule {}

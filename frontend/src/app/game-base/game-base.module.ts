@@ -12,13 +12,10 @@ import { NgtSobaOrbitControlsModule } from '@angular-three/soba/controls';
 import { PlaneComponent } from './components/plane/plane.component';
 import { TextureModelsService } from './utils/services/texture-models.service';
 import { NgtGroupModule } from '@angular-three/core/group';
+import { PlaneStatsComponent } from './components/plane-stats/plane-stats.component';
 
 @NgModule({
-  declarations: [
-    GameMainComponent,
-    EarthComponent,
-    PlaneComponent
-  ],
+  declarations: [GameMainComponent, EarthComponent, PlaneComponent, PlaneStatsComponent],
   imports: [
     CommonModule,
     GameBaseRoutingModule,
@@ -31,11 +28,8 @@ import { NgtGroupModule } from '@angular-three/core/group';
     NgtSobaOrbitControlsModule,
     NgtGroupModule,
     NgtObjectPassThroughModule,
-    NgtRadianPipeModule
+    NgtRadianPipeModule,
   ],
-  providers: [
-    TextureModelsService
-  ]
+  providers: [TextureModelsService],
 })
-export class GameBaseModule {
-}
+export class GameBaseModule {}
