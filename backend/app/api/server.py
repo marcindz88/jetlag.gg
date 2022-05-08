@@ -1,55 +1,71 @@
-import time
-from typing import Optional
+from fastapi import FastAPI, WebSocket, HTTPException
+from pydantic import BaseModel, constr
 
-from fastapi import FastAPI, WebSocket
+from app.game import exceptions
+from app.game.core import GameSession
+from app.tools.websocket_server import StarletteWebsocketServer, WebSocketSession
 
-from app.tools.websocket_server import StarletteWebsocketServer
 
 app = FastAPI()
+game_session = GameSession()
 
 
-SHARED_BUFFER = {
-
-}
-
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World", "buffer": SHARED_BUFFER}
+@app.get("/api/game/players/")
+def add_player():
+    return game_session.player_list()
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Optional[str] = None):
-    return {"item_id": item_id, "q": q}
+class AddPlayerRequestBody(BaseModel):
+    nickname: constr(min_length=1)
 
 
-def custom_sleep(seconds):
-    start = time.time()
-    while True:
-        if (time.time() - start) >= seconds:
-            break
+@app.post("/api/game/players/")
+def add_player(body: AddPlayerRequestBody):
+    try:
+        player = game_session.add_player(nickname=body.nickname)
+    except exceptions.PlayerInvalidNickname:
+        raise HTTPException(status_code=400, detail="Invalid nickname")
+    except exceptions.PlayerLimitExceeded:
+        raise HTTPException(status_code=400, detail="Lobby is full")
+
+    return {"player_id": player.id, "token": player.token}
 
 
-def on_message(websocket: WebSocket, msg: str):
+def validate_connection(ws_session: WebSocketSession) -> bool:
+    token = ws_session.connection.headers.get("sec-websocket-protocol", "")
+    try:
+        player = game_session.get_player_by_token(token)
+    except exceptions.PlayerNotFound:
+        return False
+    if player.is_connected:
+        return False
+
+    ws_session.token = token
+    ws_session.player_id = player.id
+    return True
+
+
+def on_connect(ws_session: WebSocketSession):
+    print("On connect", ws_session)
+    player = game_session.get_player(player_id=ws_session.player_id)
+    game_session.add_session(player=player, ws_session=ws_session)
+
+
+def on_disconnect(ws_session: WebSocketSession):
+    print("On disconnect", ws_session)
+    game_session.remove_session(ws_session=ws_session)
+
+
+def on_message(ws_session: WebSocketSession, msg: str):
     print("On message start", msg)
-    SHARED_BUFFER[str(time.time())] = msg
-    custom_sleep(6)
+
     print("On message end", msg)
-
-
-def on_connect(websocket: WebSocket):
-    print("On connect start", websocket)
-    custom_sleep(6)
-    print("On connect end", websocket)
-
-
-def on_disconnect(websocket: WebSocket):
-    print("On disconnect", websocket)
 
 
 @app.websocket("/ws/")
 async def websocket_endpoint(websocket: WebSocket):
     server = StarletteWebsocketServer(
+        validate=validate_connection,
         on_connect=on_connect,
         on_message=on_message,
         on_disconnect=on_disconnect,
