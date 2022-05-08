@@ -44,7 +44,11 @@ export class MyPlayerService {
     if (playerFromStorage) {
       this.player = JSON.parse(playerFromStorage) as MyPlayer;
       // TODO save player data backend
-      this.createUser(this.player.nickname).subscribe();
+      this.createUser(this.player.nickname).subscribe({
+        error: () => {
+          this.websocketService.createWSSConnection(this.player!.token);
+        },
+      });
     }
   }
 }

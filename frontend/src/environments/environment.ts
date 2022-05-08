@@ -4,7 +4,7 @@ export const environment = <const>{
   server: {
     domain: 'localhost:9999',
     apiSubDomain: '',
-    wsSubDomain: 'ws.',
+    wsSubDomain: '',
   },
   protocols: { http: 'http://', ws: 'ws://' },
 };

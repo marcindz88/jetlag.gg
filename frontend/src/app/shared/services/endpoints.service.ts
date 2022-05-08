@@ -22,7 +22,7 @@ export class EndpointsService {
   }
 
   getWebSocketEndpoint(): string {
-    return `${environment.protocols.ws}${environment.server.wsSubDomain}${environment.server.domain}/`;
+    return `${environment.protocols.ws}${environment.server.wsSubDomain}${environment.server.domain}/ws/`;
   }
 
   private getUrlWithReplacedId(url: string, config?: Config): string {
