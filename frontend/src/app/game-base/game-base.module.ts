@@ -10,9 +10,11 @@ import { NgtMeshPhysicalMaterialModule } from '@angular-three/core/materials';
 import { NgtAmbientLightModule, NgtDirectionalLightModule } from '@angular-three/core/lights';
 import { NgtSobaOrbitControlsModule } from '@angular-three/soba/controls';
 import { PlaneComponent } from './components/plane/plane.component';
-import { TextureModelsService } from './utils/services/texture-models.service';
 import { NgtGroupModule } from '@angular-three/core/group';
 import { PlaneStatsComponent } from './components/plane-stats/plane-stats.component';
+import { PlayersService } from '../players/services/players.service';
+import { SharedModule } from '../shared/shared.module';
+import { PlayersModule } from '../players/players.module';
 
 @NgModule({
   declarations: [GameMainComponent, EarthComponent, PlaneComponent, PlaneStatsComponent],
@@ -29,7 +31,9 @@ import { PlaneStatsComponent } from './components/plane-stats/plane-stats.compon
     NgtGroupModule,
     NgtObjectPassThroughModule,
     NgtRadianPipeModule,
+    SharedModule,
+    PlayersModule,
   ],
-  providers: [TextureModelsService],
+  providers: [PlayersService],
 })
 export class GameBaseModule {}
