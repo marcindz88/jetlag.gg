@@ -3,7 +3,6 @@ import { NgtCameraOptions, NgtGLOptions } from '@angular-three/core/lib/types';
 import { PCFSoftShadowMap, WebGLShadowMap } from 'three';
 import { PlaneState } from '../../utils/models/game.types';
 import { DEFAULT_PLANE_STATE } from '../../utils/models/game.constants';
-import { DirectionEnum } from '../../utils/models/game.enums';
 
 @Component({
   selector: 'pg-game-main',
@@ -34,13 +33,10 @@ export class GameMainComponent {
   handleChangeOfDirection(keyCode: string) {
     switch (keyCode) {
       case 'ArrowLeft':
-        this.myPlaneState.direction = DirectionEnum.LEFT;
+        this.myPlaneState.direction -= 5;
         break;
       case 'ArrowRight':
-        this.myPlaneState.direction = DirectionEnum.RIGHT;
-        break;
-      case 'ArrowUp':
-        this.myPlaneState.direction = DirectionEnum.FORWARD;
+        this.myPlaneState.direction += 5;
         break;
     }
   }

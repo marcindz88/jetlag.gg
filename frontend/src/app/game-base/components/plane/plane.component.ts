@@ -4,7 +4,6 @@ import { NgtEuler, NgtRenderState, NgtVector3 } from '@angular-three/core';
 import { Group } from 'three';
 import { GeoLocationPoint } from '../../utils/models/game.types';
 import { DEFAULT_PLANE_STATE, EARTH_RADIUS } from '../../utils/models/game.constants';
-import { DirectionEnum } from '../../utils/models/game.enums';
 import { degToRad } from 'three/src/math/MathUtils';
 import { calculateCircumference } from '../../utils/utils';
 
@@ -19,8 +18,10 @@ export class PlaneComponent {
     // TODO calculate starting rotation and position
   };
 
-  @Input() direction: DirectionEnum = DEFAULT_PLANE_STATE.direction;
+  @Input() direction: number = DEFAULT_PLANE_STATE.direction;
   @Input() speed = DEFAULT_PLANE_STATE.speed;
+
+  private lastDirection: number = DEFAULT_PLANE_STATE.direction;
 
   readonly textures$ = this.textureModelsService.planeTextures$;
 
@@ -35,20 +36,20 @@ export class PlaneComponent {
   }
 
   updatePlane(event: { state: NgtRenderState; object: Group }) {
-    switch (this.direction) {
-      case DirectionEnum.FORWARD:
-        event.object.rotateX(this.angle);
-        event.object.translateY(this.speed / this.SPEED_DIVISOR);
-        break;
-      case DirectionEnum.LEFT:
-        event.object.rotateY(-this.angle);
-        event.object.translateX(this.speed / this.SPEED_DIVISOR);
-        break;
-      case DirectionEnum.RIGHT:
-        event.object.rotateY(this.angle);
-        event.object.translateX(-this.speed / this.SPEED_DIVISOR);
-        break;
+    // Update direction gradually
+    const currentDirectionDifference = this.direction - this.lastDirection;
+    if (Math.abs(currentDirectionDifference) > 0.1) {
+      const currentDifference = currentDirectionDifference / 30; // Divide change into 30 frames
+      event.object.rotateZ(degToRad(currentDifference));
+      this.lastDirection = this.lastDirection + currentDifference;
+    } else {
+      event.object.rotateZ(degToRad(currentDirectionDifference));
+      this.lastDirection = this.direction;
     }
+
+    // Move forward by speed
+    event.object.rotateX(this.angle);
+    event.object.translateY(this.speed / this.SPEED_DIVISOR);
   }
 
   private get angle() {
