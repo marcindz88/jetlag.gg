@@ -1,3 +1,6 @@
 <pg-card>
-  <pg-player-summary *ngFor="let player of players" [player]="player"></pg-player-summary>
+  <h5 *ngIf="!players.length; else playersInfo">No players in session</h5>
+  <ng-template #playersInfo>
+    <pg-player-summary *ngFor="let player of players" [player]="player"></pg-player-summary>
+  </ng-template>
 </pg-card>

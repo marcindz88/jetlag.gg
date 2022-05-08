@@ -16,9 +16,9 @@ export class TextureModelsService {
 
   fetchEarthTextures() {
     return combineLatest([
-      this.ngtLoader.use(TextureLoader, 'assets/earthbump.jpg'),
-      this.ngtLoader.use(TextureLoader, 'assets/earthmap.jpg'),
-      this.ngtLoader.use(TextureLoader, 'assets/earthspec.jpg'),
+      this.ngtLoader.use(TextureLoader, 'assets/earth/earthbump.jpg'),
+      this.ngtLoader.use(TextureLoader, 'assets/earth/earthmap.jpg'),
+      this.ngtLoader.use(TextureLoader, 'assets/earth/earthspec.jpg'),
     ]).pipe(
       filter(textures => textures.every(Boolean)),
       map(([bump, map, spec]) => ({ bump, map, spec })),
