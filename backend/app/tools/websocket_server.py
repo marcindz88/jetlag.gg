@@ -1,8 +1,10 @@
+import asyncio
 import threading
 import uuid
 from typing import Callable
 import websockets
 from fastapi import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocketState
 
 from app.tools.thread_manager import ThreadManager
 
@@ -26,21 +28,41 @@ class WebsocketServer:
         self.handler = handler
 
 
+class WebSocketSession:
+    connection: WebSocket
+    id: uuid.UUID = uuid.uuid4()
+    token: str
+    player_id: uuid.UUID
+
+    def __init__(self, websocket):
+        self.connection = websocket
+
+    def close_connection(self, code=1000, reason=""):
+        if self.connection.client_state == WebSocketState.DISCONNECTED:
+            return
+        loop = asyncio.get_event_loop()
+        coroutine = self.connection.close(code=code, reason=reason)
+        loop.run_until_complete(coroutine)
+
+
 class StarletteWebsocketServer:
 
-    def __init__(self, on_connect: Callable, on_message: Callable, on_disconnect: Callable):
+    def __init__(self, validate: Callable, on_connect: Callable, on_message: Callable, on_disconnect: Callable):
         self._thread_manager = ThreadManager()
 
         async def handler(websocket: WebSocket):
-            await websocket.accept()
-            websocket.id = uuid.uuid4()
-            thread = threading.Thread(target=on_connect, args=(websocket,))
-            self._thread_manager.add_thread(str(websocket.id), thread)
+            ws_session = WebSocketSession(websocket)
+            if not validate(ws_session):
+                await ws_session.connection.close(code=400)
+                return
+            await ws_session.connection.accept(subprotocol=ws_session.token)
+            thread = threading.Thread(target=on_connect, args=(ws_session,))
+            self._thread_manager.add_thread(str(ws_session.id), thread)
             while True:
                 try:
-                    message = await websocket.receive_text()
-                    thread = threading.Thread(target=on_message, args=(websocket, message,))
-                    self._thread_manager.add_thread(str(websocket.id), thread)
+                    message = await ws_session.connection.receive_text()
+                    thread = threading.Thread(target=on_message, args=(ws_session, message,))
+                    self._thread_manager.add_thread(str(ws_session.id), thread)
                 except WebSocketDisconnect:
-                    return on_disconnect(websocket)
+                    return on_disconnect(ws_session)
         self.handler = handler
