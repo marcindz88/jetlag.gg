@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  game:
+    build:
+      context: .
+      dockerfile: .
+    image: core_local_planegame
+    container_name: game
+    tty: true
+    ports:
+      - "9999:9999"
+    command: python run.py
