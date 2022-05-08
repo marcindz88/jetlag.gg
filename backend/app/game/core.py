@@ -1,3 +1,4 @@
+import dataclasses
 import datetime
 import logging
 import threading
@@ -5,7 +6,9 @@ import time
 import uuid
 from typing import Optional, List
 
+from app.game.events import Event, EventType
 from app.game.exceptions import PlayerLimitExceeded, PlayerNotFound, PlayerAlreadyConnected, PlayerInvalidNickname
+from app.tools.encoder import encode
 from app.tools.websocket_server import WebSocketSession
 
 
@@ -40,7 +43,7 @@ class Player:
 
 class GameSession:
     MAX_PLAYERS = 10
-    PLAYER_TIME_TO_CONNECT = datetime.timedelta(seconds=10)
+    PLAYER_TIME_TO_CONNECT = datetime.timedelta(seconds=30)
 
     def __init__(self):
         self._players = {}
@@ -56,6 +59,16 @@ class GameSession:
             logging.debug("FRONTMAN | loop")
             self.remove_idle_players()
             time.sleep(2)  # todo remove
+
+    def broadcast_event(self, event: Event, everyone_except: List[Player] = None):
+        logging.info("broadcast_event")
+        excl_player_ids = [p.id for p in everyone_except or []]
+        sessions: List[WebSocketSession] = [s for s, _ in self._sessions.values() if s.player_id not in excl_player_ids]
+        logging.info("broadcast will be to sessions %s", str([s.id for s in sessions]))
+        for session in sessions:
+            data = dataclasses.asdict(event)
+            data = encode(data)
+            session.send(data)
 
     def get_player(self, player_id: uuid.UUID) -> Player:
         player = self._players.get(player_id)
@@ -101,6 +114,8 @@ class GameSession:
                 raise PlayerInvalidNickname
         player = Player(nickname=nickname)
         self._players[player.id] = player
+        event = Event(type=EventType.PLAYER_REGISTERED, data={"id": player.id, "nickname": player.nickname})
+        self.broadcast_event(event=event, everyone_except=[player])
         logging.info(f"add_player {nickname} added {player.id}")
         return player
 
@@ -110,6 +125,8 @@ class GameSession:
             raise PlayerAlreadyConnected
         self._sessions[ws_session.id] = (ws_session, player)
         player.session_id = ws_session.id
+        event = Event(type=EventType.PLAYER_CONNECTED, data={"id": player.id, "nickname": player.nickname})
+        self.broadcast_event(event=event, everyone_except=[player])
 
     def remove_session(self, ws_session: WebSocketSession):
         logging.info(f"remove_session {ws_session.id}")
@@ -118,6 +135,8 @@ class GameSession:
         player = self.get_player(player_id=ws_session.player_id)
         player.session_id = None
         player._disconnected_since = datetime.datetime.now()
+        event = Event(type=EventType.PLAYER_DISCONNECTED, data={"id": player.id, "nickname": player.nickname})
+        self.broadcast_event(event=event, everyone_except=[player])
 
     def remove_player(self, player: Player):
         logging.info(f"remove_player {player.id}")
@@ -126,4 +145,9 @@ class GameSession:
             self.remove_session(ws_session)
         except PlayerNotFound:
             pass
-        self._players.pop(player.id, None)
+        try:
+            self._players.pop(player.id)
+            event = Event(type=EventType.PLAYER_REMOVED, data={"id": player.id, "nickname": player.nickname})
+            self.broadcast_event(event=event, everyone_except=[player])
+        except KeyError:
+            pass
