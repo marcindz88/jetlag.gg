@@ -44,6 +44,14 @@ class WebSocketSession:
         coroutine = self.connection.close(code=code, reason=reason)
         loop.run_until_complete(coroutine)
 
+    def send(self, data: dict):
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+        coroutine = self.connection.send_json(data)
+        loop.run_until_complete(coroutine)
+
 
 class StarletteWebsocketServer:
 
