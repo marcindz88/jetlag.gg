@@ -18,7 +18,7 @@ export class MyPlayerService {
     private endpointsService: EndpointsService,
     private websocketService: WebsocketService
   ) {
-    this.restoreUser();
+    // TODO this.restoreUser();
   }
 
   createUser(nickname: string): Observable<MyPlayer> {
