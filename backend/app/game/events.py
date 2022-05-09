@@ -22,5 +22,5 @@ EVENTS_EMITTED_BY_SERVER = [
 class Event:
     type: EventType
     data: dict
-    created: datetime.datetime = datetime.datetime.now()
+    created: datetime.datetime = dataclasses.field(default_factory=datetime.datetime.now)
     emitted_by_server: bool = True
