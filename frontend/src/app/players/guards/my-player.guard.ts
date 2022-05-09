@@ -9,6 +9,6 @@ import { ROUTES } from '../../shared/constants/routes';
 export class MyPlayerGuard implements CanLoad {
   constructor(private myPlayerService: MyPlayerService, private router: Router) {}
   canLoad(_: Route, _1: UrlSegment[]): boolean | UrlTree {
-    return this.myPlayerService.player ? true : this.router.createUrlTree([ROUTES.root, ROUTES.intro]);
+    return !!this.myPlayerService.player$.value || this.router.createUrlTree([ROUTES.root, ROUTES.intro]);
   }
 }
