@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Websocket tester</title>
+  </head>
+  <body>
+    <h1>Register user</h1>
+    <input id="nicknameInput" label="nickname"/>
+    <button onclick="registerUser()">Register</button>
+
+	<script>
+
+      const registerUser = () => {
+        const nickname = document.querySelector("#nicknameInput").value
+        console.log("registerUser nickname:", nickname)
+
+        fetch(
+                "http://127.0.0.1:9999/api/game/players/",
+                {
+                  method: "POST",
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({nickname: nickname}),
+                }
+        ).then(response => response.json()).then(response => {
+          document.TOKEN = response.token;
+          console.log("token: ", document.TOKEN);
+          connectUser();
+        })
+      }
+
+      const connectUser = () => {
+        document.WS = new WebSocket("ws://127.0.0.1:9999/ws/", document.TOKEN);
+        console.log("Connected to websockets")
+      }
+
+    </script>
+  </body>
+</html>
