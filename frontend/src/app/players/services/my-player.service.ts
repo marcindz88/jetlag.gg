@@ -3,7 +3,7 @@ import { MyPlayer } from '../models/player.types';
 import { HttpClient } from '@angular/common/http';
 import { EndpointsService } from '../../shared/services/endpoints.service';
 import { WebsocketService } from '../../shared/services/websocket.service';
-import { map, Observable, tap } from 'rxjs';
+import { BehaviorSubject, map, Observable, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +11,7 @@ import { map, Observable, tap } from 'rxjs';
 export class MyPlayerService {
   readonly playerKey = 'player';
 
-  player: MyPlayer | null = null;
+  player$ = new BehaviorSubject<MyPlayer | null>(null);
 
   constructor(
     private httpClient: HttpClient,
@@ -29,24 +29,24 @@ export class MyPlayerService {
   }
 
   resetUser() {
-    this.player = null;
+    this.player$.next(null);
     localStorage.removeItem(this.playerKey);
   }
 
   setUser(player: MyPlayer) {
-    this.player = player;
-    localStorage.setItem(this.playerKey, JSON.stringify(player));
-    this.websocketService.createWSSConnection(this.player.token);
+    this.player$.next(player);
+    // TEMP localStorage.setItem(this.playerKey, JSON.stringify(player));
+    this.websocketService.createWSSConnection(player.token);
   }
 
   restoreUser() {
     const playerFromStorage = localStorage.getItem(this.playerKey);
     if (playerFromStorage) {
-      this.player = JSON.parse(playerFromStorage) as MyPlayer;
-      // TODO save player data backend
-      this.createUser(this.player.nickname).subscribe({
+      const myPlayer = JSON.parse(playerFromStorage) as MyPlayer;
+      this.player$.next(myPlayer);
+      this.createUser(myPlayer.nickname).subscribe({
         error: () => {
-          this.websocketService.createWSSConnection(this.player!.token);
+          this.websocketService.createWSSConnection(myPlayer.token);
         },
       });
     }
