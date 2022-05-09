@@ -30,11 +30,12 @@ class WebsocketServer:
 
 class WebSocketSession:
     connection: WebSocket
-    id: uuid.UUID = uuid.uuid4()
+    id: uuid.UUID
     token: str
     player_id: uuid.UUID
 
     def __init__(self, websocket):
+        self.id = uuid.uuid4()
         self.connection = websocket
 
     def close_connection(self, code=1000, reason=""):
