@@ -2,7 +2,6 @@ import dataclasses
 import datetime
 import logging
 import threading
-import time
 import uuid
 from typing import Optional, List
 
@@ -12,7 +11,7 @@ from app.tools.encoder import encode
 from app.tools.websocket_server import WebSocketSession
 
 
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 
 
 class Player:
@@ -66,10 +65,9 @@ class GameSession:
         while True:
             logging.debug("FRONTMAN | loop")
             self.remove_idle_players()
-            time.sleep(2)  # todo remove
 
     def broadcast_event(self, event: Event, everyone_except: List[Player] = None):
-        logging.info("broadcast_event")
+        logging.info("broadcast_event %s", event.type)
         excl_player_ids = [p.id for p in everyone_except or []]
         sessions: List[WebSocketSession] = [s for s, _ in self._sessions.values() if s.player_id not in excl_player_ids]
         logging.info("broadcast will be to sessions %s", str([s.id for s in sessions]))
@@ -88,7 +86,7 @@ class GameSession:
         return [p.serialized for p in self._players.values()]
 
     def remove_idle_players(self):
-        logging.info(f"remove_idle_players")
+        logging.debug(f"remove_idle_players")
         now = datetime.datetime.now()
 
         for player in list(self._players.values()):
@@ -139,7 +137,7 @@ class GameSession:
         self._sessions.pop(ws_session.id, None)
         player = self.get_player(player_id=ws_session.player_id)
         player.session_id = None
-        player._disconnected_since = datetime.datetime.now()
+        player.disconnected_since = datetime.datetime.now()
         event = Event(type=EventType.PLAYER_DISCONNECTED, data=player.serialized)
         self.broadcast_event(event=event, everyone_except=[player])
 
