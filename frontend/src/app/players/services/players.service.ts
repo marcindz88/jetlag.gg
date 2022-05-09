@@ -4,10 +4,11 @@ import { HttpClient } from '@angular/common/http';
 import { EndpointsService } from '../../shared/services/endpoints.service';
 import { WebsocketService } from '../../shared/services/websocket.service';
 import { ServerMessageTypeEnum } from '../../shared/models/wss.types';
+import { BehaviorSubject } from 'rxjs';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class PlayersService {
-  players: OtherPlayer[] = [];
+  players$ = new BehaviorSubject<OtherPlayer[]>([]);
 
   constructor(
     private httpClient: HttpClient,
@@ -19,20 +20,16 @@ export class PlayersService {
   }
 
   fetchPlayers() {
-    this.httpClient
-      .get<OtherPlayer[]>(this.endpointsService.getEndpoint('players'))
-      .subscribe(players => (this.players = players));
+    this.httpClient.get<OtherPlayer[]>(this.endpointsService.getEndpoint('players')).subscribe(players => {
+      this.players$.next(players);
+    });
   }
 
   setPlayersUpdateHandler() {
     this.websocketService.playerMessages$.subscribe(playerMessage => {
       switch (playerMessage.type) {
         case ServerMessageTypeEnum.CONNECTED:
-          this.updatePlayerStatus(playerMessage.data);
-          break;
         case ServerMessageTypeEnum.REGISTERED:
-          this.updatePlayerStatus(playerMessage.data);
-          break;
         case ServerMessageTypeEnum.DISCONNECTED:
           this.updatePlayerStatus(playerMessage.data);
           break;
@@ -46,17 +43,17 @@ export class PlayersService {
   updatePlayerStatus(player: OtherPlayer) {
     const existingPlayer = this.getPlayerById(player.id);
     if (existingPlayer) {
-      existingPlayer.connected = player.connected;
+      this.players$.next(this.players$.value.map(oldPlayer => (oldPlayer.id === player.id ? player : oldPlayer)));
     } else {
-      this.players.push(player);
+      this.players$.next([...this.players$.value, player]);
     }
   }
 
   removePlayerById(id: string) {
-    this.players = this.players.filter(player => player.id !== id);
+    this.players$.next(this.players$.value.filter(player => player.id !== id));
   }
 
   getPlayerById(id: string): OtherPlayer | undefined {
-    return this.players.find(player => player.id === id);
+    return this.players$.value.find(player => player.id === id);
   }
 }

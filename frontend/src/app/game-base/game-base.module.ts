@@ -12,7 +12,6 @@ import { NgtSobaOrbitControlsModule } from '@angular-three/soba/controls';
 import { PlaneComponent } from './components/plane/plane.component';
 import { NgtGroupModule } from '@angular-three/core/group';
 import { PlaneStatsComponent } from './components/plane-stats/plane-stats.component';
-import { PlayersService } from '../players/services/players.service';
 import { SharedModule } from '../shared/shared.module';
 import { PlayersModule } from '../players/players.module';
 
@@ -34,6 +33,5 @@ import { PlayersModule } from '../players/players.module';
     SharedModule,
     PlayersModule,
   ],
-  providers: [PlayersService],
 })
 export class GameBaseModule {}

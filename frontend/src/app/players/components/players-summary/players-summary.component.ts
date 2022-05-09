@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { OtherPlayer } from '../../models/player.types';
 import { PlayersService } from '../../services/players.service';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'pg-players-summary',
@@ -8,7 +9,7 @@ import { PlayersService } from '../../services/players.service';
   styleUrls: ['./players-summary.component.scss'],
 })
 export class PlayersSummaryComponent {
-  players: OtherPlayer[] = this.playersService.players;
+  players$: BehaviorSubject<OtherPlayer[]> = this.playersService.players$;
 
   constructor(private playersService: PlayersService) {}
 }
