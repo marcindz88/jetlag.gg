@@ -38,6 +38,7 @@ export class PlaneComponent {
   @Input() set startingPosition(position: GeoLocationPoint) {
     this.startingPositionVector = transformCoordinatesIntoPoint(position, this.MOVING_RADIUS);
     this.startingRotationVector = transformPointAndDirectionIntoRotation(position, this.currentDirection);
+    this.lastDirection = this.currentDirection;
   }
 
   @Input() speed = DEFAULT_PLANE_STATE.speed;
