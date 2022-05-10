@@ -12,7 +12,7 @@ import { auditTime, filter, fromEvent, Subject, takeUntil } from 'rxjs';
 })
 export class GameMainComponent implements OnDestroy {
   readonly cameraOptions: NgtCameraOptions = {
-    zoom: 1,
+    zoom: 1 / 3,
     position: [0, 15, 50],
   };
   readonly rendererOptions: NgtGLOptions = {
