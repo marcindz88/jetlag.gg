@@ -1,7 +1,10 @@
 <ngt-canvas [camera]="cameraOptions" [gl]="rendererOptions" [shadows]="shadowOptions">
   <ngt-ambient-light></ngt-ambient-light>
   <pg-earth></pg-earth>
-  <pg-plane [speed]="myPlaneState.speed" [direction]="myPlaneState.direction"></pg-plane>
+  <pg-plane
+    [speed]="myPlaneState.speed"
+    [direction]="myPlaneState.direction"
+    [startingPosition]="myPlaneState.initialPoint"></pg-plane>
   <ngt-soba-orbit-controls [rotateSpeed]="0.3"></ngt-soba-orbit-controls>
 </ngt-canvas>
 <pg-plane-stats class="plane-stats" [planeState]="myPlaneState"></pg-plane-stats>
