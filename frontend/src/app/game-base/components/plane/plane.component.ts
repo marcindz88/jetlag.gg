@@ -58,7 +58,7 @@ export class PlaneComponent {
 
   updatePlane(event: { state: NgtRenderState; object: Group }) {
     this.updatePlaneDirection(event.object);
-    this.movePlaneForward(event.object);
+    this.movePlaneForward(event.object, event.state.delta);
   }
 
   private updatePlaneDirection(plane: Group) {
@@ -76,9 +76,10 @@ export class PlaneComponent {
     }
   }
 
-  private movePlaneForward(plane: Group) {
+  private movePlaneForward(plane: Group, delta: number) {
+    const speed = (this.speed * MAP_SCALE) / delta / 3600000; // delta in ms convert to h
     // Move forward by speed and rotate downward to continue nosing down with curvature of earth
-    plane.rotateX(degToRad(((this.speed * MAP_SCALE) / this.MOVING_CIRCUMFERENCE) * 360));
-    plane.translateY(this.speed * MAP_SCALE);
+    plane.rotateX(degToRad((speed / this.MOVING_CIRCUMFERENCE) * 360));
+    plane.translateY(speed);
   }
 }

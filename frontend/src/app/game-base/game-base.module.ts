@@ -14,6 +14,7 @@ import { NgtGroupModule } from '@angular-three/core/group';
 import { PlaneStatsComponent } from './components/plane-stats/plane-stats.component';
 import { SharedModule } from '../shared/shared.module';
 import { PlayersModule } from '../players/players.module';
+import { KeyboardControlsService } from './utils/services/keyboard-controls.service';
 
 @NgModule({
   declarations: [GameMainComponent, EarthComponent, PlaneComponent, PlaneStatsComponent],
@@ -33,5 +34,6 @@ import { PlayersModule } from '../players/players.module';
     SharedModule,
     PlayersModule,
   ],
+  providers: [KeyboardControlsService],
 })
 export class GameBaseModule {}
