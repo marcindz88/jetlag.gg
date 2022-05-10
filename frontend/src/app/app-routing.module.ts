@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { MyPlayerGuard } from './players/guards/my-player.guard';
 import { ROUTES } from './shared/constants/routes';
 
 const routes: Routes = [
@@ -14,7 +15,7 @@ const routes: Routes = [
   },
   {
     path: ROUTES.game,
-    // canLoad: [MyPlayerGuard],
+    canLoad: [MyPlayerGuard],
     loadChildren: () => import('./game-base/game-base.module').then(m => m.GameBaseModule),
   },
   {
