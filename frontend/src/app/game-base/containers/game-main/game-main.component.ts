@@ -1,16 +1,17 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { NgtCameraOptions, NgtGLOptions } from '@angular-three/core/lib/types';
 import { PCFSoftShadowMap, WebGLShadowMap } from 'three';
 import { PlaneState } from '../../utils/models/game.types';
 import { DEFAULT_PLANE_STATE, DIRECTION, SPEED } from '../../utils/models/game.constants';
-import { auditTime, filter, fromEvent, Subject, takeUntil } from 'rxjs';
+import { KeyboardControlsService } from '../../utils/services/keyboard-controls.service';
+import { KeyEventEnum } from '../../utils/models/keyboard.types';
 
 @Component({
   selector: 'pg-game-main',
   templateUrl: './game-main.component.html',
   styleUrls: ['./game-main.component.scss'],
 })
-export class GameMainComponent implements OnDestroy {
+export class GameMainComponent {
   readonly cameraOptions: NgtCameraOptions = {
     zoom: 1 / 3,
     position: [0, 15, 50],
@@ -25,62 +26,50 @@ export class GameMainComponent implements OnDestroy {
 
   myPlaneState: PlaneState = DEFAULT_PLANE_STATE;
 
-  private destroy$ = new Subject<void>();
-  private keyDownEvent$ = fromEvent<KeyboardEvent>(document, 'keydown').pipe(takeUntil(this.destroy$));
-
-  constructor() {
-    this.setupDirectionChangeHandling();
-    this.setupSpeedChangeHandling();
+  constructor(private keyboardControlsService: KeyboardControlsService) {
+    this.setupSteeringAndHandling();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  private setupSteeringAndHandling() {
+    this.keyboardControlsService.keyEvent$.subscribe((keyEvent: KeyEventEnum) => {
+      switch (keyEvent) {
+        case KeyEventEnum.LEFT:
+          this.turnLeft();
+          break;
+        case KeyEventEnum.RIGHT:
+          this.turnRight();
+          break;
+        case KeyEventEnum.BACKWARD:
+          this.decelerate();
+          break;
+        case KeyEventEnum.FORWARD:
+          this.accelerate();
+          break;
+      }
+    });
   }
 
-  private setupDirectionChangeHandling() {
-    this.keyDownEvent$
-      .pipe(
-        filter(e => e.key === 'ArrowLeft'),
-        auditTime(100)
-      )
-      .subscribe(() => {
-        this.myPlaneState.direction -= DIRECTION.step;
-        if (this.myPlaneState.direction < DIRECTION.min) {
-          this.myPlaneState.direction += DIRECTION.max;
-        }
-      });
-    this.keyDownEvent$
-      .pipe(
-        filter(e => e.key === 'ArrowRight'),
-        auditTime(100)
-      )
-      .subscribe(() => {
-        this.myPlaneState.direction += DIRECTION.step;
-        this.myPlaneState.direction %= DIRECTION.max;
-      });
+  private turnLeft() {
+    this.myPlaneState.direction -= DIRECTION.step;
+    if (this.myPlaneState.direction < DIRECTION.min) {
+      this.myPlaneState.direction += DIRECTION.max;
+    }
   }
 
-  private setupSpeedChangeHandling() {
-    this.keyDownEvent$
-      .pipe(
-        filter(e => e.key === 'ArrowUp'),
-        auditTime(100)
-      )
-      .subscribe(() => {
-        if (this.myPlaneState.speed + SPEED.step <= SPEED.max) {
-          this.myPlaneState.speed += SPEED.step;
-        }
-      });
-    this.keyDownEvent$
-      .pipe(
-        filter(e => e.key === 'ArrowDown'),
-        auditTime(100)
-      )
-      .subscribe(() => {
-        if (this.myPlaneState.speed - SPEED.step >= SPEED.min) {
-          this.myPlaneState.speed -= SPEED.step;
-        }
-      });
+  private turnRight() {
+    this.myPlaneState.direction += DIRECTION.step;
+    this.myPlaneState.direction %= DIRECTION.max;
+  }
+
+  private accelerate() {
+    if (this.myPlaneState.speed + SPEED.step <= SPEED.max) {
+      this.myPlaneState.speed += SPEED.step;
+    }
+  }
+
+  private decelerate() {
+    if (this.myPlaneState.speed - SPEED.step >= SPEED.min) {
+      this.myPlaneState.speed -= SPEED.step;
+    }
   }
 }

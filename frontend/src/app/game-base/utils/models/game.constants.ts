@@ -2,16 +2,16 @@ import { PlaneState } from './game.types';
 
 export const EARTH_RADIUS = 40;
 export const REAL_EARTH_RADIUS = 6371; // km
-export const MAP_SCALE = EARTH_RADIUS / REAL_EARTH_RADIUS / 5000;
+export const MAP_SCALE = EARTH_RADIUS / REAL_EARTH_RADIUS;
 
 export const FLIGHT_ALTITUDE = 100 * (EARTH_RADIUS / REAL_EARTH_RADIUS);
 
 // km/h
 export const SPEED = {
-  min: 100,
-  max: 10000,
-  step: 50,
-  default: 1000,
+  min: 1000,
+  max: 100000,
+  step: 500,
+  default: 10000,
 };
 
 // deg

@@ -6,15 +6,17 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 @Injectable({ providedIn: 'root' })
 export class TextureModelsService {
-  earthTextures$: Observable<{ bump: Texture; map: Texture; spec: Texture }>;
-  planeTextures$: Observable<{ trail: Texture; model: Mesh[] }>;
+  earthTextures$!: Observable<{ bump: Texture; map: Texture; spec: Texture }>;
+  planeTextures$!: Observable<{ trail: Texture; model: Mesh[] }>;
 
-  constructor(private ngtLoader: NgtLoader) {
+  constructor(private ngtLoader: NgtLoader) {}
+
+  fetchAllTextures() {
     this.earthTextures$ = this.fetchEarthTextures();
     this.planeTextures$ = this.fetchPlaneTextures();
   }
 
-  fetchEarthTextures() {
+  private fetchEarthTextures() {
     return combineLatest([
       this.ngtLoader.use(TextureLoader, 'assets/earth/earthbump.jpg'),
       this.ngtLoader.use(TextureLoader, 'assets/earth/earthmap.jpg'),
@@ -26,7 +28,7 @@ export class TextureModelsService {
     );
   }
 
-  fetchPlaneTextures() {
+  private fetchPlaneTextures() {
     return combineLatest([
       this.ngtLoader.use(TextureLoader, 'assets/mask.png'),
       this.ngtLoader
