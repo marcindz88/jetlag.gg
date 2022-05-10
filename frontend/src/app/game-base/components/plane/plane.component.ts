@@ -4,18 +4,24 @@ import { NgtEuler, NgtRenderState, NgtVector3 } from '@angular-three/core';
 import { Group } from 'three';
 import { TextureModelsService } from '../../utils/services/texture-models.service';
 import { GeoLocationPoint } from '../../utils/models/game.types';
-import { DEFAULT_PLANE_STATE, DIRECTION, EARTH_RADIUS, MAP_SCALE } from '../../utils/models/game.constants';
-import { calculateCircumference } from '../../utils/utils';
+import {
+  DEFAULT_PLANE_STATE,
+  DIRECTION,
+  EARTH_RADIUS,
+  FLIGHT_ALTITUDE,
+  MAP_SCALE,
+} from '../../utils/models/game.constants';
+import {
+  calculateCircumference,
+  transformCoordinatesIntoPoint,
+  transformPointAndDirectionIntoRotation,
+} from '../../utils/utils';
 
 @Component({
   selector: 'pg-plane',
   templateUrl: './plane.component.html',
 })
 export class PlaneComponent {
-  @Input() set startingPosition(position: GeoLocationPoint) {
-    // TODO calculate starting rotation and position
-  }
-
   @Input() set direction(direction: number) {
     // Correct last direction if went out of scale
     if (Math.abs(direction - this.lastDirection) > DIRECTION.max / 2) {
@@ -29,6 +35,11 @@ export class PlaneComponent {
     this.currentDirection = direction;
   }
 
+  @Input() set startingPosition(position: GeoLocationPoint) {
+    this.startingPositionVector = transformCoordinatesIntoPoint(position, this.MOVING_RADIUS);
+    this.startingRotationVector = transformPointAndDirectionIntoRotation(position, this.currentDirection);
+  }
+
   @Input() speed = DEFAULT_PLANE_STATE.speed;
 
   private lastDirection: number = DEFAULT_PLANE_STATE.direction;
@@ -36,7 +47,7 @@ export class PlaneComponent {
 
   readonly textures$ = this.textureModelsService.planeTextures$;
 
-  readonly MOVING_RADIUS = EARTH_RADIUS + 1;
+  readonly MOVING_RADIUS = EARTH_RADIUS + FLIGHT_ALTITUDE;
   readonly MOVING_CIRCUMFERENCE = calculateCircumference(this.MOVING_RADIUS);
 
   startingPositionVector: NgtVector3 = [0, 0, this.MOVING_RADIUS];
@@ -58,7 +69,7 @@ export class PlaneComponent {
       plane.rotateZ(degToRad(currentDifference));
       this.lastDirection += currentDifference;
     } else {
-      // If difference very small - update lastdirection and make dinal rotation
+      // If difference very small - update lastdirection and make final rotation
       plane.rotateZ(degToRad(currentDirectionDifference));
       this.lastDirection = this.currentDirection;
     }
