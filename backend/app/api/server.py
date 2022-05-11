@@ -46,7 +46,7 @@ def add_player(body: AddPlayerRequestBody):
     except exceptions.PlayerLimitExceeded:
         raise HTTPException(status_code=400, detail="Lobby is full")
 
-    return {"id": player.id, "token": player.token}
+    return {**player.serialized, "token": player.token}
 
 
 def validate_connection(ws_session: WebSocketSession) -> bool:
