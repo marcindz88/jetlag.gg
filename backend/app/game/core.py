@@ -126,6 +126,13 @@ class GameSession:
             logging.debug("FRONTMAN | loop")
             self.remove_idle_players()
 
+    def send_event(self, event: Event, player: Player):
+        logging.info("send_event %s", event.type)
+        session, _ = self._sessions.get(player.session_id)
+        data = dataclasses.asdict(event)
+        data = encode(data)
+        session.send(data)
+
     def broadcast_event(self, event: Event, everyone_except: List[Player] = None):
         logging.info("broadcast_event %s", event.type)
         excl_player_ids = [p.id for p in everyone_except or []]
@@ -253,9 +260,19 @@ class GameSession:
             velocity=data_model.velocity,
         )
 
+    def handle_event_sync(self, player: Player, event: Event):
+        logging.info(f"handle_event_sync {player.id} {event}")
+        event = Event(type=EventType.CLOCK_TIME, data={
+            "timestamp": timestamp_now(),
+        })
+        self.send_event(event=event, player=player)
+
     def handle_event(self, player: Player, event: Event):
         logging.info(f"handle_event {player.id} {event}")
 
         if event.type == EventType.PLAYER_POSITION_UPDATE_REQUEST:
             self.handle_player_position_update_request_event(player=player, event=event)
             return
+
+        if event.type == EventType.CLOCK_SYNC:
+            self.handle_event_sync(player=player, event=event)
