@@ -1,3 +1,8 @@
+## Prerequisities
+
+- Windows - https://docs.docker.com/desktop/windows/install/
+- Linux - https://docs.docker.com/desktop/linux/install/ 
+
 ## How to run?
 
 > ./start.sh
