@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { PlaneState } from '../../utils/models/game.types';
+import { PlanePosition } from '../../../players/models/player.types';
 
 @Component({
   selector: 'pg-plane-stats',
@@ -7,5 +7,5 @@ import { PlaneState } from '../../utils/models/game.types';
   styleUrls: ['./plane-stats.component.scss'],
 })
 export class PlaneStatsComponent {
-  @Input() planeState: PlaneState | null = null;
+  @Input() planePosition: PlanePosition | null = null;
 }

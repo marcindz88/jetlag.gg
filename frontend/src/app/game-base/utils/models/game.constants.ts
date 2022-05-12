@@ -15,15 +15,15 @@ export const SPEED = {
 };
 
 // deg
-export const DIRECTION = {
+export const BEARING = {
   min: 0,
   max: 360,
-  step: 2,
+  step: 1,
   default: 180,
 };
 
 export const DEFAULT_PLANE_STATE: PlaneState = {
-  initialPoint: { lat: 52.22135563657265, long: 21.008107155957713 },
-  speed: SPEED.default,
-  direction: DIRECTION.default,
+  initialPoint: { lat: 52.22135563657265, lon: 21.008107155957713 },
+  velocity: SPEED.default,
+  bearing: BEARING.default,
 };
