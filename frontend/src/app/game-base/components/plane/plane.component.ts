@@ -77,7 +77,7 @@ export class PlaneComponent {
   }
 
   private movePlaneForward(plane: Group, delta: number) {
-    const speed = (this.velocity * MAP_SCALE) / delta / 3600000; // delta in ms convert to h
+    const speed = this.velocity / 3600 * MAP_SCALE * delta // delta in s convert to h
     // Move forward by speed and rotate downward to continue nosing down with curvature of earth
     plane.rotateX(degToRad((speed / this.MOVING_CIRCUMFERENCE) * 360));
     plane.translateY(speed);
