@@ -9,12 +9,13 @@ export type MessageDataType =
   | PlaneStateUpdateRequest
   | PlayerPositionUpdate
   | Record<string, never>;
+
 export type MessageTypeEnum = ServerMessageTypeEnum | ClientMessageTypeEnum;
 
 export type Message<T extends MessageDataType = MessageDataType, K extends MessageTypeEnum = ServerMessageTypeEnum> = {
   type: K;
   data: T;
-  created?: number;
+  created: number;
 };
 
 export enum ServerMessageTypeEnum {

@@ -57,6 +57,7 @@ export class PlayersService {
     const updatedPlayer = this.updatePlayer(player);
     this.websocketService.sendWSSMessage({
       type: ClientMessageTypeEnum.POSITION_UPDATE_REQUEST,
+      created: this.clockService.getCurrentTime(),
       data: {
         bearing: updatedPlayer.position.bearing,
         velocity: updatedPlayer.position.velocity,
@@ -68,12 +69,12 @@ export class PlayersService {
   updatePlayer(player: PartialPlayerWithId): OtherPlayer {
     const existingPlayer = this.getPlayerById(player.id);
     const updatedPlayer = { ...existingPlayer, ...player } as OtherPlayer;
-    if (updatedPlayer) {
+    if (existingPlayer) {
       this.players$.next(
         this.players$.value.map(oldPlayer => (oldPlayer.id === player.id ? updatedPlayer : oldPlayer))
       );
     } else {
-      this.players$.next([...this.players$.value, updatedPlayer as OtherPlayer]);
+      this.players$.next([...this.players$.value, updatedPlayer]);
     }
     return updatedPlayer;
   }
