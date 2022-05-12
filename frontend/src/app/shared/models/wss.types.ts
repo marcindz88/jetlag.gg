@@ -1,8 +1,14 @@
-import { OtherPlayer } from '../../players/models/player.types';
+import { OtherPlayer, PlayerPositionUpdate } from '../../players/models/player.types';
+import { PlaneStateUpdateRequest } from '../../game-base/utils/models/game.types';
 
 export type ClockMessageDataType = { timestamp: number };
 
-export type MessageDataType = OtherPlayer | ClockMessageDataType | Record<string, never>;
+export type MessageDataType =
+  | OtherPlayer
+  | ClockMessageDataType
+  | PlaneStateUpdateRequest
+  | PlayerPositionUpdate
+  | Record<string, never>;
 export type MessageTypeEnum = ServerMessageTypeEnum | ClientMessageTypeEnum;
 
 export type Message<T extends MessageDataType = MessageDataType, K extends MessageTypeEnum = ServerMessageTypeEnum> = {

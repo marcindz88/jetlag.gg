@@ -1,10 +1,13 @@
 import { Component } from '@angular/core';
 import { NgtCameraOptions, NgtGLOptions } from '@angular-three/core/lib/types';
 import { PCFSoftShadowMap, WebGLShadowMap } from 'three';
-import { PlaneState } from '../../utils/models/game.types';
-import { DEFAULT_PLANE_STATE, DIRECTION, SPEED } from '../../utils/models/game.constants';
+import { BEARING, SPEED } from '../../utils/models/game.constants';
 import { KeyboardControlsService } from '../../utils/services/keyboard-controls.service';
 import { KeyEventEnum } from '../../utils/models/keyboard.types';
+import { MyPlayer, OtherPlayer } from '../../../players/models/player.types';
+import { Observable } from 'rxjs';
+import { PlayersService } from '../../../players/services/players.service';
+import { MyPlayerService } from '../../../players/services/my-player.service';
 
 @Component({
   selector: 'pg-game-main',
@@ -24,10 +27,19 @@ export class GameMainComponent {
     type: PCFSoftShadowMap,
   };
 
-  myPlaneState: PlaneState = DEFAULT_PLANE_STATE;
+  playersState$: Observable<OtherPlayer[]> = this.playersService.players$;
+  myPlayer: MyPlayer = this.myPlayerService.player$.value!;
 
-  constructor(private keyboardControlsService: KeyboardControlsService) {
+  constructor(
+    private keyboardControlsService: KeyboardControlsService,
+    private playersService: PlayersService,
+    private myPlayerService: MyPlayerService
+  ) {
     this.setupSteeringAndHandling();
+  }
+
+  trackById(index: number, player: OtherPlayer) {
+    return player.id;
   }
 
   private setupSteeringAndHandling() {
@@ -46,30 +58,31 @@ export class GameMainComponent {
           this.accelerate();
           break;
       }
+      this.playersService.updatePlayerAndEmitPositionUpdate(this.myPlayer);
     });
   }
 
   private turnLeft() {
-    this.myPlaneState.direction -= DIRECTION.step;
-    if (this.myPlaneState.direction < DIRECTION.min) {
-      this.myPlaneState.direction += DIRECTION.max;
+    this.myPlayer.position.bearing -= BEARING.step;
+    if (this.myPlayer.position.bearing < BEARING.min) {
+      this.myPlayer.position.bearing += BEARING.max;
     }
   }
 
   private turnRight() {
-    this.myPlaneState.direction += DIRECTION.step;
-    this.myPlaneState.direction %= DIRECTION.max;
+    this.myPlayer.position.bearing += BEARING.step;
+    this.myPlayer.position.bearing %= BEARING.max;
   }
 
   private accelerate() {
-    if (this.myPlaneState.speed + SPEED.step <= SPEED.max) {
-      this.myPlaneState.speed += SPEED.step;
+    if (this.myPlayer.position.velocity + SPEED.step <= SPEED.max) {
+      this.myPlayer.position.velocity += SPEED.step;
     }
   }
 
   private decelerate() {
-    if (this.myPlaneState.speed - SPEED.step >= SPEED.min) {
-      this.myPlaneState.speed -= SPEED.step;
+    if (this.myPlayer.position.velocity - SPEED.step >= SPEED.min) {
+      this.myPlayer.position.velocity -= SPEED.step;
     }
   }
 }

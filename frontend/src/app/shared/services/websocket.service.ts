@@ -9,13 +9,14 @@ import {
   MessageTypeEnum,
 } from '../models/wss.types';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { OtherPlayer } from '../../players/models/player.types';
+import { OtherPlayer, PlayerPositionUpdate } from '../../players/models/player.types';
 
 @Injectable({
   providedIn: 'root',
 })
 export class WebsocketService {
   playerMessages$: Subject<Message<OtherPlayer>> = new Subject();
+  playerPositionMessages$: Subject<Message<PlayerPositionUpdate>> = new Subject();
   clockMessages$: Subject<Message<ClockMessageDataType>> = new Subject();
   isConnected$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
@@ -35,6 +36,10 @@ export class WebsocketService {
     this.isConnected$.next(true);
     this.webSocket.subscribe({
       next: message => {
+        if (message.type.startsWith('player_position')) {
+          this.playerPositionMessages$.next(message as Message<PlayerPositionUpdate>);
+          return;
+        }
         if (message.type.startsWith('player')) {
           this.playerMessages$.next(message as Message<OtherPlayer>);
           return;
