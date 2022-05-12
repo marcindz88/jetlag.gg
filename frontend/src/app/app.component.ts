@@ -12,6 +12,6 @@ export class AppComponent {
 
   constructor(private textureModelsService: TextureModelsService, private clockService: ClockService) {
     this.textureModelsService.fetchAllTextures();
-    this.clockService.setupSyncingOfTime();
+    // this.clockService.setupSyncingOfTime();
   }
 }
