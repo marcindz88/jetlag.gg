@@ -248,7 +248,7 @@ class GameSession:
             "id": player.id,
             "position": new_position.serialized,
         })
-        self.broadcast_event(event=event)  # todo think if the player should be excluded
+        self.broadcast_event(event=event, everyone_except=[player])
 
     def handle_player_position_update_request_event(self, player: Player, event: Event):
         logging.info(f"handle_player_position_update_request_event {player.id} {event}")

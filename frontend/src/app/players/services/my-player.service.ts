@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { MyPlayer } from '../models/player.types';
+import { MyPlayer, OtherPlayer } from '../models/player.types';
 import { HttpClient } from '@angular/common/http';
 import { EndpointsService } from '../../shared/services/endpoints.service';
 import { WebsocketService } from '../../shared/services/websocket.service';
@@ -22,10 +22,12 @@ export class MyPlayerService {
   }
 
   createUser(nickname: string): Observable<MyPlayer> {
-    return this.httpClient.post<MyPlayer>(this.endpointsService.getEndpoint('players'), { nickname }).pipe(
-      map(player => ({ ...player, nickname })),
-      tap(this.setUser.bind(this))
-    );
+    return this.httpClient
+      .post<MyPlayer & OtherPlayer>(this.endpointsService.getEndpoint('players'), { nickname })
+      .pipe(
+        map(({ connected: _, ...player }) => ({ ...player, nickname })),
+        tap(this.setUser.bind(this))
+      );
   }
 
   resetUser() {
