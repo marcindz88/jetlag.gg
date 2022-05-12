@@ -26,14 +26,14 @@ logging.getLogger().setLevel(logging.INFO)
 
 class PlayerPosition:
     coordinates: Coordinates
-    bearing: float
+    bearing: int
     velocity: int
     timestamp: int
 
     def __init__(
         self,
         coordinates: Coordinates,
-        bearing: float,
+        bearing: int,
         velocity: int,
         timestamp: int,
     ):
@@ -56,7 +56,7 @@ class PlayerPosition:
     def random() -> "PlayerPosition":
         return PlayerPosition(
             coordinates=Coordinates(random.uniform(-180, 180), random.uniform(-180, 180)),
-            bearing=random.uniform(0, 360),
+            bearing=random.randint(0, 359),
             velocity=0,
             timestamp=timestamp_now(),
         )
@@ -222,9 +222,10 @@ class GameSession:
         except KeyError:
             pass
 
-    def update_player_position(self, player: Player, timestamp: int, velocity: int, bearing: float):
+    def update_player_position(self, player: Player, timestamp: int, velocity: int, bearing: int):
         logging.info(f"update_player_position {player.id} timestamp: {timestamp} V={velocity} bearing={bearing}")
         last_position = player.position
+        MAX_FUTURE_TIME_DEVIATION = 500  # event can be at most 500ms in the future
 
         if last_position.timestamp >= timestamp:
             # ignore, we can't change the past
@@ -235,7 +236,7 @@ class GameSession:
             )
             raise ChangingPastPosition
         now = timestamp_now()
-        if timestamp > now:
+        if timestamp > now + MAX_FUTURE_TIME_DEVIATION:
             logging.warning(f"update_player_position position not updated, timestamp %s newer than %s", timestamp, now)
             raise ChangingFuturePosition
 
