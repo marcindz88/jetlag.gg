@@ -2,10 +2,11 @@
   <ngt-ambient-light></ngt-ambient-light>
   <pg-earth></pg-earth>
   <pg-plane
-    [speed]="myPlaneState.speed"
-    [direction]="myPlaneState.direction"
-    [startingPosition]="myPlaneState.initialPoint"></pg-plane>
+    *ngFor="let player of playersState$ | async; trackBy: trackById"
+    [velocity]="player.position.velocity"
+    [bearing]="player.position.bearing"
+    [startingPosition]="{ lat: player.position.lat, lon: player.position.lon }"></pg-plane>
   <ngt-soba-orbit-controls [rotateSpeed]="0.3"></ngt-soba-orbit-controls>
 </ngt-canvas>
-<pg-plane-stats class="plane-stats" [planeState]="myPlaneState"></pg-plane-stats>
+<pg-plane-stats class="plane-stats" [planePosition]="myPlayer.position"></pg-plane-stats>
 <pg-players-summary class="players-summary"></pg-players-summary>

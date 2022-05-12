@@ -9,13 +9,13 @@ export const calculateCircumference = (radius: number) => 2 * Math.PI * radius;
 export const transformPointIntoCoordinates = (vector: Vector3): GeoLocationPoint => {
   return {
     lat: radToDeg(Math.atan2(vector.y, Math.sqrt(Math.pow(vector.x, 2) + Math.pow(vector.z, 2)))),
-    long: -radToDeg(Math.atan2(vector.z, vector.x)),
+    lon: -radToDeg(Math.atan2(vector.z, vector.x)),
   };
 };
 
 export const transformCoordinatesIntoPoint = (point: GeoLocationPoint, radius: number): NgtVector3 => {
   const latRad = degToRad(point.lat);
-  const longRad = degToRad(point.long);
+  const longRad = degToRad(point.lon);
   return [
     Math.cos(latRad) * Math.cos(longRad) * radius,
     Math.sin(latRad) * radius,
@@ -24,4 +24,4 @@ export const transformCoordinatesIntoPoint = (point: GeoLocationPoint, radius: n
 };
 
 export const transformPointAndDirectionIntoRotation = (point: GeoLocationPoint, direction: number): Euler =>
-  new Euler(degToRad(point.lat), degToRad(270 + point.long), degToRad(direction - 180), 'YXZ');
+  new Euler(degToRad(point.lat), degToRad(270 + point.lon), degToRad(direction - 180), 'YXZ');

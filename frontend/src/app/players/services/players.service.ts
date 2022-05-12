@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { OtherPlayer } from '../models/player.types';
+import { OtherPlayer, PartialPlayerWithId } from '../models/player.types';
 import { HttpClient } from '@angular/common/http';
 import { EndpointsService } from '../../shared/services/endpoints.service';
 import { WebsocketService } from '../../shared/services/websocket.service';
-import { ServerMessageTypeEnum } from '../../shared/models/wss.types';
+import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '../../shared/models/wss.types';
 import { BehaviorSubject } from 'rxjs';
+import { ClockService } from '../../shared/services/clock.service';
 
 @Injectable({ providedIn: 'root' })
 export class PlayersService {
@@ -13,7 +14,8 @@ export class PlayersService {
   constructor(
     private httpClient: HttpClient,
     private endpointsService: EndpointsService,
-    private websocketService: WebsocketService
+    private websocketService: WebsocketService,
+    private clockService: ClockService
   ) {
     this.fetchPlayers();
     this.setPlayersUpdateHandler();
@@ -31,22 +33,49 @@ export class PlayersService {
         case ServerMessageTypeEnum.CONNECTED:
         case ServerMessageTypeEnum.REGISTERED:
         case ServerMessageTypeEnum.DISCONNECTED:
-          this.updatePlayerStatus(playerMessage.data);
+          this.updatePlayer(playerMessage.data);
           break;
         case ServerMessageTypeEnum.REMOVED:
           this.removePlayerById(playerMessage.data.id);
+          break;
+        case ServerMessageTypeEnum.POSITION_UPDATED:
+          this.updatePlayer(playerMessage.data);
+          break;
+      }
+    });
+
+    this.websocketService.playerPositionMessages$.subscribe(playerPositionMessage => {
+      switch (playerPositionMessage.type) {
+        case ServerMessageTypeEnum.POSITION_UPDATED:
+          this.updatePlayer(playerPositionMessage.data);
           break;
       }
     });
   }
 
-  updatePlayerStatus(player: OtherPlayer) {
+  updatePlayerAndEmitPositionUpdate(player: PartialPlayerWithId) {
+    const updatedPlayer = this.updatePlayer(player);
+    this.websocketService.sendWSSMessage({
+      type: ClientMessageTypeEnum.POSITION_UPDATE_REQUEST,
+      data: {
+        bearing: updatedPlayer.position.bearing,
+        velocity: updatedPlayer.position.velocity,
+        timestamp: this.clockService.getCurrentTime(),
+      },
+    });
+  }
+
+  updatePlayer(player: PartialPlayerWithId): OtherPlayer {
     const existingPlayer = this.getPlayerById(player.id);
-    if (existingPlayer) {
-      this.players$.next(this.players$.value.map(oldPlayer => (oldPlayer.id === player.id ? player : oldPlayer)));
+    const updatedPlayer = { ...existingPlayer, ...player } as OtherPlayer;
+    if (updatedPlayer) {
+      this.players$.next(
+        this.players$.value.map(oldPlayer => (oldPlayer.id === player.id ? updatedPlayer : oldPlayer))
+      );
     } else {
-      this.players$.next([...this.players$.value, player]);
+      this.players$.next([...this.players$.value, updatedPlayer as OtherPlayer]);
     }
+    return updatedPlayer;
   }
 
   removePlayerById(id: string) {

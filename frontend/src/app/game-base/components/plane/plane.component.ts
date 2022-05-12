@@ -5,8 +5,8 @@ import { Group } from 'three';
 import { TextureModelsService } from '../../utils/services/texture-models.service';
 import { GeoLocationPoint } from '../../utils/models/game.types';
 import {
+  BEARING,
   DEFAULT_PLANE_STATE,
-  DIRECTION,
   EARTH_RADIUS,
   FLIGHT_ALTITUDE,
   MAP_SCALE,
@@ -22,13 +22,13 @@ import {
   templateUrl: './plane.component.html',
 })
 export class PlaneComponent {
-  @Input() set direction(direction: number) {
+  @Input() set bearing(direction: number) {
     // Correct last direction if went out of scale
-    if (Math.abs(direction - this.lastDirection) > DIRECTION.max / 2) {
-      if (this.lastDirection > DIRECTION.max / 2) {
-        this.lastDirection -= DIRECTION.max;
+    if (Math.abs(direction - this.lastDirection) > BEARING.max / 2) {
+      if (this.lastDirection > BEARING.max / 2) {
+        this.lastDirection -= BEARING.max;
       } else {
-        this.lastDirection += DIRECTION.max;
+        this.lastDirection += BEARING.max;
       }
     }
     // Update current direction
@@ -41,10 +41,10 @@ export class PlaneComponent {
     this.lastDirection = this.currentDirection;
   }
 
-  @Input() speed = DEFAULT_PLANE_STATE.speed;
+  @Input() velocity = DEFAULT_PLANE_STATE.velocity;
 
-  private lastDirection: number = DEFAULT_PLANE_STATE.direction;
-  private currentDirection: number = DEFAULT_PLANE_STATE.direction;
+  private lastDirection: number = DEFAULT_PLANE_STATE.bearing;
+  private currentDirection: number = DEFAULT_PLANE_STATE.bearing;
 
   readonly textures$ = this.textureModelsService.planeTextures$;
 
@@ -77,7 +77,7 @@ export class PlaneComponent {
   }
 
   private movePlaneForward(plane: Group, delta: number) {
-    const speed = (this.speed * MAP_SCALE) / delta / 3600000; // delta in ms convert to h
+    const speed = (this.velocity * MAP_SCALE) / delta / 3600000; // delta in ms convert to h
     // Move forward by speed and rotate downward to continue nosing down with curvature of earth
     plane.rotateX(degToRad((speed / this.MOVING_CIRCUMFERENCE) * 360));
     plane.translateY(speed);
