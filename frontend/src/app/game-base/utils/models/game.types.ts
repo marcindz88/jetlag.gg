@@ -1,10 +1,16 @@
 export type GeoLocationPoint = {
   lat: number;
-  long: number;
+  lon: number;
 };
 
 export type PlaneState = {
   initialPoint: GeoLocationPoint;
-  speed: number;
-  direction: number;
+  velocity: number;
+  bearing: number;
+};
+
+export type PlaneStateUpdateRequest = {
+  bearing: number;
+  velocity: number;
+  timestamp: number;
 };
