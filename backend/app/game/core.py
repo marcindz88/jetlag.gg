@@ -43,7 +43,7 @@ class PlayerPosition:
         self.timestamp = timestamp
 
     def future_position(self, timestamp_delta: int) -> "PlayerPosition":
-        distance_traveled = self.velocity * timestamp_delta // 3600000
+        distance_traveled = self.velocity * timestamp_delta // 3600000  # s = v*t, convert timestamp to hours
         future_coordinates = self.coordinates.destination_coordinates(distance=distance_traveled, bearing=self.bearing)
         return PlayerPosition(
             coordinates=future_coordinates,
@@ -64,8 +64,7 @@ class PlayerPosition:
     @property
     def serialized(self) -> dict:
         return {
-            "lat": self.coordinates.latitude,
-            "lon": self.coordinates.longitude,
+            "coordinates": self.coordinates.serialized,
             "velocity": self.velocity,
             "bearing": self.bearing,
             "timestamp": self.timestamp,
