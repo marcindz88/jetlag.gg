@@ -10,6 +10,13 @@ class Coordinates:
         self.latitude = latitude
         self.longitude = longitude
 
+    @property
+    def serialized(self) -> dict:
+        return {
+            "lat": self.latitude,
+            "lon": self.longitude,
+        }
+
     @staticmethod
     def distance_between(coord1: "Coordinates", coord2: "Coordinates") -> float:
         """
