@@ -39,9 +39,11 @@ export class Player {
 
   get position() {
     const coordinates = transformPointIntoCoordinates(this.cartesianPosition);
+    let bearing = radToDeg(this.cartesianRotation.z) + calculateBearingDisplacementFromCoordinates(coordinates);
+    bearing = bearing > 0 ? bearing : 360 + bearing;
     return {
       coordinates,
-      bearing: radToDeg(this.cartesianRotation.z) + calculateBearingDisplacementFromCoordinates(coordinates),
+      bearing: bearing,
       velocity: this.velocity,
     };
   }
