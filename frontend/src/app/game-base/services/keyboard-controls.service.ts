@@ -35,7 +35,7 @@ export class KeyboardControlsService {
         filter(event => keyCodes.includes(event.key)),
         take(1),
         switchMap(keyEvent =>
-          timer(0, 100).pipe(takeUntil(this.keyUpEvent$.pipe(filter(event => event.key === keyEvent.key))))
+          timer(0, 200).pipe(takeUntil(this.keyUpEvent$.pipe(filter(event => event.key === keyEvent.key))))
         ),
         repeat()
       )
