@@ -11,4 +11,10 @@
   & &__button {
     margin-top: 10px;
   }
+
+  & &__error {
+    color: #f00;
+    font-size: 12px;
+    font-weight: normal;
+  }
 }

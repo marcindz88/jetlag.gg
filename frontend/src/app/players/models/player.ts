@@ -1,0 +1,78 @@
+import { NgtTriple } from '@angular-three/core/lib/types';
+import { BEARING, MOVING_RADIUS, VELOCITY } from '@pg/game-base/models/game.constants';
+import {
+  transformCoordinatesIntoPoint,
+  transformPointAndDirectionIntoRotation,
+  transformPointIntoCoordinates,
+} from '@pg/game-base/utils/utils';
+import { Subject } from 'rxjs';
+import { Euler } from 'three';
+import { degToRad } from 'three/src/math/MathUtils';
+
+import { OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
+
+export class Player {
+  readonly id: string;
+  readonly nickname: string;
+
+  connected: string;
+
+  cartesianPosition!: NgtTriple;
+  cartesianRotation!: Euler;
+  bearing!: number;
+  velocity!: number;
+
+  flightParametersChanged$ = new Subject<void>();
+
+  constructor(player: OtherPlayer) {
+    this.id = player.id;
+    this.nickname = player.nickname;
+    this.connected = player.connected;
+
+    this.position = player.position;
+  }
+
+  set position(position: PlanePosition) {
+    this.cartesianPosition = transformCoordinatesIntoPoint(position.coordinates, MOVING_RADIUS);
+    this.cartesianRotation = transformPointAndDirectionIntoRotation(position.coordinates, position.bearing);
+    this.velocity = position.velocity;
+    this.bearing = position.bearing;
+  }
+
+  get position() {
+    return {
+      coordinates: transformPointIntoCoordinates(this.cartesianPosition),
+      bearing: this.bearing,
+      velocity: this.velocity,
+    };
+  }
+
+  updatePlayer(playerData: PartialPlayerData) {
+    if (playerData.connected) {
+      this.connected = playerData.connected;
+    }
+    if (playerData.position) {
+      this.position = playerData.position;
+    }
+  }
+
+  updateBearing(bearingChange: number) {
+    let bearing = this.bearing + bearingChange;
+    if (bearing < BEARING.min) {
+      bearing += BEARING.max;
+    } else if (bearing > BEARING.max) {
+      bearing %= BEARING.max;
+    }
+    this.bearing = bearing;
+    this.cartesianRotation.z = this.cartesianRotation.z + degToRad(bearingChange);
+    this.flightParametersChanged$.next();
+  }
+
+  updateVelocity(velocityChange: number) {
+    const velocity = this.velocity + velocityChange;
+    if (velocity >= VELOCITY.min && velocity <= VELOCITY.max) {
+      this.velocity = velocity;
+      this.flightParametersChanged$.next();
+    }
+  }
+}

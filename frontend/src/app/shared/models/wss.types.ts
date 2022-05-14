@@ -1,5 +1,5 @@
-import { OtherPlayer, PlayerPositionUpdate } from '../../players/models/player.types';
-import { PlaneStateUpdateRequest } from '../../game-base/utils/models/game.types';
+import { PlaneStateUpdateRequest } from '@pg/game-base/models/game.types';
+import { OtherPlayer, PlayerPositionUpdate } from '@pg/players/models/player.types';
 
 export type ClockMessageDataType = { timestamp: number };
 
