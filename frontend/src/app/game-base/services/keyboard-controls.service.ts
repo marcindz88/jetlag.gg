@@ -20,7 +20,16 @@ export class KeyboardControlsService {
     this.handleKeyEvent(KeyEventEnum.CAMERA, 'c');
   }
 
-  handleKeyEvent(type: KeyEventEnum, ...keyCodes: string[]) {
+  setupKeyEvent<T>(type: KeyEventEnum, destroyBase: T, handleFunction: () => void) {
+    this.keyEvent$
+      .pipe(
+        filter(event => event == type),
+        untilDestroyed(destroyBase)
+      )
+      .subscribe(handleFunction);
+  }
+
+  private handleKeyEvent(type: KeyEventEnum, ...keyCodes: string[]) {
     this.keyDownEvent$
       .pipe(
         filter(event => keyCodes.includes(event.key)),
