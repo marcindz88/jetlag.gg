@@ -2,6 +2,7 @@ import dataclasses
 import logging
 import random
 import threading
+import time
 import uuid
 from typing import Optional, List
 
@@ -26,14 +27,14 @@ logging.getLogger().setLevel(logging.INFO)
 
 class PlayerPosition:
     coordinates: Coordinates
-    bearing: int
+    bearing: float
     velocity: int
     timestamp: int
 
     def __init__(
         self,
         coordinates: Coordinates,
-        bearing: int,
+        bearing: float,
         velocity: int,
         timestamp: int,
     ):
@@ -59,7 +60,7 @@ class PlayerPosition:
                 latitude=random.uniform(-90, 90),
                 longitude=random.uniform(-180, 180),
             ),
-            bearing=random.randint(0, 359),
+            bearing=random.uniform(0, 359),
             velocity=0,
             timestamp=timestamp_now(),
         )
@@ -127,6 +128,7 @@ class GameSession:
         while True:
             logging.debug("FRONTMAN | loop")
             self.remove_idle_players()
+            time.sleep(0.5)
 
     def send_event(self, event: Event, player: Player):
         logging.info("send_event %s", event.type)
@@ -224,7 +226,7 @@ class GameSession:
         except KeyError:
             pass
 
-    def update_player_position(self, player: Player, timestamp: int, velocity: int, bearing: int):
+    def update_player_position(self, player: Player, timestamp: int, velocity: int, bearing: float):
         logging.info(f"update_player_position {player.id} timestamp: {timestamp} V={velocity} bearing={bearing}")
         last_position = player.position
         MAX_FUTURE_TIME_DEVIATION = 500  # event can be at most 500ms in the future
