@@ -1,20 +1,23 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { filter, fromEvent, repeat, Subject, switchMap, take, takeUntil, timer } from 'rxjs';
+
 import { KeyEventEnum } from '../models/keyboard.types';
 
+@UntilDestroy()
 @Injectable()
-export class KeyboardControlsService implements OnDestroy {
+export class KeyboardControlsService {
   keyEvent$ = new Subject<KeyEventEnum>();
 
-  private destroy$ = new Subject<void>();
-  private keyDownEvent$ = fromEvent<KeyboardEvent>(document, 'keydown').pipe(takeUntil(this.destroy$));
-  private keyUpEvent$ = fromEvent<KeyboardEvent>(document, 'keyup').pipe(takeUntil(this.destroy$));
+  private keyDownEvent$ = fromEvent<KeyboardEvent>(document, 'keydown').pipe(untilDestroyed(this));
+  private keyUpEvent$ = fromEvent<KeyboardEvent>(document, 'keyup').pipe(untilDestroyed(this));
 
   constructor() {
     this.handleKeyEvent(KeyEventEnum.FORWARD, 'w', 'ArrowUp', 'Up');
     this.handleKeyEvent(KeyEventEnum.LEFT, 'a', 'ArrowLeft', 'Left');
     this.handleKeyEvent(KeyEventEnum.RIGHT, 'd', 'ArrowRight', 'Right');
     this.handleKeyEvent(KeyEventEnum.BACKWARD, 's', 'ArrowDown', 'Down');
+    this.handleKeyEvent(KeyEventEnum.CAMERA, 'c');
   }
 
   handleKeyEvent(type: KeyEventEnum, ...keyCodes: string[]) {
@@ -28,10 +31,5 @@ export class KeyboardControlsService implements OnDestroy {
         repeat()
       )
       .subscribe(() => this.keyEvent$.next(type));
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 }

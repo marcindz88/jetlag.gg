@@ -1,19 +1,22 @@
 import { Injectable } from '@angular/core';
-import { combineLatest, filter, map, Observable, shareReplay } from 'rxjs';
-import { Mesh, Texture, TextureLoader } from 'three';
 import { NgtLoader } from '@angular-three/core';
+import { BehaviorSubject, combineLatest, filter, map, Observable, shareReplay } from 'rxjs';
+import { Mesh, Texture, TextureLoader } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 @Injectable({ providedIn: 'root' })
 export class TextureModelsService {
   earthTextures$!: Observable<{ bump: Texture; map: Texture; spec: Texture }>;
   planeTextures$!: Observable<{ trail: Texture; model: Mesh[] }>;
+  loading$ = new BehaviorSubject<boolean>(true);
 
-  constructor(private ngtLoader: NgtLoader) {}
-
-  fetchAllTextures() {
+  constructor(private ngtLoader: NgtLoader) {
     this.earthTextures$ = this.fetchEarthTextures();
     this.planeTextures$ = this.fetchPlaneTextures();
+  }
+
+  prefetchAllTextures() {
+    combineLatest([this.earthTextures$, this.planeTextures$]).subscribe(() => this.loading$.next(false));
   }
 
   private fetchEarthTextures() {

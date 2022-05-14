@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { EARTH_RADIUS } from '@pg/game-base/models/game.constants';
+import { TextureModelsService } from '@pg/game-base/services/texture-models.service';
 import { Color } from 'three';
-import { TextureModelsService } from '../../utils/services/texture-models.service';
-import { EARTH_RADIUS } from '../../utils/models/game.constants';
 
 @Component({
   selector: 'pg-earth',
   templateUrl: './earth.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EarthComponent {
   readonly EARTH_RADIUS = EARTH_RADIUS;
