@@ -45,6 +45,7 @@ export class GameMainComponent {
     private playersService: PlayersService,
     private cdr: ChangeDetectorRef
   ) {
+    this.setupPlaneUpdates();
     this.setupPlayersChanges();
     this.setupCameraControls();
     this.setupPlaneControls();
@@ -59,33 +60,28 @@ export class GameMainComponent {
   }
 
   private setupPlaneControls() {
-    this.keyboardControlsService.keyEvent$.pipe(untilDestroyed(this)).subscribe((keyEvent: KeyEventEnum) => {
-      switch (keyEvent) {
-        case KeyEventEnum.LEFT:
-          this.myPlayer.updateBearing(-BEARING.step);
-          break;
-        case KeyEventEnum.RIGHT:
-          this.myPlayer.updateBearing(BEARING.step);
-          break;
-        case KeyEventEnum.BACKWARD:
-          this.myPlayer.updateVelocity(-VELOCITY.step);
-          break;
-        case KeyEventEnum.FORWARD:
-          this.myPlayer.updateVelocity(VELOCITY.step);
-          break;
-      }
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LEFT, this, () =>
+      this.myPlayer.updateBearing(-BEARING.step)
+    );
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.RIGHT, this, () =>
+      this.myPlayer.updateBearing(BEARING.step)
+    );
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.BACKWARD, this, () =>
+      this.myPlayer.updateVelocity(-VELOCITY.step)
+    );
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FORWARD, this, () =>
+      this.myPlayer.updateVelocity(VELOCITY.step)
+    );
+  }
+
+  private setupPlaneUpdates() {
+    this.myPlayer.flightParametersChanged$.pipe(untilDestroyed(this)).subscribe(() => {
       this.playersService.emitPlayerPositionUpdate(this.myPlayer);
     });
   }
 
   private setupCameraControls() {
-    this.keyboardControlsService.keyEvent$.pipe(untilDestroyed(this)).subscribe((keyEvent: KeyEventEnum) => {
-      switch (keyEvent) {
-        case KeyEventEnum.CAMERA:
-          this.switchCameraPosition();
-          break;
-      }
-    });
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA, this, () => this.switchCameraPosition());
   }
 
   private switchCameraPosition() {
@@ -96,11 +92,12 @@ export class GameMainComponent {
     }
 
     // TODO use XYZ coordinates to calculate camera position and add animation
-    const playerPositionXYZ = (focusedPlayerEntry.value as Player).position.coordinates;
+    const cameraPosition = transformCoordinatesIntoPoint(
+      (focusedPlayerEntry.value as Player).position.coordinates,
+      CAMERA_ALTITUDE
+    );
 
-    this.ngtCanvas?.cameraRef
-      .getValue()
-      .position.set(...transformCoordinatesIntoPoint(playerPositionXYZ, CAMERA_ALTITUDE));
+    this.ngtCanvas?.cameraRef.getValue().position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
     this.cdr.markForCheck();
   }
 }

@@ -1,4 +1,3 @@
-import { NgtTriple } from '@angular-three/core/lib/types';
 import { BEARING, MOVING_RADIUS, VELOCITY } from '@pg/game-base/models/game.constants';
 import {
   transformCoordinatesIntoPoint,
@@ -6,7 +5,7 @@ import {
   transformPointIntoCoordinates,
 } from '@pg/game-base/utils/utils';
 import { Subject } from 'rxjs';
-import { Euler } from 'three';
+import { Euler, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
 import { OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
@@ -17,7 +16,7 @@ export class Player {
 
   connected: string;
 
-  cartesianPosition!: NgtTriple;
+  cartesianPosition!: Vector3;
   cartesianRotation!: Euler;
   bearing!: number;
   velocity!: number;
