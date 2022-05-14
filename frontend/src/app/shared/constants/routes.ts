@@ -1,5 +1,7 @@
 export const ROUTES = {
   root: '/',
-  intro: 'intro',
+  login: 'login',
   game: 'game',
+  gameLoad: 'load',
+  gameMain: 'main',
 };

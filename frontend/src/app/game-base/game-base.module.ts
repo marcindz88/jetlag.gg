@@ -1,23 +1,26 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GameBaseRoutingModule } from './game-base-routing.module';
-import { GameMainComponent } from './containers/game-main/game-main.component';
+import { NgModule } from '@angular/core';
 import { NgtCanvasModule, NgtObjectPassThroughModule, NgtRadianPipeModule } from '@angular-three/core';
-import { EarthComponent } from './containers/earth/earth.component';
-import { NgtMeshModule } from '@angular-three/core/meshes';
+import { NgtPerspectiveCameraModule } from '@angular-three/core/cameras';
 import { NgtSphereGeometryModule } from '@angular-three/core/geometries';
-import { NgtMeshPhysicalMaterialModule } from '@angular-three/core/materials';
-import { NgtAmbientLightModule, NgtDirectionalLightModule } from '@angular-three/core/lights';
-import { NgtSobaOrbitControlsModule } from '@angular-three/soba/controls';
-import { PlaneComponent } from './components/plane/plane.component';
 import { NgtGroupModule } from '@angular-three/core/group';
-import { PlaneStatsComponent } from './components/plane-stats/plane-stats.component';
-import { SharedModule } from '../shared/shared.module';
+import { NgtAmbientLightModule, NgtDirectionalLightModule } from '@angular-three/core/lights';
+import { NgtMeshPhysicalMaterialModule } from '@angular-three/core/materials';
+import { NgtMeshModule } from '@angular-three/core/meshes';
+import { NgtSobaOrbitControlsModule } from '@angular-three/soba/controls';
+import { PlayersService } from '@pg/players/services/players.service';
+import { SharedModule } from '@shared/shared.module';
+
 import { PlayersModule } from '../players/players.module';
-import { KeyboardControlsService } from './utils/services/keyboard-controls.service';
+import { EarthComponent } from './components/earth/earth.component';
+import { PlaneComponent } from './components/plane/plane.component';
+import { GameLoaderComponent } from './containers/game-loader/game-loader.component';
+import { GameMainComponent } from './containers/game-main/game-main.component';
+import { GameBaseRoutingModule } from './game-base-routing.module';
+import { KeyboardControlsService } from './services/keyboard-controls.service';
 
 @NgModule({
-  declarations: [GameMainComponent, EarthComponent, PlaneComponent, PlaneStatsComponent],
+  declarations: [GameMainComponent, EarthComponent, PlaneComponent, GameLoaderComponent],
   imports: [
     CommonModule,
     GameBaseRoutingModule,
@@ -33,7 +36,8 @@ import { KeyboardControlsService } from './utils/services/keyboard-controls.serv
     NgtRadianPipeModule,
     SharedModule,
     PlayersModule,
+    NgtPerspectiveCameraModule,
   ],
-  providers: [KeyboardControlsService],
+  providers: [PlayersService, KeyboardControlsService],
 })
 export class GameBaseModule {}

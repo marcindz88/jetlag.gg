@@ -1,6 +1,7 @@
 <pg-card class="start" [formGroup]="form">
   <p class="start__label">Enter you nickname</p>
   <input class="start__input" formControlName="nickname" type="text" />
+  <p class="start__error" *ngIf="nicknameControl?.errors?.['username_taken']">Please select a different username</p>
   <br />
   <button class="start__button" (click)="registerAndStartGame()" [disabled]="!form.valid">Start playing</button>
 </pg-card>

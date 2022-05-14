@@ -1,19 +1,19 @@
-import { GeoLocationPoint } from './models/game.types';
-import { Vector3 } from 'three/src/math/Vector3';
-import { degToRad, radToDeg } from 'three/src/math/MathUtils';
-import { NgtVector3 } from '@angular-three/core';
+import { NgtTriple } from '@angular-three/core/lib/types';
 import { Euler } from 'three';
+import { degToRad, radToDeg } from 'three/src/math/MathUtils';
+
+import { GeoLocationPoint } from '../models/game.types';
 
 export const calculateCircumference = (radius: number) => 2 * Math.PI * radius;
 
-export const transformPointIntoCoordinates = (vector: Vector3): GeoLocationPoint => {
+export const transformPointIntoCoordinates = ([x, y, z]: NgtTriple): GeoLocationPoint => {
   return {
-    lat: radToDeg(Math.atan2(vector.y, Math.sqrt(Math.pow(vector.x, 2) + Math.pow(vector.z, 2)))),
-    lon: -radToDeg(Math.atan2(vector.z, vector.x)),
+    lat: radToDeg(Math.atan2(y, Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)))),
+    lon: -radToDeg(Math.atan2(z, x)),
   };
 };
 
-export const transformCoordinatesIntoPoint = (point: GeoLocationPoint, radius: number): NgtVector3 => {
+export const transformCoordinatesIntoPoint = (point: GeoLocationPoint, radius: number): NgtTriple => {
   const latRad = degToRad(point.lat);
   const longRad = degToRad(point.lon);
   return [

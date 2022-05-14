@@ -1,8 +1,8 @@
 <ngt-group
   *ngIf="textures$ | async as textures"
   [scale]="0.002"
-  [position]="startingPositionVector"
-  [rotation]="startingRotationVector"
+  [position]="player.cartesianPosition"
+  [rotation]="player.cartesianRotation"
   (beforeRender)="updatePlane($event)">
   <ngt-mesh
     *ngFor="let child of textures.model"
