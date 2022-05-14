@@ -39,7 +39,7 @@ export class Player {
   get position() {
     return {
       coordinates: transformPointIntoCoordinates(this.cartesianPosition),
-      bearing: radToDeg(this.cartesianRotation.z) + 180,
+      bearing: radToDeg(this.cartesianRotation.z),
       velocity: this.velocity,
     };
   }
