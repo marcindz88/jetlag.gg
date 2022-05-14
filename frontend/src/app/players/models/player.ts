@@ -1,5 +1,6 @@
 import { MOVING_RADIUS, VELOCITY } from '@pg/game-base/models/game.constants';
 import {
+  calculateBearingDisplacementFromCoordinates,
   transformCoordinatesIntoPoint,
   transformPointAndDirectionIntoRotation,
   transformPointIntoCoordinates,
@@ -37,9 +38,10 @@ export class Player {
   }
 
   get position() {
+    const coordinates = transformPointIntoCoordinates(this.cartesianPosition);
     return {
-      coordinates: transformPointIntoCoordinates(this.cartesianPosition),
-      bearing: radToDeg(this.cartesianRotation.z),
+      coordinates,
+      bearing: radToDeg(this.cartesianRotation.z) + calculateBearingDisplacementFromCoordinates(coordinates),
       velocity: this.velocity,
     };
   }
