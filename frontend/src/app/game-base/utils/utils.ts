@@ -24,3 +24,7 @@ export const transformCoordinatesIntoPoint = (point: GeoLocationPoint, radius: n
 
 export const transformPointAndDirectionIntoRotation = (point: GeoLocationPoint, bearing: number): Euler =>
   new Euler(degToRad(point.lat), degToRad(270 + point.lon), degToRad(bearing), 'YXZ');
+
+export const calculateBearingDisplacementFromCoordinates = (point: GeoLocationPoint) => {
+  return Math.atan2(Math.sin(point.lon), -Math.sin(point.lat) * Math.cos(point.lon));
+};
