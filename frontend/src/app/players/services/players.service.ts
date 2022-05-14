@@ -73,7 +73,7 @@ export class PlayersService {
       type: ClientMessageTypeEnum.POSITION_UPDATE_REQUEST,
       created: this.clockService.getCurrentTime(),
       data: {
-        bearing: player.bearing,
+        bearing: player.position.bearing,
         velocity: player.velocity,
         timestamp: this.clockService.getCurrentTime(),
       },

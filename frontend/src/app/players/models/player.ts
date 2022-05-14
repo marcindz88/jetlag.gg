@@ -1,4 +1,4 @@
-import { BEARING, MOVING_RADIUS, VELOCITY } from '@pg/game-base/models/game.constants';
+import { MOVING_RADIUS, VELOCITY } from '@pg/game-base/models/game.constants';
 import {
   transformCoordinatesIntoPoint,
   transformPointAndDirectionIntoRotation,
@@ -6,7 +6,7 @@ import {
 } from '@pg/game-base/utils/utils';
 import { Subject } from 'rxjs';
 import { Euler, Vector3 } from 'three';
-import { degToRad } from 'three/src/math/MathUtils';
+import { degToRad, radToDeg } from 'three/src/math/MathUtils';
 
 import { OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
 
@@ -18,7 +18,6 @@ export class Player {
 
   cartesianPosition!: Vector3;
   cartesianRotation!: Euler;
-  bearing!: number;
   velocity!: number;
 
   flightParametersChanged$ = new Subject<void>();
@@ -35,13 +34,12 @@ export class Player {
     this.cartesianPosition = transformCoordinatesIntoPoint(position.coordinates, MOVING_RADIUS);
     this.cartesianRotation = transformPointAndDirectionIntoRotation(position.coordinates, position.bearing);
     this.velocity = position.velocity;
-    this.bearing = position.bearing;
   }
 
   get position() {
     return {
       coordinates: transformPointIntoCoordinates(this.cartesianPosition),
-      bearing: this.bearing,
+      bearing: radToDeg(this.cartesianRotation.z) + 180,
       velocity: this.velocity,
     };
   }
@@ -56,13 +54,6 @@ export class Player {
   }
 
   updateBearing(bearingChange: number) {
-    let bearing = this.bearing + bearingChange;
-    if (bearing < BEARING.min) {
-      bearing += BEARING.max;
-    } else if (bearing > BEARING.max) {
-      bearing %= BEARING.max;
-    }
-    this.bearing = bearing;
     this.cartesianRotation.z = this.cartesianRotation.z + degToRad(bearingChange);
     this.flightParametersChanged$.next();
   }
