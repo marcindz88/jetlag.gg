@@ -21,7 +21,7 @@ export class PlaneComponent {
 
   updatePlane(event: { state: NgtRenderState; object: Group }) {
     this.movePlaneForward(event.object, event.state.delta);
-    this.player.cartesianPosition = [event.object.position.x, event.object.position.y, event.object.position.z];
+    this.player.cartesianPosition = event.object.position;
     this.player.cartesianRotation = event.object.rotation;
   }
 
