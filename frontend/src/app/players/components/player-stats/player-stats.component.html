@@ -1,6 +1,6 @@
 <pg-card class="plane-stats-container" *ngIf="player && position">
   <p>Velocity: {{ player.velocity }} km/h</p>
-  <p>Bearing: {{ player.bearing }} deg</p>
+  <p>Bearing: {{ position.bearing | number: '2.2-2' }} deg</p>
   <p>Latitude: {{ position.coordinates.lat | number: '2.5-5' }} deg</p>
   <p>Longitude: {{ position.coordinates.lon | number: '2.5-5' }} deg</p>
 </pg-card>

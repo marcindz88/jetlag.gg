@@ -22,5 +22,5 @@ export const transformCoordinatesIntoPoint = (point: GeoLocationPoint, radius: n
   );
 };
 
-export const transformPointAndDirectionIntoRotation = (point: GeoLocationPoint, direction: number): Euler =>
-  new Euler(degToRad(point.lat), degToRad(270 + point.lon), degToRad(direction), 'YXZ');
+export const transformPointAndDirectionIntoRotation = (point: GeoLocationPoint, bearing: number): Euler =>
+  new Euler(degToRad(point.lat), degToRad(270 + point.lon), degToRad(bearing), 'YXZ');
