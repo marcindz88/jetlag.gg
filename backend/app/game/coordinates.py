@@ -5,6 +5,7 @@ class Coordinates:
     latitude: float
     longitude: float
     EARTH_RADIUS: float = 6371.0
+    FLIGHT_ALTITUDE: float = 200.0
 
     def __init__(self, latitude: float, longitude: float):
         self.latitude = latitude
@@ -16,6 +17,10 @@ class Coordinates:
             "lat": self.latitude,
             "lon": self.longitude,
         }
+
+    @classmethod
+    def _earth_radius(cls) -> float:
+        return cls.EARTH_RADIUS + cls.FLIGHT_ALTITUDE
 
     @staticmethod
     def distance_between(coord1: "Coordinates", coord2: "Coordinates") -> float:
@@ -36,12 +41,12 @@ class Coordinates:
         delta_lon = lon2 - lon1
         a = sin(delta_lat/2)**2 + cos(lat1)*cos(lat2)*sin(delta_lon/2)**2
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        d = Coordinates.EARTH_RADIUS * c
+        d = Coordinates._earth_radius() * c
         return d
 
     def destination_coordinates(self, distance: int, bearing: float) -> "Coordinates":
         # https://stackoverflow.com/a/7835325
-        r = Coordinates.EARTH_RADIUS
+        r = self._earth_radius()
         bearing = radians(bearing)
 
         lat1 = radians(self.latitude)
