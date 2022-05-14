@@ -52,14 +52,13 @@ class Coordinates:
         lat1 = radians(self.latitude)
         lon1 = radians(self.longitude)
 
-        lat2 = asin(
-            sin(lat1) * cos(distance / r) + cos(lat1) * sin(distance / r) * cos(bearing)
-        )
+        cos_lat1 = cos(lat1)
+        sin_lat1 = sin(lat1)
+        cos_dr = cos(distance / r)
+        sin_dr = sin(distance / r)
 
-        lon2 = lon1 + atan2(
-            sin(bearing) * sin(distance / r) * cos(lat1),
-            cos(distance / r) - sin(lat1) * sin(lat2),
-        )
+        lat2 = asin(sin_lat1*cos_dr + cos_lat1*sin_dr*cos(bearing))
+        lon2 = lon1 + atan2(sin(bearing)*sin_dr*cos_lat1, cos_dr - sin_lat1*sin(lat2))
 
         lat2 = degrees(lat2)
         lon2 = degrees(lon2)
