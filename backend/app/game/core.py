@@ -55,7 +55,10 @@ class PlayerPosition:
     @staticmethod
     def random() -> "PlayerPosition":
         return PlayerPosition(
-            coordinates=Coordinates(random.uniform(-180, 180), random.uniform(-180, 180)),
+            coordinates=Coordinates(
+                latitude=random.uniform(-90, 90),
+                longitude=random.uniform(-180, 180),
+            ),
             bearing=random.randint(0, 359),
             velocity=0,
             timestamp=timestamp_now(),
@@ -108,8 +111,8 @@ class Player:
 
 
 class GameSession:
-    MAX_PLAYERS = 10
-    PLAYER_TIME_TO_CONNECT = 30000  # 30 seconds
+    MAX_PLAYERS = 16
+    PLAYER_TIME_TO_CONNECT = 5000  # 5 seconds
 
     def __init__(self):
         self._players = {}
