@@ -1,13 +1,13 @@
-import { MOVING_RADIUS, VELOCITY } from '@pg/game-base/models/game.constants';
+import { FLIGHT_ALTITUDE, VELOCITY } from '@pg/game-base/models/game.constants';
 import {
-  calculateBearingDisplacementFromCoordinates,
+  calculateBearingFromPointAndCurrentRotation,
   transformCoordinatesIntoPoint,
   transformPointAndDirectionIntoRotation,
   transformPointIntoCoordinates,
 } from '@pg/game-base/utils/utils';
 import { Subject } from 'rxjs';
 import { Euler, Vector3 } from 'three';
-import { degToRad, radToDeg } from 'three/src/math/MathUtils';
+import { degToRad } from 'three/src/math/MathUtils';
 
 import { OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
 
@@ -32,18 +32,17 @@ export class Player {
   }
 
   set position(position: PlanePosition) {
-    this.cartesianPosition = transformCoordinatesIntoPoint(position.coordinates, MOVING_RADIUS);
+    this.cartesianPosition = transformCoordinatesIntoPoint(position.coordinates, FLIGHT_ALTITUDE);
     this.cartesianRotation = transformPointAndDirectionIntoRotation(position.coordinates, position.bearing);
     this.velocity = position.velocity;
   }
 
   get position() {
     const coordinates = transformPointIntoCoordinates(this.cartesianPosition);
-    let bearing = radToDeg(this.cartesianRotation.z) + calculateBearingDisplacementFromCoordinates(coordinates);
-    bearing = bearing > 0 ? bearing : 360 + bearing;
+    const bearing = calculateBearingFromPointAndCurrentRotation(coordinates, this.cartesianRotation);
     return {
       coordinates,
-      bearing: bearing,
+      bearing,
       velocity: this.velocity,
     };
   }
