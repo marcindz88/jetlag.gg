@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from
 import { NgtCanvas, NgtVector3 } from '@angular-three/core';
 import { NgtCameraOptions, NgtGLOptions } from '@angular-three/core/lib/types';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { transformCoordinatesIntoPoint } from '@pg/game-base/utils/utils';
+import { transformCoordinatesIntoPoint } from '@pg/game-base/utils/geo-utils';
 import { Player } from '@pg/players/models/player';
 import { OtherPlayer } from '@pg/players/models/player.types';
 import { PlayersService } from '@pg/players/services/players.service';
