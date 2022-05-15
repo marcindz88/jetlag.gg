@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
 import { NgtRenderState } from '@angular-three/core';
+import { NgtPrimitive } from '@angular-three/core/primitive';
 import { Player } from '@pg/players/models/player';
-import { Group } from 'three';
+import { map } from 'rxjs';
+import { Object3D } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
 import { MAP_SCALE, MOVING_CIRCUMFERENCE } from '../../models/game.constants';
@@ -13,19 +15,23 @@ import { TextureModelsService } from '../../services/texture-models.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlaneComponent {
+  @ViewChild(NgtPrimitive) set plane(plane: NgtPrimitive) {
+    this.player.planeObject = plane?.instanceValue;
+  }
+
   @Input() player!: Player;
 
-  readonly textures$ = this.textureModelsService.planeTextures$;
+  readonly textures$ = this.textureModelsService.planeTextures$.pipe(
+    map(({ model, trail }) => ({ model: model.clone(true), trail }))
+  );
 
   constructor(private textureModelsService: TextureModelsService) {}
 
-  updatePlane(event: { state: NgtRenderState; object: Group }) {
+  updatePlane(event: { state: NgtRenderState; object: Object3D }) {
     this.movePlaneForward(event.object, event.state.delta);
-    this.player.cartesianPosition = event.object.position;
-    this.player.cartesianRotation = event.object.rotation;
   }
 
-  private movePlaneForward(plane: Group, delta: number) {
+  private movePlaneForward(plane: Object3D, delta: number) {
     const displacement = (this.player.velocity / 3600) * MAP_SCALE * delta; // delta in s convert to h
     // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
     plane.rotateX(degToRad((displacement / MOVING_CIRCUMFERENCE) * 360));

@@ -1,6 +1,6 @@
 import { FLIGHT_ALTITUDE, VELOCITY } from '@pg/game-base/models/game.constants';
 import {
-  calculateBearingFromPointAndCurrentRotation,
+  calculateBearingFromDirectionAndRotation,
   calculatePositionAfterTimeInterval,
   transformCoordinatesIntoPoint,
   transformPointAndDirectionIntoRotation,
@@ -8,7 +8,7 @@ import {
 } from '@pg/game-base/utils/geo-utils';
 import { ClockService } from '@shared/services/clock.service';
 import { Subject } from 'rxjs';
-import { Euler, Vector3 } from 'three';
+import { Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
 import { OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
@@ -19,9 +19,12 @@ export class Player {
 
   connected: string;
 
+  planeObject?: Object3D;
   cartesianPosition!: Vector3;
   cartesianRotation!: Euler;
+
   velocity!: number;
+  lastChangeTimestamp: number | null = null;
 
   flightParametersChanged$ = new Subject<void>();
 
@@ -34,11 +37,14 @@ export class Player {
   }
 
   set position(position: PlanePosition) {
-    const updatedPosition = calculatePositionAfterTimeInterval(
-      position,
-      FLIGHT_ALTITUDE,
-      this.clockService.getCurrentTime()
-    );
+    if (this.lastChangeTimestamp && this.lastChangeTimestamp > position.timestamp) {
+      // Ignore position update if locally was updated before or messages came out of order
+      console.log(`SKIPPING POSITION UPDATE DUE TO ${this.lastChangeTimestamp} less than ${position.timestamp}`);
+      return;
+    }
+    this.lastChangeTimestamp = this.clockService.getCurrentTime();
+    const updatedPosition = calculatePositionAfterTimeInterval(position, FLIGHT_ALTITUDE, this.lastChangeTimestamp);
+
     this.cartesianPosition = transformCoordinatesIntoPoint(updatedPosition.coordinates, FLIGHT_ALTITUDE);
     this.cartesianRotation = transformPointAndDirectionIntoRotation(
       updatedPosition.coordinates,
@@ -48,14 +54,20 @@ export class Player {
   }
 
   get position(): PlanePosition {
-    const coordinates = transformPointIntoCoordinates(this.cartesianPosition);
-    const bearing = calculateBearingFromPointAndCurrentRotation(coordinates, this.cartesianRotation);
-    return {
-      coordinates,
-      bearing,
-      velocity: this.velocity,
-      timestamp: this.clockService.getCurrentTime(),
-    };
+    if (!this.planeObject) {
+      throw Error('Plane is not yet rendered cannot obtain poisiton');
+    }
+    const timestamp = this.clockService.getCurrentTime();
+    const position = this.planeObject.position.clone();
+    const rotation = this.planeObject.rotation.clone();
+    const direction = new Vector3();
+    this.planeObject.getWorldDirection(direction);
+
+    const coordinates = transformPointIntoCoordinates(position);
+    const velocity = this.velocity;
+    const bearing = calculateBearingFromDirectionAndRotation(position, direction, rotation);
+
+    return { coordinates, bearing, velocity, timestamp };
   }
 
   updatePlayer(playerData: PartialPlayerData) {
@@ -68,8 +80,9 @@ export class Player {
   }
 
   updateBearing(bearingChange: number) {
-    this.cartesianRotation.z = this.cartesianRotation.z + degToRad(bearingChange);
+    this.planeObject!.rotation.z += degToRad(bearingChange);
     this.flightParametersChanged$.next();
+    this.lastChangeTimestamp = this.clockService.getCurrentTime();
   }
 
   updateVelocity(velocityChange: number) {
@@ -77,6 +90,7 @@ export class Player {
     if (velocity >= VELOCITY.min && velocity <= VELOCITY.max) {
       this.velocity = velocity;
       this.flightParametersChanged$.next();
+      this.lastChangeTimestamp = this.clockService.getCurrentTime();
     }
   }
 }
