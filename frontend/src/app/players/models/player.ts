@@ -1,10 +1,12 @@
 import { FLIGHT_ALTITUDE, VELOCITY } from '@pg/game-base/models/game.constants';
 import {
   calculateBearingFromPointAndCurrentRotation,
+  calculatePositionAfterTimeInterval,
   transformCoordinatesIntoPoint,
   transformPointAndDirectionIntoRotation,
   transformPointIntoCoordinates,
-} from '@pg/game-base/utils/utils';
+} from '@pg/game-base/utils/geo-utils';
+import { ClockService } from '@shared/services/clock.service';
 import { Subject } from 'rxjs';
 import { Euler, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
@@ -23,7 +25,7 @@ export class Player {
 
   flightParametersChanged$ = new Subject<void>();
 
-  constructor(player: OtherPlayer) {
+  constructor(player: OtherPlayer, private clockService: ClockService) {
     this.id = player.id;
     this.nickname = player.nickname;
     this.connected = player.connected;
@@ -32,18 +34,27 @@ export class Player {
   }
 
   set position(position: PlanePosition) {
-    this.cartesianPosition = transformCoordinatesIntoPoint(position.coordinates, FLIGHT_ALTITUDE);
-    this.cartesianRotation = transformPointAndDirectionIntoRotation(position.coordinates, position.bearing);
-    this.velocity = position.velocity;
+    const updatedPosition = calculatePositionAfterTimeInterval(
+      position,
+      FLIGHT_ALTITUDE,
+      this.clockService.getCurrentTime()
+    );
+    this.cartesianPosition = transformCoordinatesIntoPoint(updatedPosition.coordinates, FLIGHT_ALTITUDE);
+    this.cartesianRotation = transformPointAndDirectionIntoRotation(
+      updatedPosition.coordinates,
+      updatedPosition.bearing
+    );
+    this.velocity = updatedPosition.velocity;
   }
 
-  get position() {
+  get position(): PlanePosition {
     const coordinates = transformPointIntoCoordinates(this.cartesianPosition);
     const bearing = calculateBearingFromPointAndCurrentRotation(coordinates, this.cartesianRotation);
     return {
       coordinates,
       bearing,
       velocity: this.velocity,
+      timestamp: this.clockService.getCurrentTime(),
     };
   }
 
