@@ -7,6 +7,7 @@ import { NgtGroupModule } from '@angular-three/core/group';
 import { NgtAmbientLightModule, NgtDirectionalLightModule } from '@angular-three/core/lights';
 import { NgtMeshPhysicalMaterialModule } from '@angular-three/core/materials';
 import { NgtMeshModule } from '@angular-three/core/meshes';
+import { NgtPrimitiveModule } from '@angular-three/core/primitive';
 import { NgtSobaOrbitControlsModule } from '@angular-three/soba/controls';
 import { PlayersService } from '@pg/players/services/players.service';
 import { SharedModule } from '@shared/shared.module';
@@ -37,6 +38,7 @@ import { KeyboardControlsService } from './services/keyboard-controls.service';
     SharedModule,
     PlayersModule,
     NgtPerspectiveCameraModule,
+    NgtPrimitiveModule,
   ],
   providers: [PlayersService, KeyboardControlsService],
 })
