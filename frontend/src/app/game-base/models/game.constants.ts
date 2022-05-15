@@ -4,7 +4,6 @@ import { PlaneState } from './game.types';
 export const EARTH_RADIUS = 40;
 export const REAL_EARTH_RADIUS = 6371; // km
 export const MAP_SCALE = EARTH_RADIUS / REAL_EARTH_RADIUS;
-
 export const FLIGHT_ALTITUDE = 200 * MAP_SCALE;
 export const CAMERA_ALTITUDE = FLIGHT_ALTITUDE + 10;
 

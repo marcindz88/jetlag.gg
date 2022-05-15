@@ -1,14 +1,8 @@
-<ngt-group
-  *ngIf="textures$ | async as textures"
-  [scale]="0.002"
-  [position]="player.cartesianPosition"
-  [rotation]="player.cartesianRotation"
-  (beforeRender)="updatePlane($event)">
-  <ngt-mesh
-    *ngFor="let child of textures.model"
-    castShadow
-    receiveShadow
-    [geometry]="child.geometry"
-    [material]="child.material">
-  </ngt-mesh>
-</ngt-group>
+<ng-container *ngIf="textures$ | async as textures">
+  <ngt-primitive
+    [object]="textures.model"
+    [position]="player.cartesianPosition"
+    [rotation]="player.cartesianRotation"
+    [scale]="0.002"
+    (beforeRender)="updatePlane($event)"></ngt-primitive>
+</ng-container>

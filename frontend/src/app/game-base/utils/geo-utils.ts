@@ -7,6 +7,11 @@ import { GeoLocationPoint } from '../models/game.types';
 
 export const calculateCircumference = (radius: number) => 2 * Math.PI * radius;
 
+export const convertLocationPointToRad = (point: GeoLocationPoint): GeoLocationPoint => ({
+  lat: degToRad(point.lat),
+  lon: degToRad(point.lon),
+});
+
 export const transformPointIntoCoordinates = (vector: Vector3): GeoLocationPoint => {
   const spherical = new Spherical().setFromVector3(vector);
   return {
@@ -24,15 +29,12 @@ export const transformCoordinatesIntoPoint = (point: GeoLocationPoint, altitude:
   return new Vector3(vector.x, -vector.y, vector.z);
 };
 
-export const transformPointAndDirectionIntoRotation = (point: GeoLocationPoint, bearing: number): Euler =>
-  new Euler(degToRad(point.lat), degToRad(270 + point.lon), degToRad(bearing), 'YXZ');
-
-export const calculateBearingDisplacementFromCoordinates = (point: GeoLocationPoint) => {
-  return Math.atan2(Math.sin(point.lon), -Math.sin(point.lat) * Math.cos(point.lon));
+export const transformPointAndDirectionIntoRotation = (point: GeoLocationPoint, bearing: number): Euler => {
+  return new Euler(degToRad(point.lat), degToRad(270 + point.lon), degToRad(bearing), 'YXZ');
 };
 
-export const calculateBearingFromPointAndCurrentRotation = (point: GeoLocationPoint, rotation: Euler) => {
-  const bearing = radToDeg(rotation.z) + calculateBearingDisplacementFromCoordinates(point);
+export const calculateBearingFromDirectionAndRotation = (position: Vector3, direction: Vector3, rotation: Euler) => {
+  const bearing = radToDeg(direction.angleTo(position) + rotation.z) - 180;
   return bearing < 0 ? bearing + 360 : bearing;
 };
 
@@ -41,13 +43,12 @@ export const calculatePositionAfterTimeInterval = (
   altitude: number,
   currentTimestamp: number
 ): PlanePosition => {
-  const distance = (position.velocity * MAP_SCALE * (currentTimestamp - position.timestamp)) / 3600000;
+  const distance = (position.velocity * MAP_SCALE * (currentTimestamp - position.timestamp + 1)) / 3600000;
 
   const r = EARTH_RADIUS + altitude;
   const bearing = degToRad(position.bearing);
 
-  const lat1 = degToRad(position.coordinates.lat);
-  const lon1 = degToRad(position.coordinates.lon);
+  const { lat: lat1, lon: lon1 } = convertLocationPointToRad(position.coordinates);
 
   const cos_lat1 = Math.cos(lat1);
   const sin_lat1 = Math.sin(lat1);
@@ -61,14 +62,16 @@ export const calculatePositionAfterTimeInterval = (
     lat: radToDeg(lat2),
     lon: radToDeg(lon2),
   };
-  const newBearing =
-    position.bearing -
-    calculateBearingDisplacementFromCoordinates(position.coordinates) +
-    calculateBearingDisplacementFromCoordinates(newPosition);
+
+  // TODO
+  // const newBearing =
+  //   position.bearing -
+  //   calculateBearingDisplacementFromCoordinates(position.coordinates) +
+  //   calculateBearingDisplacementFromCoordinates(newPosition);
 
   return {
     coordinates: newPosition,
-    bearing: newBearing,
+    bearing: position.bearing,
     velocity: position.velocity,
     timestamp: currentTimestamp,
   };

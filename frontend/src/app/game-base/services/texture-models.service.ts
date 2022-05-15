@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { NgtLoader } from '@angular-three/core';
 import { BehaviorSubject, combineLatest, filter, map, Observable, shareReplay } from 'rxjs';
-import { Mesh, Texture, TextureLoader } from 'three';
+import { Object3D, Texture, TextureLoader } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 @Injectable({ providedIn: 'root' })
 export class TextureModelsService {
   earthTextures$!: Observable<{ bump: Texture; map: Texture; spec: Texture }>;
-  planeTextures$!: Observable<{ trail: Texture; model: Mesh[] }>;
+  planeTextures$!: Observable<{ trail: Texture; model: Object3D }>;
   loading$ = new BehaviorSubject<boolean>(true);
 
   constructor(private ngtLoader: NgtLoader) {
@@ -34,9 +34,7 @@ export class TextureModelsService {
   private fetchPlaneTextures() {
     return combineLatest([
       this.ngtLoader.use(TextureLoader, 'assets/mask.png'),
-      this.ngtLoader
-        .use(GLTFLoader, 'assets/plane/scene.glb')
-        .pipe(map(scene => scene.scene.children[0].children as Mesh[])),
+      this.ngtLoader.use(GLTFLoader, 'assets/plane/scene.glb').pipe(map(model => model.scene.children[0])),
     ]).pipe(
       filter(textures => textures.every(Boolean)),
       map(([trail, model]) => ({ trail, model })),
