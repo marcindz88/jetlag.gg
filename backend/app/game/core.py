@@ -253,7 +253,7 @@ class GameSession:
             "id": player.id,
             "position": new_position.serialized,
         })
-        self.broadcast_event(event=event, everyone_except=[player])
+        self.broadcast_event(event=event)
 
     def handle_player_position_update_request_event(self, player: Player, event: Event):
         logging.info(f"handle_player_position_update_request_event {player.id} {event}")
