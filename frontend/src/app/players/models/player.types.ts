@@ -18,9 +18,10 @@ export type PlanePosition = {
   coordinates: GeoLocationPoint;
   bearing: number;
   velocity: number;
+  timestamp: number;
 };
 
 export type PlayerPositionUpdate = {
   id: string;
-  position: PlanePosition & { timestamp: number };
+  position: PlanePosition;
 };
