@@ -44,7 +44,7 @@ class PlayerPosition:
         self.timestamp = timestamp
 
     def future_position(self, timestamp_delta: int) -> "PlayerPosition":
-        distance_traveled = self.velocity * timestamp_delta // 3600000  # s = v*t, convert timestamp to hours
+        distance_traveled = self.velocity * timestamp_delta / 3600000  # s = v*t, convert timestamp to hours
         future_coordinates = self.coordinates.destination_coordinates(distance=distance_traveled, bearing=self.bearing)
         return PlayerPosition(
             coordinates=future_coordinates,
