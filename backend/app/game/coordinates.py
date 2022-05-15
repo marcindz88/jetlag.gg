@@ -44,7 +44,7 @@ class Coordinates:
         d = Coordinates._earth_radius() * c
         return d
 
-    def destination_coordinates(self, distance: int, bearing: float) -> "Coordinates":
+    def destination_coordinates(self, distance: float, bearing: float) -> "Coordinates":
         # https://stackoverflow.com/a/7835325
         r = self._earth_radius()
         bearing = radians(bearing)
