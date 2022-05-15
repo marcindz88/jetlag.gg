@@ -72,11 +72,7 @@ export class PlayersService {
     this.websocketService.sendWSSMessage({
       type: ClientMessageTypeEnum.POSITION_UPDATE_REQUEST,
       created: this.clockService.getCurrentTime(),
-      data: {
-        bearing: player.position.bearing,
-        velocity: player.velocity,
-        timestamp: this.clockService.getCurrentTime(),
-      },
+      data: player.position,
     });
   }
 
@@ -85,6 +81,6 @@ export class PlayersService {
   }
 
   addPlayer(player: OtherPlayer) {
-    this.players.set(player.id, new Player(player));
+    this.players.set(player.id, new Player(player, this.clockService));
   }
 }

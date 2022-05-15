@@ -1,4 +1,4 @@
-import { calculateCircumference } from '../utils/utils';
+import { calculateCircumference } from '../utils/geo-utils';
 import { PlaneState } from './game.types';
 
 export const EARTH_RADIUS = 40;
