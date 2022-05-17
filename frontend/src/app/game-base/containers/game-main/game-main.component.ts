@@ -1,75 +1,102 @@
-import { Component } from '@angular/core';
-import { NgtCameraOptions, NgtGLOptions } from '@angular-three/core/lib/types';
-import { PCFSoftShadowMap, WebGLShadowMap } from 'three';
-import { PlaneState } from '../../utils/models/game.types';
-import { DEFAULT_PLANE_STATE, DIRECTION, SPEED } from '../../utils/models/game.constants';
-import { KeyboardControlsService } from '../../utils/services/keyboard-controls.service';
-import { KeyEventEnum } from '../../utils/models/keyboard.types';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from '@angular/core';
+import { NgtCanvas, NgtVector3 } from '@angular-three/core';
+import { NgtCameraOptions } from '@angular-three/core/lib/types';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { transformCoordinatesIntoPoint } from '@pg/game-base/utils/geo-utils';
+import { Player } from '@pg/players/models/player';
+import { OtherPlayer } from '@pg/players/models/player.types';
+import { PlayersService } from '@pg/players/services/players.service';
+import { RENDERER_OPTIONS, SHADOW_OPTIONS } from '@shared/constants/renderer-options';
 
+import { BEARING, CAMERA_ALTITUDE, VELOCITY } from '../../models/game.constants';
+import { KeyEventEnum } from '../../models/keyboard.types';
+import { KeyboardControlsService } from '../../services/keyboard-controls.service';
+
+@UntilDestroy()
 @Component({
   selector: 'pg-game-main',
   templateUrl: './game-main.component.html',
   styleUrls: ['./game-main.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameMainComponent {
-  readonly cameraOptions: NgtCameraOptions = {
+  @ViewChild(NgtCanvas) ngtCanvas: NgtCanvas | null = null;
+  readonly RENDERER_OPTIONS = RENDERER_OPTIONS;
+  readonly SHADOW_OPTIONS = SHADOW_OPTIONS;
+  readonly players = this.playersService.players;
+
+  myPlayer = this.playersService.myPlayer;
+  focusedPlayerIterator: IterableIterator<Player> = this.players.values();
+  cameraPosition: NgtVector3 = [0, 15, 50];
+  cameraOptions: NgtCameraOptions = {
     zoom: 1 / 3,
-    position: [0, 15, 50],
-  };
-  readonly rendererOptions: NgtGLOptions = {
-    physicallyCorrectLights: true,
-  };
-  readonly shadowOptions: Partial<WebGLShadowMap> = {
-    enabled: true,
-    type: PCFSoftShadowMap,
+    position: this.cameraPosition,
   };
 
-  myPlaneState: PlaneState = DEFAULT_PLANE_STATE;
-
-  constructor(private keyboardControlsService: KeyboardControlsService) {
-    this.setupSteeringAndHandling();
+  constructor(
+    private keyboardControlsService: KeyboardControlsService,
+    private playersService: PlayersService,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.setupPlayersChanges();
   }
 
-  private setupSteeringAndHandling() {
-    this.keyboardControlsService.keyEvent$.subscribe((keyEvent: KeyEventEnum) => {
-      switch (keyEvent) {
-        case KeyEventEnum.LEFT:
-          this.turnLeft();
-          break;
-        case KeyEventEnum.RIGHT:
-          this.turnRight();
-          break;
-        case KeyEventEnum.BACKWARD:
-          this.decelerate();
-          break;
-        case KeyEventEnum.FORWARD:
-          this.accelerate();
-          break;
+  trackById(index: number, player: OtherPlayer) {
+    return player.id;
+  }
+
+  private setupPlayersChanges() {
+    this.playersService.changed$.pipe(untilDestroyed(this)).subscribe(() => {
+      if (this.myPlayer || !this.playersService.myPlayer) {
+        return;
       }
+      this.myPlayer = this.playersService.myPlayer;
+      this.setupPlaneUpdates();
+      this.setupCameraControls();
+      this.setupPlaneControls();
+      this.cdr.markForCheck();
     });
   }
 
-  private turnLeft() {
-    this.myPlaneState.direction -= DIRECTION.step;
-    if (this.myPlaneState.direction < DIRECTION.min) {
-      this.myPlaneState.direction += DIRECTION.max;
-    }
+  private setupPlaneControls() {
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LEFT, this, () =>
+      this.myPlayer!.updateBearing(-BEARING.step)
+    );
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.RIGHT, this, () =>
+      this.myPlayer!.updateBearing(BEARING.step)
+    );
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.BACKWARD, this, () =>
+      this.myPlayer!.updateVelocity(-VELOCITY.step)
+    );
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FORWARD, this, () =>
+      this.myPlayer!.updateVelocity(VELOCITY.step)
+    );
   }
 
-  private turnRight() {
-    this.myPlaneState.direction += DIRECTION.step;
-    this.myPlaneState.direction %= DIRECTION.max;
+  private setupPlaneUpdates() {
+    this.myPlayer!.flightParametersChanged$.pipe(untilDestroyed(this)).subscribe(() => {
+      this.playersService.emitPlayerPositionUpdate(this.myPlayer!);
+    });
   }
 
-  private accelerate() {
-    if (this.myPlaneState.speed + SPEED.step <= SPEED.max) {
-      this.myPlaneState.speed += SPEED.step;
-    }
+  private setupCameraControls() {
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA, this, () => this.switchCameraPosition());
   }
 
-  private decelerate() {
-    if (this.myPlaneState.speed - SPEED.step >= SPEED.min) {
-      this.myPlaneState.speed -= SPEED.step;
+  private switchCameraPosition() {
+    let focusedPlayerEntry = this.focusedPlayerIterator.next();
+    if (focusedPlayerEntry.done) {
+      this.focusedPlayerIterator = this.players.values();
+      focusedPlayerEntry = this.focusedPlayerIterator.next();
     }
+
+    // TODO use XYZ coordinates to calculate camera position and add animation
+    const cameraPosition = transformCoordinatesIntoPoint(
+      (focusedPlayerEntry.value as Player).position.coordinates,
+      CAMERA_ALTITUDE
+    );
+
+    this.ngtCanvas?.cameraRef.getValue().position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    this.cdr.markForCheck();
   }
 }
