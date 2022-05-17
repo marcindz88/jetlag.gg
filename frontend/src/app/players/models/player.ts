@@ -39,7 +39,6 @@ export class Player {
   set position(position: PlanePosition) {
     if (this.lastChangeTimestamp && this.lastChangeTimestamp > position.timestamp) {
       // Ignore position update if locally was updated before or messages came out of order
-      console.log(`SKIPPING POSITION UPDATE DUE TO ${this.lastChangeTimestamp} less than ${position.timestamp}`);
       return;
     }
     this.lastChangeTimestamp = this.clockService.getCurrentTime();

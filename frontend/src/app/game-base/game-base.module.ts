@@ -9,19 +9,18 @@ import { NgtMeshPhysicalMaterialModule } from '@angular-three/core/materials';
 import { NgtMeshModule } from '@angular-three/core/meshes';
 import { NgtPrimitiveModule } from '@angular-three/core/primitive';
 import { NgtSobaOrbitControlsModule } from '@angular-three/soba/controls';
+import { EarthComponent } from '@pg/game-base/components/earth/earth.component';
 import { PlayersService } from '@pg/players/services/players.service';
 import { SharedModule } from '@shared/shared.module';
 
 import { PlayersModule } from '../players/players.module';
-import { EarthComponent } from './components/earth/earth.component';
 import { PlaneComponent } from './components/plane/plane.component';
-import { GameLoaderComponent } from './containers/game-loader/game-loader.component';
 import { GameMainComponent } from './containers/game-main/game-main.component';
 import { GameBaseRoutingModule } from './game-base-routing.module';
 import { KeyboardControlsService } from './services/keyboard-controls.service';
 
 @NgModule({
-  declarations: [GameMainComponent, EarthComponent, PlaneComponent, GameLoaderComponent],
+  declarations: [GameMainComponent, EarthComponent, PlaneComponent],
   imports: [
     CommonModule,
     GameBaseRoutingModule,

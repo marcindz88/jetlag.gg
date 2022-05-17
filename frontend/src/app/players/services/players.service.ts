@@ -3,10 +3,11 @@ import { Injectable } from '@angular/core';
 import { UserService } from '@auth/services/user.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
+import { enableLoader } from '@shared/operators/operators';
 import { ClockService } from '@shared/services/clock.service';
 import { EndpointsService } from '@shared/services/endpoints.service';
 import { WebsocketService } from '@shared/services/websocket.service';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 
 import { Player } from '../models/player';
 import { OtherPlayer, PartialPlayerWithId } from '../models/player.types';
@@ -16,7 +17,6 @@ import { OtherPlayer, PartialPlayerWithId } from '../models/player.types';
 export class PlayersService {
   players = new Map<string, Player>();
   myPlayer: Player | null = null;
-  loading$ = new BehaviorSubject<boolean>(true);
   changed$ = new Subject<void>();
 
   constructor(
@@ -26,17 +26,17 @@ export class PlayersService {
     private clockService: ClockService,
     private userService: UserService
   ) {
+    this.fetchPlayers();
     this.setPlayersUpdateHandler();
   }
 
   fetchPlayers() {
     this.httpClient
       .get<OtherPlayer[]>(this.endpointsService.getEndpoint('players'))
-      .pipe(untilDestroyed(this))
+      .pipe(untilDestroyed(this), enableLoader)
       .subscribe(players => {
         players.forEach(this.addPlayer.bind(this));
         this.myPlayer = this.players.get(this.userService.user$.value!.id)!;
-        this.loading$.next(false);
         this.changed$.next();
       });
   }
