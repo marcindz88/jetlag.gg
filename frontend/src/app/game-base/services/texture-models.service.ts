@@ -1,14 +1,13 @@
 import { Injectable } from '@angular/core';
 import { NgtLoader } from '@angular-three/core';
-import { BehaviorSubject, combineLatest, filter, map, Observable, shareReplay } from 'rxjs';
-import { Object3D, Texture, TextureLoader } from 'three';
+import { combineLatest, filter, map, Observable, shareReplay } from 'rxjs';
+import { Color, Object3D, Texture, TextureLoader } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 @Injectable({ providedIn: 'root' })
 export class TextureModelsService {
-  earthTextures$!: Observable<{ bump: Texture; map: Texture; spec: Texture }>;
+  earthTextures$!: Observable<{ bump: Texture; map: Texture; spec: Texture; sheenColor: Color }>;
   planeTextures$!: Observable<{ trail: Texture; model: Object3D }>;
-  loading$ = new BehaviorSubject<boolean>(true);
 
   constructor(private ngtLoader: NgtLoader) {
     this.earthTextures$ = this.fetchEarthTextures();
@@ -16,7 +15,7 @@ export class TextureModelsService {
   }
 
   prefetchAllTextures() {
-    combineLatest([this.earthTextures$, this.planeTextures$]).subscribe(() => this.loading$.next(false));
+    combineLatest([this.earthTextures$, this.planeTextures$]).subscribe();
   }
 
   private fetchEarthTextures() {
@@ -26,7 +25,7 @@ export class TextureModelsService {
       this.ngtLoader.use(TextureLoader, 'assets/earth/earthspec.jpg'),
     ]).pipe(
       filter(textures => textures.every(Boolean)),
-      map(([bump, map, spec]) => ({ bump, map, spec })),
+      map(([bump, map, spec]) => ({ bump, map, spec, sheenColor: new Color('#ff8a00').convertSRGBToLinear() })),
       shareReplay(1)
     );
   }

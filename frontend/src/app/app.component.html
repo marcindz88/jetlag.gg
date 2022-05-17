@@ -1,3 +1,4 @@
 <div class="app-root">
   <router-outlet></router-outlet>
 </div>
+<pg-loader *ngIf="loading$ | async"></pg-loader>
