@@ -4,7 +4,7 @@ services:
   game:
     build:
       context: .
-      dockerfile: .
+      dockerfile: Dockerfile
     image: core_local_planegame
     container_name: game
     tty: true

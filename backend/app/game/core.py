@@ -1,17 +1,78 @@
 import dataclasses
-import datetime
 import logging
+import random
 import threading
+import time
 import uuid
 from typing import Optional, List
 
+from app.game.coordinates import Coordinates
 from app.game.events import Event, EventType
-from app.game.exceptions import PlayerLimitExceeded, PlayerNotFound, PlayerAlreadyConnected, PlayerInvalidNickname
+from app.game.exceptions import (
+    PlayerLimitExceeded,
+    PlayerNotFound,
+    PlayerAlreadyConnected,
+    PlayerInvalidNickname,
+    ChangingPastPosition,
+    ChangingFuturePosition,
+)
+from app.game.models import PlayerPositionUpdateRequest
 from app.tools.encoder import encode
+from app.tools.timestamp import timestamp_now
 from app.tools.websocket_server import WebSocketSession
 
 
 logging.getLogger().setLevel(logging.INFO)
+
+
+class PlayerPosition:
+    coordinates: Coordinates
+    bearing: float
+    velocity: int
+    timestamp: int
+
+    def __init__(
+        self,
+        coordinates: Coordinates,
+        bearing: float,
+        velocity: int,
+        timestamp: int,
+    ):
+        self.coordinates = coordinates
+        self.bearing = bearing
+        self.velocity = velocity
+        self.timestamp = timestamp
+
+    def future_position(self, timestamp_delta: int) -> "PlayerPosition":
+        distance_traveled = self.velocity * timestamp_delta / 3600000  # s = v*t, convert timestamp to hours
+        future_coordinates = self.coordinates.destination_coordinates(distance=distance_traveled, bearing=self.bearing)
+        return PlayerPosition(
+            coordinates=future_coordinates,
+            bearing=self.bearing,
+            velocity=self.velocity,
+            timestamp=self.timestamp + timestamp_delta,
+        )
+
+    @staticmethod
+    def random() -> "PlayerPosition":
+        return PlayerPosition(
+            coordinates=Coordinates(
+                latitude=random.uniform(-90, 90),
+                longitude=random.uniform(-180, 180),
+            ),
+            bearing=random.uniform(0, 359),
+            velocity=0,
+            timestamp=timestamp_now(),
+        )
+
+    @property
+    def serialized(self) -> dict:
+        return {
+            "coordinates": self.coordinates.serialized,
+            "velocity": self.velocity,
+            "bearing": self.bearing,
+            "timestamp": self.timestamp,
+        }
 
 
 class Player:
@@ -20,8 +81,9 @@ class Player:
         self._id: uuid.UUID = uuid.uuid4()
         self._nickname: str = nickname
         self._token: str = uuid.uuid4().hex
-        self.disconnected_since: datetime.datetime = datetime.datetime.now()
+        self.disconnected_since: int = timestamp_now()
         self.session_id: Optional[uuid.UUID] = None
+        self.position: PlayerPosition = PlayerPosition.random()
 
     @property
     def id(self) -> uuid.UUID:
@@ -45,12 +107,13 @@ class Player:
             "id": self.id,
             "nickname": self.nickname,
             "connected": self.is_connected,
+            "position": self.position.serialized,
         }
 
 
 class GameSession:
-    MAX_PLAYERS = 10
-    PLAYER_TIME_TO_CONNECT = datetime.timedelta(seconds=30)
+    MAX_PLAYERS = 16
+    PLAYER_TIME_TO_CONNECT = 5000  # 5 seconds
 
     def __init__(self):
         self._players = {}
@@ -65,6 +128,14 @@ class GameSession:
         while True:
             logging.debug("FRONTMAN | loop")
             self.remove_idle_players()
+            time.sleep(0.5)
+
+    def send_event(self, event: Event, player: Player):
+        logging.info("send_event %s", event.type)
+        session, _ = self._sessions.get(player.session_id)
+        data = dataclasses.asdict(event)
+        data = encode(data)
+        session.send(data)
 
     def broadcast_event(self, event: Event, everyone_except: List[Player] = None):
         logging.info("broadcast_event %s", event.type)
@@ -87,7 +158,7 @@ class GameSession:
 
     def remove_idle_players(self):
         logging.debug(f"remove_idle_players")
-        now = datetime.datetime.now()
+        now = timestamp_now()
 
         for player in list(self._players.values()):
             if player.is_connected:
@@ -137,7 +208,7 @@ class GameSession:
         self._sessions.pop(ws_session.id, None)
         player = self.get_player(player_id=ws_session.player_id)
         player.session_id = None
-        player.disconnected_since = datetime.datetime.now()
+        player.disconnected_since = timestamp_now()
         event = Event(type=EventType.PLAYER_DISCONNECTED, data=player.serialized)
         self.broadcast_event(event=event, everyone_except=[player])
 
@@ -154,3 +225,59 @@ class GameSession:
             self.broadcast_event(event=event, everyone_except=[player])
         except KeyError:
             pass
+
+    def update_player_position(self, player: Player, timestamp: int, velocity: int, bearing: float):
+        logging.info(f"update_player_position {player.id} timestamp: {timestamp} V={velocity} bearing={bearing}")
+        last_position = player.position
+        MAX_FUTURE_TIME_DEVIATION = 500  # event can be at most 500ms in the future
+
+        if last_position.timestamp >= timestamp:
+            # ignore, we can't change the past
+            logging.warning(
+                f"update_player_position position not updated, timestamp %s older than %s",
+                timestamp,
+                last_position.timestamp,
+            )
+            raise ChangingPastPosition
+        now = timestamp_now()
+        if timestamp > now + MAX_FUTURE_TIME_DEVIATION:
+            logging.warning(f"update_player_position position not updated, timestamp %s newer than %s", timestamp, now)
+            raise ChangingFuturePosition
+
+        new_position = last_position.future_position(timestamp_delta=timestamp-last_position.timestamp)
+        new_position.velocity = velocity  # todo validation
+        new_position.bearing = bearing  # todo validation
+
+        player.position = new_position
+        event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
+            "id": player.id,
+            "position": new_position.serialized,
+        })
+        self.broadcast_event(event=event)
+
+    def handle_player_position_update_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_player_position_update_request_event {player.id} {event}")
+        data_model = PlayerPositionUpdateRequest(**event.data)
+        self.update_player_position(
+            player=player,
+            timestamp=data_model.timestamp,
+            bearing=data_model.bearing,
+            velocity=data_model.velocity,
+        )
+
+    def handle_event_sync(self, player: Player, event: Event):
+        logging.info(f"handle_event_sync {player.id} {event}")
+        event = Event(type=EventType.CLOCK_TIME, data={
+            "timestamp": timestamp_now(),
+        })
+        self.send_event(event=event, player=player)
+
+    def handle_event(self, player: Player, event: Event):
+        logging.info(f"handle_event {player.id} {event}")
+
+        if event.type == EventType.PLAYER_POSITION_UPDATE_REQUEST:
+            self.handle_player_position_update_request_event(player=player, event=event)
+            return
+
+        if event.type == EventType.CLOCK_SYNC:
+            self.handle_event_sync(player=player, event=event)

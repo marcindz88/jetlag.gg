@@ -1,5 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { ROUTES } from '@shared/constants/routes';
+
 import { GameMainComponent } from './containers/game-main/game-main.component';
 
 const routes: Routes = [
@@ -9,7 +11,7 @@ const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: '/',
+    redirectTo: `/${ROUTES.game}`,
   },
 ];
 

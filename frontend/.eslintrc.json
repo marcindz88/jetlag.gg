@@ -3,6 +3,9 @@
   "ignorePatterns": [
     "projects/**/*"
   ],
+  "plugins": [
+    "simple-import-sort"
+  ],
   "overrides": [
     {
       "files": [
@@ -22,6 +25,8 @@
         "plugin:@typescript-eslint/recommended-requiring-type-checking"
       ],
       "rules": {
+        "simple-import-sort/imports": "error",
+        "simple-import-sort/exports": "error",
         "@angular-eslint/directive-selector": [
           "error",
           {
@@ -49,6 +54,9 @@
         ],
         "@typescript-eslint/unbound-method": [
           "off"
+        ],
+        "@typescript-eslint/no-non-null-assertion": [
+          "off"
         ]
       }
     },
@@ -57,17 +65,10 @@
         "*.html"
       ],
       "extends": [
-        "plugin:@angular-eslint/template/recommended"
+        "plugin:@angular-eslint/template/recommended",
+        "plugin:prettier/recommended"
       ],
       "rules": {
-      }
-    },
-    {
-      "files": ["*.html"],
-      "excludedFiles": ["*inline-template-*.component.html"],
-      "extends": ["plugin:prettier/recommended"],
-      "rules": {
-        "prettier/prettier": ["error", { "parser": "angular" }]
       }
     }
   ]
