@@ -1,11 +1,8 @@
-<ngt-canvas [camera]="cameraOptions" [gl]="rendererOptions" [shadows]="shadowOptions">
+<ngt-canvas [camera]="cameraOptions" [gl]="RENDERER_OPTIONS" [shadows]="SHADOW_OPTIONS">
   <ngt-ambient-light></ngt-ambient-light>
   <pg-earth></pg-earth>
-  <pg-plane
-    [speed]="myPlaneState.speed"
-    [direction]="myPlaneState.direction"
-    [startingPosition]="myPlaneState.initialPoint"></pg-plane>
-  <ngt-soba-orbit-controls [rotateSpeed]="0.3"></ngt-soba-orbit-controls>
+  <pg-plane *ngFor="let player of players.values(); trackBy: trackById" [player]="player"> </pg-plane>
+  <ngt-soba-orbit-controls [rotateSpeed]="0.3" [zoomSpeed]="0.3"></ngt-soba-orbit-controls>
 </ngt-canvas>
-<pg-plane-stats class="plane-stats" [planeState]="myPlaneState"></pg-plane-stats>
-<pg-players-summary class="players-summary"></pg-players-summary>
+<pg-players-summary *ngIf="players" class="players-summary"></pg-players-summary>
+<pg-player-stats *ngIf="myPlayer" class="plane-stats" [player]="myPlayer"></pg-player-stats>

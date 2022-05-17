@@ -1,5 +1,7 @@
+@import 'src/styles/variables';
+
 .app-root {
-  background: linear-gradient(313deg, #0b1a2b 33%, #3a6291 111%);
+  background: $background;
   height: 100%;
   position: absolute;
   width: 100%;

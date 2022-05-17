@@ -1,26 +1,28 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { MyPlayerGuard } from './players/guards/my-player.guard';
-import { ROUTES } from './shared/constants/routes';
+import { UserLoggedGuard } from '@auth/guards/user-logged.guard';
+import { UserNotLoggedGuard } from '@auth/guards/user-not-logged.guard';
+import { ROUTES } from '@shared/constants/routes';
 
 const routes: Routes = [
   {
     path: '',
-    redirectTo: '/intro',
+    redirectTo: `/${ROUTES.login}`,
     pathMatch: 'full',
   },
   {
-    path: ROUTES.intro,
-    loadChildren: () => import('./intro/intro.module').then(m => m.IntroModule),
+    path: ROUTES.login,
+    canLoad: [UserNotLoggedGuard],
+    loadChildren: () => import('./auth/auth.module').then(m => m.AuthModule),
   },
   {
     path: ROUTES.game,
-    canLoad: [MyPlayerGuard],
+    canLoad: [UserLoggedGuard],
     loadChildren: () => import('./game-base/game-base.module').then(m => m.GameBaseModule),
   },
   {
     path: '**',
-    redirectTo: '/intro',
+    redirectTo: `/${ROUTES.login}`,
   },
 ];
 

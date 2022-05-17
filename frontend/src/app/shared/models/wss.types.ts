@@ -1,10 +1,21 @@
-import { OtherPlayer } from '../../players/models/player.types';
+import { PlaneStateUpdateRequest } from '@pg/game-base/models/game.types';
+import { OtherPlayer, PlayerPositionUpdate } from '@pg/players/models/player.types';
 
-export type Message = {
-  type: ServerMessageTypeEnum;
+export type ClockMessageDataType = { timestamp: number };
+
+export type MessageDataType =
+  | OtherPlayer
+  | ClockMessageDataType
+  | PlaneStateUpdateRequest
+  | PlayerPositionUpdate
+  | Record<string, never>;
+
+export type MessageTypeEnum = ServerMessageTypeEnum | ClientMessageTypeEnum;
+
+export type Message<T extends MessageDataType = MessageDataType, K extends MessageTypeEnum = ServerMessageTypeEnum> = {
+  type: K;
+  data: T;
   created: number;
-  data: OtherPlayer;
-  emitted_by_server: boolean;
 };
 
 export enum ServerMessageTypeEnum {
@@ -12,4 +23,11 @@ export enum ServerMessageTypeEnum {
   REGISTERED = 'player.registered',
   DISCONNECTED = 'player.disconnected',
   REMOVED = 'player.removed',
+  POSITION_UPDATED = 'player_position.updated',
+  CLOCK_TIME = 'clock.time',
+}
+
+export enum ClientMessageTypeEnum {
+  POSITION_UPDATE_REQUEST = 'player_position.update_request',
+  CLOCK_SYNC = 'clock.sync',
 }
