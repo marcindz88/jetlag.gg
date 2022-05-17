@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { OtherPlayer } from '@pg/players/models/player.types';
+import { enableLoader } from '@shared/operators/operators';
 import { EndpointsService } from '@shared/services/endpoints.service';
 import { WebsocketService } from '@shared/services/websocket.service';
 import { BehaviorSubject, map, Observable, tap } from 'rxjs';
@@ -25,6 +26,7 @@ export class UserService {
 
   createUser(nickname: string): Observable<User> {
     return this.httpClient.post<User & OtherPlayer>(this.endpointsService.getEndpoint('players'), { nickname }).pipe(
+      enableLoader,
       map(({ connected: _, position: _1, ...player }) => ({ ...player, nickname })),
       tap(this.setUser.bind(this))
     );
