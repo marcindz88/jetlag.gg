@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ClockService } from '@shared/services/clock.service';
+import { LoaderService } from '@shared/services/loader.service';
 
 import { TextureModelsService } from './game-base/services/texture-models.service';
 
@@ -10,8 +11,13 @@ import { TextureModelsService } from './game-base/services/texture-models.servic
 })
 export class AppComponent {
   title = 'plane-game';
+  loading$ = this.loaderService.loading$;
 
-  constructor(private textureModelsService: TextureModelsService, private clockService: ClockService) {
+  constructor(
+    private textureModelsService: TextureModelsService,
+    private clockService: ClockService,
+    private loaderService: LoaderService
+  ) {
     this.textureModelsService.prefetchAllTextures();
     // this.clockService.setupSyncingOfTime();
   }

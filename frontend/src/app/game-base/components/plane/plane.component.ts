@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
-import { NgtRenderState } from '@angular-three/core';
 import { NgtPrimitive } from '@angular-three/core/primitive';
+import { BeforeRenderedObject } from '@pg/game-base/models/game.types';
 import { Player } from '@pg/players/models/player';
 import { map } from 'rxjs';
 import { Object3D } from 'three';
@@ -27,7 +27,7 @@ export class PlaneComponent {
 
   constructor(private textureModelsService: TextureModelsService) {}
 
-  updatePlane(event: { state: NgtRenderState; object: Object3D }) {
+  updatePlane(event: BeforeRenderedObject) {
     this.movePlaneForward(event.object, event.state.delta);
   }
 

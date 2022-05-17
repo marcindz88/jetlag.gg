@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ROUTES } from '@shared/constants/routes';
+import { LoaderService } from '@shared/services/loader.service';
 
 import { UserService } from '../../services/user.service';
 
@@ -34,6 +35,7 @@ export class LoginComponent {
     if (this.form.valid) {
       this.myPlayerService.createUser(this.nicknameControl?.value as string).subscribe({
         next: () => {
+          LoaderService.addLoader(); // start additional loader until earth finishes rendering
           void this.router.navigate([ROUTES.root, ROUTES.game]);
         },
         error: err => {

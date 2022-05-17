@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
+import { OtherPlayer, PlayerPositionUpdate } from '@pg/players/models/player.types';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { EndpointsService } from './endpoints.service';
+
 import {
   ClientMessageTypeEnum,
   ClockMessageDataType,
@@ -8,8 +10,7 @@ import {
   MessageDataType,
   MessageTypeEnum,
 } from '../models/wss.types';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { OtherPlayer, PlayerPositionUpdate } from '../../players/models/player.types';
+import { EndpointsService } from './endpoints.service';
 
 @Injectable({
   providedIn: 'root',
@@ -30,8 +31,18 @@ export class WebsocketService {
     this.webSocket = webSocket({
       url: this.es.getWebSocketEndpoint(),
       protocol: [token],
-      openObserver: { next: () => this.isConnected$.next(true) },
-      closeObserver: { next: () => this.isConnected$.next(false) },
+      openObserver: {
+        next: () => {
+          console.log('WSS CONNECTED');
+          this.isConnected$.next(true);
+        },
+      },
+      closeObserver: {
+        next: () => {
+          console.log('WSS CLOSED');
+          this.isConnected$.next(false);
+        },
+      },
     });
     this.isConnected$.next(true);
     this.webSocket.subscribe({
