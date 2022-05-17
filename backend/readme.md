@@ -32,9 +32,8 @@ only 1 connection per user at a time is allowed
 
 ### Format
 > {<br>
-> created: integer timestamp<br>
+> created: integer timestamp (in milliseconds)<br>
 > data: json<br>
-> emitted_by_server: bool<br>
 > type: str event type<br>
 > }
 
@@ -43,6 +42,14 @@ only 1 connection per user at a time is allowed
 * 'player.registered'
 * 'player.disconnected'
 * 'player.removed'
+* 'player_position.updated'
+* 'clock.time'
 
 ### Event types accepted from the clients:
-* todo
+* 'player_position.update_request'<br>
+sample:
+> ws.send(JSON.stringify({type: 'player_position.update_request', created: new Date().getTime(), data: {bearing: 30, velocity: 2000, timestamp: new Date().getTime()}}))
+
+* 'clock.sync'<br>
+sample:
+> ws.send(JSON.stringify({type: 'clock.sync', created: new Date().getTime(), data: {}}))

@@ -1,0 +1,20 @@
+.start {
+  display: block;
+  height: min(90vh, 300px);
+  margin: auto;
+  width: min(90vw, 500px);
+
+  & &__input {
+    width: min(80%, 120px);
+  }
+
+  & &__button {
+    margin-top: 10px;
+  }
+
+  & &__error {
+    color: #f00;
+    font-size: 12px;
+    font-weight: normal;
+  }
+}

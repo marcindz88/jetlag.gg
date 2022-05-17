@@ -12,3 +12,15 @@ class PlayerAlreadyConnected(Exception):
 
 class PlayerInvalidNickname(Exception):
     pass
+
+
+class ChangingPastPosition(Exception):
+    pass
+
+
+class ChangingFuturePosition(Exception):
+    pass
+
+
+class InvalidEventFormat(Exception):
+    pass

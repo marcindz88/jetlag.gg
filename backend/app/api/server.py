@@ -1,10 +1,17 @@
+import json
+import logging
+
 from fastapi import FastAPI, WebSocket, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, constr
+from pydantic import constr, BaseModel
 
 from app.game import exceptions
 from app.game.core import GameSession
+from app.game.events import dict_to_event
 from app.tools.websocket_server import StarletteWebsocketServer, WebSocketSession
+
+
+logging.getLogger().setLevel(logging.INFO)
 
 
 game_session = GameSession()
@@ -39,7 +46,7 @@ def add_player(body: AddPlayerRequestBody):
     except exceptions.PlayerLimitExceeded:
         raise HTTPException(status_code=400, detail="Lobby is full")
 
-    return {"id": player.id, "token": player.token}
+    return {**player.serialized, "token": player.token}
 
 
 def validate_connection(ws_session: WebSocketSession) -> bool:
@@ -67,10 +74,18 @@ def on_disconnect(ws_session: WebSocketSession):
     game_session.remove_session(ws_session=ws_session)
 
 
-def on_message(ws_session: WebSocketSession, msg: str):
-    print("On message start", msg)
+def on_message(ws_session: WebSocketSession, body: str):
+    logging.info("on_message %s", body)
+    try:
+        data = json.loads(body)
+        event = dict_to_event(data=data)
+    except (json.JSONDecodeError, exceptions.InvalidEventFormat) as e:
+        logging.error("Invalid event format: %s", e)
+        return
+    logging.info("on_message parsed event %s", event)
 
-    print("On message end", msg)
+    player = game_session.get_player(player_id=ws_session.player_id)
+    game_session.handle_event(player, event)
 
 
 @app.websocket("/ws/")
