@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
+import { Logger } from '@shared/services/logger.service';
+import { distinctUntilChanged, filter, map, merge, Observable, of, switchMap, take, takeWhile, tap, timer } from 'rxjs';
+
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '../models/wss.types';
-import { distinctUntilChanged, filter, map, Observable, of, switchMap, take, tap, timer } from 'rxjs';
 import { WebsocketService } from './websocket.service';
 
 @Injectable({
@@ -12,7 +14,7 @@ export class ClockService {
   constructor(private webSocketService: WebsocketService) {}
 
   getCurrentTime() {
-    return this.getTime() - this.timeDelta;
+    return this.getTime() + this.timeDelta;
   }
 
   setupSyncingOfTime() {
@@ -25,7 +27,8 @@ export class ClockService {
   }
 
   private createTimeSyncer() {
-    return timer(0, 10000).pipe(
+    // 20 quick samples then update every 10 seconds
+    return merge(timer(0, 500).pipe(takeWhile(i => i < 20)), timer(10000, 5000)).pipe(
       map(() => this.getTime()),
       tap(() =>
         this.webSocketService.sendWSSMessage({
@@ -38,15 +41,23 @@ export class ClockService {
         this.webSocketService.clockMessages$.pipe(
           filter(message => message.type === ServerMessageTypeEnum.CLOCK_TIME),
           take(1),
-          tap(
-            timeMessage =>
-              // Server time - half of the request time - sent time
-              (this.timeDelta = timeMessage.data.timestamp - (this.getTime() - sentTime) / 2 - sentTime)
-          )
+          tap(timeMessage => this.updateDelta(timeMessage.data.timestamp, sentTime))
         )
       ),
       map(() => undefined)
     );
+  }
+
+  private updateDelta(messageTimestamp: number, sentTime: number) {
+    // Server time - half of the request time - sent time
+    const delta = messageTimestamp - (this.getTime() - sentTime) / 2 - sentTime;
+    if (this.timeDelta) {
+      this.timeDelta = Math.round((this.timeDelta + delta) / 2);
+    } else {
+      this.timeDelta = Math.round(delta);
+    }
+
+    Logger.log(ClockService, `RECEIVED: ${delta.toFixed(0)} -> NEW DELTA: ${this.timeDelta}`);
   }
 
   private getTime() {
