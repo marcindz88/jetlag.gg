@@ -7,10 +7,18 @@ import { GeoLocationPoint } from '../models/game.types';
 
 export const calculateCircumference = (radius: number) => 2 * Math.PI * radius;
 
-export const convertLocationPointToRad = (point: GeoLocationPoint): GeoLocationPoint => ({
+const convertLocationPointToRad = (point: GeoLocationPoint): GeoLocationPoint => ({
   lat: degToRad(point.lat),
   lon: degToRad(point.lon),
 });
+
+const arePointsEqual = (start: GeoLocationPoint, end: GeoLocationPoint) => {
+  return Math.abs(start.lat - end.lat) < 0.00000001 && Math.abs(start.lon - end.lon) < 0.00000001;
+};
+
+const normalizeBearing = (bearing: number) => {
+  return bearing < 0 ? bearing + 360 : bearing;
+};
 
 export const transformPointIntoCoordinates = (vector: Vector3): GeoLocationPoint => {
   const spherical = new Spherical().setFromVector3(vector);
@@ -33,9 +41,23 @@ export const transformPointAndDirectionIntoRotation = (point: GeoLocationPoint, 
   return new Euler(degToRad(point.lat), degToRad(270 + point.lon), degToRad(bearing), 'YXZ');
 };
 
-export const calculateBearingFromDirectionAndRotation = (position: Vector3, direction: Vector3, rotation: Euler) => {
-  const bearing = radToDeg(direction.angleTo(position) + rotation.z) - 180;
-  return bearing < 0 ? bearing + 360 : bearing;
+export const calculateBearingFromDirectionAndRotation = (rotation: Euler) => {
+  return normalizeBearing(radToDeg(rotation.z));
+};
+
+export const calculateBearingBetweenPoints = (start: GeoLocationPoint, end: GeoLocationPoint) => {
+  const { lon: lon1, lat: lat1 } = convertLocationPointToRad(start);
+  const { lon: lon2, lat: lat2 } = convertLocationPointToRad(end);
+
+  const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360; // in degrees
+};
+
+export const calculateBearingDisplacementBetweenCoordinates = (start: GeoLocationPoint, end: GeoLocationPoint) => {
+  return arePointsEqual(start, end)
+    ? 0
+    : ((calculateBearingBetweenPoints(end, start) - 180) % 360) - calculateBearingBetweenPoints(start, end);
 };
 
 export const calculatePositionAfterTimeInterval = (
@@ -63,15 +85,13 @@ export const calculatePositionAfterTimeInterval = (
     lon: radToDeg(lon2),
   };
 
-  // TODO
-  // const newBearing =
-  //   position.bearing -
-  //   calculateBearingDisplacementFromCoordinates(position.coordinates) +
-  //   calculateBearingDisplacementFromCoordinates(newPosition);
+  const newBearing = normalizeBearing(
+    position.bearing + calculateBearingDisplacementBetweenCoordinates(position.coordinates, newPosition)
+  );
 
   return {
     coordinates: newPosition,
-    bearing: position.bearing,
+    bearing: newBearing,
     velocity: position.velocity,
     timestamp: currentTimestamp,
   };
