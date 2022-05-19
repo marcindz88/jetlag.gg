@@ -54,7 +54,7 @@ export class Player {
 
   get position(): PlanePosition {
     if (!this.planeObject) {
-      throw Error('Plane is not yet rendered cannot obtain poisiton');
+      throw Error('Plane is not yet rendered cannot obtain position');
     }
     const timestamp = this.clockService.getCurrentTime();
     const position = this.planeObject.position.clone();
