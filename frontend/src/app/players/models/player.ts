@@ -59,12 +59,10 @@ export class Player {
     const timestamp = this.clockService.getCurrentTime();
     const position = this.planeObject.position.clone();
     const rotation = this.planeObject.rotation.clone();
-    const direction = new Vector3();
-    this.planeObject.getWorldDirection(direction);
 
     const coordinates = transformPointIntoCoordinates(position);
     const velocity = this.velocity;
-    const bearing = calculateBearingFromDirectionAndRotation(position, direction, rotation);
+    const bearing = calculateBearingFromDirectionAndRotation(rotation);
 
     return { coordinates, bearing, velocity, timestamp };
   }
