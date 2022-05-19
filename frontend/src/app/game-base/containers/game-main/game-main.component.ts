@@ -2,13 +2,12 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from
 import { NgtCanvas, NgtVector3 } from '@angular-three/core';
 import { NgtCameraOptions } from '@angular-three/core/lib/types';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { transformCoordinatesIntoPoint } from '@pg/game-base/utils/geo-utils';
 import { Player } from '@pg/players/models/player';
 import { OtherPlayer } from '@pg/players/models/player.types';
 import { PlayersService } from '@pg/players/services/players.service';
 import { RENDERER_OPTIONS, SHADOW_OPTIONS } from '@shared/constants/renderer-options';
 
-import { BEARING, CAMERA_ALTITUDE, VELOCITY } from '../../models/game.constants';
+import { BEARING, VELOCITY } from '../../models/game.constants';
 import { KeyEventEnum } from '../../models/keyboard.types';
 import { KeyboardControlsService } from '../../services/keyboard-controls.service';
 
@@ -90,13 +89,12 @@ export class GameMainComponent {
       focusedPlayerEntry = this.focusedPlayerIterator.next();
     }
 
-    // TODO use XYZ coordinates to calculate camera position and add animation
-    const cameraPosition = transformCoordinatesIntoPoint(
-      (focusedPlayerEntry.value as Player).position.coordinates,
-      CAMERA_ALTITUDE
-    );
-
-    this.ngtCanvas?.cameraRef.getValue().position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
-    this.cdr.markForCheck();
+    let position = (focusedPlayerEntry.value as Player).planeObject?.position;
+    const camera = this.ngtCanvas?.cameraRef.getValue();
+    if (position && camera) {
+      position = position.clone().multiplyScalar(1.2);
+      camera.position.set(position.x, position.y, position.z);
+      this.cdr.markForCheck();
+    }
   }
 }
