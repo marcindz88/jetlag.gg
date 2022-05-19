@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { OtherPlayer, PlayerPositionUpdate } from '@pg/players/models/player.types';
+import { Logger } from '@shared/services/logger.service';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 
@@ -27,19 +28,19 @@ export class WebsocketService {
   constructor(private es: EndpointsService) {}
 
   createWSSConnection(token: string): void {
-    console.log('OPENING NEW WSS CONNECTION');
+    Logger.log(WebsocketService, 'OPENING NEW WSS CONNECTION');
     this.webSocket = webSocket({
       url: this.es.getWebSocketEndpoint(),
       protocol: [token],
       openObserver: {
         next: () => {
-          console.log('WSS CONNECTED');
+          Logger.log(WebsocketService, 'WSS CONNECTED');
           this.isConnected$.next(true);
         },
       },
       closeObserver: {
         next: () => {
-          console.log('WSS CLOSED');
+          Logger.log(WebsocketService, 'WSS CLOSED');
           this.isConnected$.next(false);
         },
       },
@@ -61,11 +62,11 @@ export class WebsocketService {
         }
       },
       error: err => {
-        console.error('WSS ERROR', err);
+        Logger.error(WebsocketService, `WSS ERROR ${err as string}`);
         this.tryToReconnect(token);
       },
       complete: () => {
-        console.warn('WSS CONNECTION CLOSED');
+        Logger.warn(WebsocketService, 'WSS CONNECTION CLOSED');
         this.tryToReconnect(token);
       },
     });
@@ -75,7 +76,7 @@ export class WebsocketService {
     if (this.webSocket) {
       this.webSocket.next(message);
     } else {
-      console.error('No WSS connection available');
+      Logger.error(WebsocketService, 'No WSS connection available');
     }
   }
 

@@ -19,6 +19,6 @@ export class AppComponent {
     private loaderService: LoaderService
   ) {
     this.textureModelsService.prefetchAllTextures();
-    // this.clockService.setupSyncingOfTime();
+    this.clockService.setupSyncingOfTime();
   }
 }
