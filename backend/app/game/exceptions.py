@@ -24,3 +24,15 @@ class ChangingFuturePosition(Exception):
 
 class InvalidEventFormat(Exception):
     pass
+
+
+class AirportFull(Exception):
+    pass
+
+
+class TooFarToLand(Exception):
+    pass
+
+
+class InvalidAirport(Exception):
+    pass
