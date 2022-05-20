@@ -1,1 +1,15 @@
-$background: linear-gradient(313deg, #0b1a2b 33%, #3a6291 111%);
+:root {
+  --primary-color: #0b1a2b;
+  --primary-color-2: #3a6291;
+  --accent-color: #dcd9d9;
+  --accent-lighter-color: #ece9e9;
+  --accent-darker-color: #848484;
+  --error-color: #ff2e2e;
+  --correct-color: #6cc444;
+  --card-text-color: #dddee1;
+  --card-background-color: rgb(0 0 0 / 40%);
+  --card-background-lighter-color: rgb(0 0 0 / 40%);
+}
+
+$background: linear-gradient(313deg, var(--primary-color) 33%, var(--primary-color-2) 111%);
+

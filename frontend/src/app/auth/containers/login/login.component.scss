@@ -1,20 +1,65 @@
+:host {
+  align-items: center;
+  display: flex;
+  height: 80%;
+  justify-content: center;
+}
+
 .start {
-  display: block;
-  height: min(90vh, 300px);
-  margin: auto;
-  width: min(90vw, 500px);
+  display: flex;
+  flex-direction: column;
+  height: min(90vh, 250px);
+  justify-content: center;
+  padding: 30px;
+  width: min(90vw, 250px);
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0 0;
 
   & &__input {
-    width: min(80%, 120px);
-  }
+    background-color: var(--accent-color);
+    border: 0;
+    display: block;
+    line-height: 1.5;
+    padding: 0.375rem 0.75rem;
+    transition: background-color 0.15s ease-in-out;
 
-  & &__button {
-    margin-top: 10px;
+    &:focus {
+      background-color: var(--accent-lighter-color);
+      outline: none;
+    }
   }
 
   & &__error {
-    color: #f00;
-    font-size: 12px;
-    font-weight: normal;
+    color: var(--error-color);
+    font-size: 11px;
+    margin: 0;
+  }
+}
+
+.button-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: flex-end;
+
+  &__button {
+    background-color: var(--accent-color);
+    border: 0;
+    cursor: pointer;
+    padding: 10px;
+    width: 100%;
+
+    &:disabled {
+      background-color: var(--accent-darker-color);
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      background-color: var(--accent-lighter-color);
+    }
   }
 }
