@@ -1,4 +1,4 @@
-<tr>
-  <td>{{ player.nickname }}</td>
-  <td>{{ player.connected ? 'connected' : 'disconnected' }}</td>
-</tr>
+<span class="status">
+  <span class="material-symbols-outlined" [class.material-symbols-outlined--filled]="player.connected">circle</span>
+</span>
+<span class="nickname">{{ player.nickname }}</span>
