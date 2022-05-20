@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from
 import { NgtCanvas, NgtVector3 } from '@angular-three/core';
 import { NgtCameraOptions } from '@angular-three/core/lib/types';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { Player } from '@pg/players/models/player';
 import { OtherPlayer } from '@pg/players/models/player.types';
 import { PlayersService } from '@pg/players/services/players.service';
 import { RENDERER_OPTIONS, SHADOW_OPTIONS } from '@shared/constants/renderer-options';
@@ -25,7 +24,8 @@ export class GameMainComponent {
   readonly players = this.playersService.players;
 
   myPlayer = this.playersService.myPlayer;
-  focusedPlayerIterator: IterableIterator<Player> = this.players.values();
+  focusedPlayerIndex = 0;
+  followingPlayer = false;
   cameraPosition: NgtVector3 = [0, 15, 50];
   cameraOptions: NgtCameraOptions = {
     zoom: 1 / 3,
@@ -79,22 +79,19 @@ export class GameMainComponent {
   }
 
   private setupCameraControls() {
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA, this, () => this.switchCameraPosition());
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA_FOCUS, this, this.switchCameraFocus.bind(this));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA_FOLLOW, this, this.swtchCameraFollowing.bind(this));
   }
 
-  private switchCameraPosition() {
-    let focusedPlayerEntry = this.focusedPlayerIterator.next();
-    if (focusedPlayerEntry.done) {
-      this.focusedPlayerIterator = this.players.values();
-      focusedPlayerEntry = this.focusedPlayerIterator.next();
+  private switchCameraFocus() {
+    if (this.focusedPlayerIndex + 1 === this.players.size) {
+      this.focusedPlayerIndex = 0;
+    } else {
+      this.focusedPlayerIndex++;
     }
+  }
 
-    let position = (focusedPlayerEntry.value as Player).planeObject?.position;
-    const camera = this.ngtCanvas?.cameraRef.getValue();
-    if (position && camera) {
-      position = position.clone().multiplyScalar(1.2);
-      camera.position.set(position.x, position.y, position.z);
-      this.cdr.markForCheck();
-    }
+  private swtchCameraFollowing() {
+    this.followingPlayer = !this.followingPlayer;
   }
 }
