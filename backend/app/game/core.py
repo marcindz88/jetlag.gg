@@ -265,19 +265,9 @@ class GameSession:
             velocity=data_model.velocity,
         )
 
-    def handle_event_sync(self, player: Player, event: Event):
-        logging.info(f"handle_event_sync {player.id} {event}")
-        event = Event(type=EventType.CLOCK_TIME, data={
-            "timestamp": timestamp_now(),
-        })
-        self.send_event(event=event, player=player)
-
     def handle_event(self, player: Player, event: Event):
         logging.info(f"handle_event {player.id} {event}")
 
         if event.type == EventType.PLAYER_POSITION_UPDATE_REQUEST:
             self.handle_player_position_update_request_event(player=player, event=event)
             return
-
-        if event.type == EventType.CLOCK_SYNC:
-            self.handle_event_sync(player=player, event=event)
