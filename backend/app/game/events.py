@@ -14,8 +14,6 @@ class EventType(str, enum.Enum):
     PLAYER_REMOVED = 'player.removed'
     PLAYER_POSITION_UPDATED = 'player_position.updated'
     PLAYER_POSITION_UPDATE_REQUEST = 'player_position.update_request'
-    CLOCK_TIME = 'clock.time'
-    CLOCK_SYNC = 'clock.sync'
 
 
 EVENTS_EMITTED_BY_SERVER = [
@@ -24,7 +22,6 @@ EVENTS_EMITTED_BY_SERVER = [
     EventType.PLAYER_DISCONNECTED,
     EventType.PLAYER_REMOVED,
     EventType.PLAYER_POSITION_UPDATED,
-    EventType.CLOCK_TIME,
 ]
 
 

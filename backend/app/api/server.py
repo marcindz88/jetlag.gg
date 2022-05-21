@@ -8,6 +8,7 @@ from pydantic import constr, BaseModel
 from app.game import exceptions
 from app.game.core import GameSession
 from app.game.events import dict_to_event
+from app.tools.timestamp import timestamp_now
 from app.tools.websocket_server import StarletteWebsocketServer, WebSocketSession
 
 
@@ -44,7 +45,7 @@ def add_player(body: AddPlayerRequestBody):
     except exceptions.PlayerInvalidNickname:
         raise HTTPException(status_code=400, detail="Invalid nickname")
     except exceptions.PlayerLimitExceeded:
-        raise HTTPException(status_code=400, detail="Lobby is full")
+        raise HTTPException(status_code=409, detail="Lobby is full")
 
     return {**player.serialized, "token": player.token}
 
@@ -97,3 +98,11 @@ async def websocket_endpoint(websocket: WebSocket):
         on_disconnect=on_disconnect,
     )
     await server.handler(websocket)
+
+
+@app.websocket("/clock/")
+async def clock_websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        await websocket.send_json({"t": timestamp_now(), "ref": data})

@@ -43,13 +43,15 @@ only 1 connection per user at a time is allowed
 * 'player.disconnected'
 * 'player.removed'
 * 'player_position.updated'
-* 'clock.time'
 
 ### Event types accepted from the clients:
 * 'player_position.update_request'<br>
 sample:
 > ws.send(JSON.stringify({type: 'player_position.update_request', created: new Date().getTime(), data: {bearing: 30, velocity: 2000, timestamp: new Date().getTime()}}))
 
-* 'clock.sync'<br>
+### Clock synchronisation
+> GET /clock/ (websocket)
+
 sample:
-> ws.send(JSON.stringify({type: 'clock.sync', created: new Date().getTime(), data: {}}))
+> ws.send("test123")
+> > {t: 1653085964101, ref: "test123"}
