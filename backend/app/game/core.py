@@ -188,7 +188,7 @@ class Airport:
             "id": self.id,
             "name": self.name,
             "coordinates": self.coordinates.serialized,
-            "occupying_player": self.occupying_player.serialized if self.occupying_player else None,
+            "occupying_player": self.occupying_player.id if self.occupying_player else None,
             "shipments": [shipment.serialized for shipment in self.shipments],
         }
 
