@@ -36,3 +36,7 @@ class TooFarToLand(Exception):
 
 class InvalidAirport(Exception):
     pass
+
+
+class CantFlyWhenLanded(Exception):
+    pass

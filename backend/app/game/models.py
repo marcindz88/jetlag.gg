@@ -10,4 +10,8 @@ class PlayerPositionUpdateRequest(BaseModel):
 
 
 class AirportLandingRequest(BaseModel):
-    airport_id: uuid.UUID
+    id: uuid.UUID
+
+
+class AirportDepartureRequest(BaseModel):
+    id: uuid.UUID
