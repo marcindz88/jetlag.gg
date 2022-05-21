@@ -1,5 +1,5 @@
 <div class="compass">
-  <div class="compass-moving" [style]="'transform: rotate(' + (bearing - 180) + 'deg);'">
+  <div class="compass-moving" [style]="'transform: rotate(' + -bearing + 'deg);'">
     <div class="compass-moving__arrow"></div>
     <div class="compass-moving__separators">
       <div *ngFor="let i; repeat: 180"></div>
@@ -8,13 +8,13 @@
       <div
         *ngFor="let direction of directions"
         [class]="'directions__direction-' + direction"
-        [style]="'transform: rotate(' + (-bearing - 180) + 'deg);'">
+        [style]="'transform: rotate(' + bearing + 'deg);'">
         {{ direction }}
       </div>
     </div>
     <div class="compass-moving__angle-labels angle-labels">
       <div *ngFor="let i; repeat: 12">
-        <span [style]="'transform: rotate(' + (-bearing - i * 30 + 90) + 'deg);'">{{ i * 30 }}</span>
+        <span [style]="'transform: rotate(' + (bearing - i * 30 + 270) + 'deg);'">{{ i * 30 }}</span>
       </div>
     </div>
   </div>
