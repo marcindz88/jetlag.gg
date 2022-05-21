@@ -39,8 +39,18 @@ export class LoginComponent {
           void this.router.navigate([ROUTES.root, ROUTES.game]);
         },
         error: err => {
-          if (err instanceof HttpErrorResponse && err.status === HttpStatusCode.BadRequest) {
-            this.nicknameControl?.setErrors({ username_taken: true });
+          if (err instanceof HttpErrorResponse) {
+            switch (err.status) {
+              case HttpStatusCode.BadRequest:
+                this.nicknameControl?.setErrors({ username_taken: true });
+                break;
+              case HttpStatusCode.Conflict:
+                this.nicknameControl?.setErrors({ lobby_full: true });
+                break;
+              default:
+                this.nicknameControl?.setErrors({ unknown_error: true });
+                break;
+            }
             this.cdr.markForCheck();
           }
         },
