@@ -16,8 +16,8 @@ class EventType(str, enum.Enum):
     PLAYER_POSITION_UPDATED = 'player_position.updated'
     PLAYER_POSITION_UPDATE_REQUEST = 'player_position.update_request'
     AIRPORT_LANDING_REQUEST = 'airport.landing_request'
-    AIRPORT_PLANE_LANDED = 'airport.plane_landed'
-    # AIRPORT_PLANE_LANDING_DECLINED = 'airport.plane_landing_declined'
+    AIRPORT_DEPARTURE_REQUEST = 'airport.departure_request'
+    AIRPORT_UPDATED = 'airport.updated'
     AIRPORT_LIST = 'airport.list'
 
 EVENTS_EMITTED_BY_SERVER = [
@@ -27,8 +27,7 @@ EVENTS_EMITTED_BY_SERVER = [
     EventType.PLAYER_DISCONNECTED,
     EventType.PLAYER_REMOVED,
     EventType.PLAYER_POSITION_UPDATED,
-    EventType.AIRPORT_PLANE_LANDED,
-    # EventType.AIRPORT_PLANE_LANDING_DECLINED,
+    EventType.AIRPORT_UPDATED,
     EventType.AIRPORT_LIST,
 ]
 
