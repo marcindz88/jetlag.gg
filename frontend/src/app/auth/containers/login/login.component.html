@@ -1,5 +1,5 @@
 <pg-card class="start" [formGroup]="form">
-  <p class="start__label">Enter you nickname</p>
+  <p class="start__label">Enter your nickname</p>
   <div class="start__input-wrapper input-wrapper">
     <input
       class="input-wrapper__input"
@@ -8,6 +8,12 @@
       (keydown.enter)="registerAndStartGame()" />
     <p class="input-wrapper__error" *ngIf="nicknameControl?.errors?.['username_taken']">
       Please select a different username
+    </p>
+    <p class="input-wrapper__error" *ngIf="nicknameControl?.errors?.['lobby_full']">
+      Lobby is full, please try again later
+    </p>
+    <p class="input-wrapper__error" *ngIf="nicknameControl?.errors?.['unknown_error']">
+      Unknown error occurred, please try again later
     </p>
   </div>
   <div class="start__button-wrapper button-wrapper">

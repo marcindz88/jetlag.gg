@@ -6,12 +6,12 @@ import { timer } from 'rxjs';
 
 @UntilDestroy()
 @Component({
-  selector: 'pg-player-stats',
-  templateUrl: './player-stats.component.html',
-  styleUrls: ['./player-stats.component.scss'],
+  selector: 'pg-player-cockpit',
+  templateUrl: './player-cockpit.component.html',
+  styleUrls: ['./player-cockpit.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PlayerStatsComponent implements OnInit {
+export class PlayerCockpitComponent implements OnInit {
   @Input() player!: Player;
 
   position?: PlanePosition;
@@ -24,7 +24,7 @@ export class PlayerStatsComponent implements OnInit {
   }
 
   setUpdatePositionHandler() {
-    timer(0, 1000)
+    timer(0, 500)
       .pipe(untilDestroyed(this))
       .subscribe(() => {
         this.position = this.player.position;
