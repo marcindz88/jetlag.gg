@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Logger } from '@shared/services/logger.service';
 import { BehaviorSubject } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
@@ -7,7 +7,7 @@ import { ClientMessage, ServerMessage } from '../models/wss.types';
 import { EndpointsService } from './endpoints.service';
 
 @Injectable()
-export abstract class AbstractWebsocketService<S extends ServerMessage, C extends ClientMessage> {
+export abstract class AbstractWebsocketService<S extends ServerMessage, C extends ClientMessage> implements OnDestroy {
   isConnected$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
   protected url = 'ws';
@@ -22,6 +22,10 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
     } else {
       Logger.error(this.class, 'No WSS connection available');
     }
+  }
+
+  ngOnDestroy(): void {
+    this.closeConnection();
   }
 
   protected abstract get class(): { name: string };
