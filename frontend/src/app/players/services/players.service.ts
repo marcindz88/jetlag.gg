@@ -6,7 +6,7 @@ import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss
 import { enableLoader } from '@shared/operators/operators';
 import { ClockService } from '@shared/services/clock.service';
 import { EndpointsService } from '@shared/services/endpoints.service';
-import { WebsocketService } from '@shared/services/websocket.service';
+import { MainWebsocketService } from '@shared/services/main-websocket.service';
 import { Subject } from 'rxjs';
 
 import { Player } from '../models/player';
@@ -22,7 +22,7 @@ export class PlayersService {
   constructor(
     private httpClient: HttpClient,
     private endpointsService: EndpointsService,
-    private websocketService: WebsocketService,
+    private mainWebsocketService: MainWebsocketService,
     private clockService: ClockService,
     private userService: UserService
   ) {
@@ -42,7 +42,7 @@ export class PlayersService {
   }
 
   setPlayersUpdateHandler() {
-    this.websocketService.playerMessages$.pipe(untilDestroyed(this)).subscribe(playerMessage => {
+    this.mainWebsocketService.playerMessages$.pipe(untilDestroyed(this)).subscribe(playerMessage => {
       switch (playerMessage.type) {
         case ServerMessageTypeEnum.REGISTERED:
           this.addPlayer(playerMessage.data);
@@ -58,7 +58,7 @@ export class PlayersService {
       this.changed$.next();
     });
 
-    this.websocketService.playerPositionMessages$.pipe(untilDestroyed(this)).subscribe(playerPositionMessage => {
+    this.mainWebsocketService.playerPositionMessages$.pipe(untilDestroyed(this)).subscribe(playerPositionMessage => {
       switch (playerPositionMessage.type) {
         case ServerMessageTypeEnum.POSITION_UPDATED:
           this.updatePlayer(playerPositionMessage.data);
@@ -69,7 +69,7 @@ export class PlayersService {
   }
 
   emitPlayerPositionUpdate(player: Player) {
-    this.websocketService.sendWSSMessage({
+    this.mainWebsocketService.sendWSSMessage({
       type: ClientMessageTypeEnum.POSITION_UPDATE_REQUEST,
       created: this.clockService.getCurrentTime(),
       data: player.position,
@@ -81,6 +81,9 @@ export class PlayersService {
   }
 
   addPlayer(player: OtherPlayer) {
-    this.players.set(player.id, new Player(player, this.clockService));
+    // If player has been already setup by wss then don't override
+    if (!this.players.get(player.id)) {
+      this.players.set(player.id, new Player(player, this.clockService));
+    }
   }
 }
