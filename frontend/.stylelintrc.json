@@ -5,7 +5,7 @@
   ],
   "rules": {
     "max-nesting-depth": [
-      3,
+      4,
       {
         "ignore": ["pseudo-classes"]
       }

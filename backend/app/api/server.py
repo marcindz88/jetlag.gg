@@ -45,7 +45,7 @@ def add_player(body: AddPlayerRequestBody):
     except exceptions.PlayerInvalidNickname:
         raise HTTPException(status_code=400, detail="Invalid nickname")
     except exceptions.PlayerLimitExceeded:
-        raise HTTPException(status_code=400, detail="Lobby is full")
+        raise HTTPException(status_code=409, detail="Lobby is full")
 
     return {**player.serialized, "token": player.token}
 
