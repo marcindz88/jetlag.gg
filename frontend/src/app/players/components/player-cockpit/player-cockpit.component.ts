@@ -24,7 +24,7 @@ export class PlayerCockpitComponent implements OnInit {
   }
 
   setUpdatePositionHandler() {
-    timer(0, 500)
+    timer(0, 1000)
       .pipe(untilDestroyed(this))
       .subscribe(() => {
         this.position = this.player.position;

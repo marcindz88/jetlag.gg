@@ -1,58 +1,64 @@
 import { Injectable } from '@angular/core';
+import { AbstractWebsocketService } from '@shared/services/abstract-websocket.service';
 import { Logger } from '@shared/services/logger.service';
-import { distinctUntilChanged, filter, map, merge, Observable, of, switchMap, take, takeWhile, tap, timer } from 'rxjs';
+import { merge, Observable, Subscription, takeWhile, timer } from 'rxjs';
 
-import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '../models/wss.types';
-import { WebsocketService } from './websocket.service';
+import { ClockClientMessage, ClockServerMessage } from '../models/wss.types';
 
 @Injectable({
   providedIn: 'root',
 })
-export class ClockService {
-  private timeDelta = 0;
-  private timeSyncer$: Observable<void> = this.createTimeSyncer();
-  constructor(private webSocketService: WebsocketService) {}
+export class ClockService extends AbstractWebsocketService<ClockServerMessage, ClockClientMessage> {
+  protected override url = 'clock';
+  private timeDelta: number | null = null;
+  private timeSyncer$: Observable<number> = this.createTimeSyncer();
+  private timeSyncerSubscription: Subscription | null = null;
 
-  getCurrentTime() {
-    return this.getTime() + this.timeDelta;
+  get class(): { name: string } {
+    return ClockService;
   }
 
   setupSyncingOfTime() {
-    this.webSocketService.isConnected$
-      .pipe(
-        distinctUntilChanged(),
-        switchMap(isConnected => (isConnected ? this.timeSyncer$ : of(null)))
-      )
-      .subscribe();
+    this.createWSSConnection();
+  }
+
+  getCurrentTime() {
+    return this.getTime() + this.delta;
+  }
+
+  protected messagesHandler(message: ClockServerMessage): void {
+    this.updateDelta(message.t, message.ref);
+  }
+
+  protected override openHandler() {
+    super.openHandler();
+    this.timeSyncerSubscription = this.timeSyncer$.subscribe(() => this.sendWSSMessage(this.getTime()));
+  }
+
+  protected override closeHandler() {
+    super.closeHandler();
+    this.timeSyncerSubscription?.unsubscribe();
+  }
+
+  private get delta(): number {
+    return this.timeDelta || 0;
   }
 
   private createTimeSyncer() {
     // 20 quick samples then update every 10 seconds
-    return merge(timer(0, 500).pipe(takeWhile(i => i < 20)), timer(10000, 5000)).pipe(
-      map(() => this.getTime()),
-      tap(() =>
-        this.webSocketService.sendWSSMessage({
-          type: ClientMessageTypeEnum.CLOCK_SYNC,
-          created: this.getTime(),
-          data: {},
-        })
-      ),
-      switchMap(sentTime =>
-        this.webSocketService.clockMessages$.pipe(
-          filter(message => message.type === ServerMessageTypeEnum.CLOCK_TIME),
-          take(1),
-          tap(timeMessage => this.updateDelta(timeMessage.data.timestamp, sentTime))
-        )
-      ),
-      map(() => undefined)
-    );
+    return merge(timer(0, 500).pipe(takeWhile(i => i < 20)), timer(5000, 5000));
   }
 
   private updateDelta(messageTimestamp: number, sentTime: number) {
     // Server time - half of the request time - sent time
     const delta = messageTimestamp - (this.getTime() - sentTime) / 2 - sentTime;
-    if (this.timeDelta) {
-      this.timeDelta = Math.round((this.timeDelta + delta) / 2);
+    if (this.timeDelta !== null) {
+      // If delta is significantly larger than current saved - reject
+      if (Math.abs(delta) > (Math.abs(this.delta) + 1) * 20) {
+        Logger.warn(ClockService, `RECEIVED: ${delta.toFixed(0)} -> REJECTED`);
+        return;
+      }
+      this.timeDelta = Math.round((this.delta + delta) / 2);
     } else {
       this.timeDelta = Math.round(delta);
     }

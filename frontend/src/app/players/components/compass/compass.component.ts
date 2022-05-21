@@ -9,5 +9,5 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 export class CompassComponent {
   readonly directions = ['N', 'E', 'S', 'W'];
 
-  @Input() bearing = 180;
+  @Input() bearing = 0;
 }
