@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
+
 import { ENDPOINTS } from '../constants/endpoints';
 
 type QueryParam = {
@@ -21,8 +22,8 @@ export class EndpointsService {
     return `${environment.protocols.http}${environment.server.apiSubDomain}${environment.server.domain}/api/${url}`;
   }
 
-  getWebSocketEndpoint(): string {
-    return `${environment.protocols.ws}${environment.server.wsSubDomain}${environment.server.domain}/ws/`;
+  getWebSocketEndpoint(url: string): string {
+    return `${environment.protocols.ws}${environment.server.wsSubDomain}${environment.server.domain}/${url}/`;
   }
 
   private getUrlWithReplacedId(url: string, config?: Config): string {
