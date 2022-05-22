@@ -19,8 +19,9 @@ from app.game.exceptions import (
     AirportFull,
     TooFarToLand,
     InvalidAirport,
+    CantFlyWhenLanded,
 )
-from app.game.models import PlayerPositionUpdateRequest, AirportLandingRequest
+from app.game.models import PlayerPositionUpdateRequest, AirportLandingRequest, AirportDepartureRequest
 from app.tools.encoder import encode
 from app.tools.misc import random_with_probability
 from app.tools.timestamp import timestamp_now
@@ -148,6 +149,14 @@ class Player:
         return bool(self.session_id)
 
     @property
+    def is_landed(self) -> bool:
+        return bool(self._airport_id)
+
+    @property
+    def airport_id(self) -> uuid.UUID:
+        return self._airport_id
+
+    @property
     def serialized(self) -> dict:
         return {
             "id": self.id,
@@ -179,7 +188,7 @@ class Airport:
             "id": self.id,
             "name": self.name,
             "coordinates": self.coordinates.serialized,
-            "occupying_player": self.occupying_player.serialized if self.occupying_player else None,
+            "occupying_player": self.occupying_player.id if self.occupying_player else None,
             "shipments": [shipment.serialized for shipment in self.shipments],
         }
 
@@ -206,6 +215,12 @@ class Airport:
             return False
         self.occupying_player = None
         player._airport_id = None
+
+        now = timestamp_now()
+        player.position.coordinates.latitude = self.coordinates.latitude
+        player.position.coordinates.longitude = self.coordinates.longitude
+        player.position.velocity = 500000
+        player.position.timestamp = now
         return True
 
 
@@ -315,6 +330,11 @@ class GameSession:
         self.broadcast_event(event=event, everyone_except=[player])
 
         # send game info
+        player_list_event = Event(
+            type=EventType.PLAYER_LIST,
+            data={"players": self.player_list()},
+        )
+        self.send_event(event=player_list_event, player=player)
         airport_list_event = Event(
             type=EventType.AIRPORT_LIST,
             data={"airports": [airport.serialized for airport in self._airports.values()]}
@@ -339,6 +359,11 @@ class GameSession:
         except PlayerNotFound:
             pass
         try:
+            if player.is_landed:
+                airport = self._airports.get(player.airport_id)
+                airport.remove_player(player)
+                airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
+                self.broadcast_event(event=airport_updated_event)
             self._players.pop(player.id)
             event = Event(type=EventType.PLAYER_REMOVED, data=player.serialized)
             self.broadcast_event(event=event, everyone_except=[player])
@@ -349,6 +374,9 @@ class GameSession:
         logging.info(f"update_player_position {player.id} timestamp: {timestamp} V={velocity} bearing={bearing}")
         last_position = player.position
         MAX_FUTURE_TIME_DEVIATION = 500  # event can be at most 500ms in the future
+
+        if player.is_landed:
+            raise CantFlyWhenLanded
 
         if last_position.timestamp >= timestamp:
             # ignore, we can't change the past
@@ -388,17 +416,33 @@ class GameSession:
         logging.info(f"handle_airport_landing_request_event {player.id} {event}")
         data_model = AirportLandingRequest(**event.data)
 
-        airport: Airport = self._airports.get(data_model.airport_id)
+        airport: Airport = self._airports.get(data_model.id)
         if not airport:
             raise InvalidAirport
 
         airport.land_player(player=player)
 
-        airport_plane_landed_event = Event(type=EventType.AIRPORT_PLANE_LANDED, data={
-            "id": airport.id,
-            "occupying_player_id": airport.occupying_player.id,
+        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
+        self.broadcast_event(event=airport_updated_event)
+
+        position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
+            "id": player.id,
+            "position": player.position.serialized,
         })
-        self.broadcast_event(event=airport_plane_landed_event)
+        self.broadcast_event(event=position_updated_event)
+
+    def handle_airport_departure_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_airport_departure_request_event {player.id} {event}")
+        data_model = AirportDepartureRequest(**event.data)
+
+        airport: Airport = self._airports.get(data_model.id)
+        if not airport:
+            raise InvalidAirport
+
+        airport.remove_player(player=player)
+
+        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
+        self.broadcast_event(event=airport_updated_event)
 
         position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
             "id": player.id,
@@ -415,4 +459,8 @@ class GameSession:
 
         if event.type == EventType.AIRPORT_LANDING_REQUEST:
             self.handle_airport_landing_request_event(player=player, event=event)
+            return
+
+        if event.type == EventType.AIRPORT_DEPARTURE_REQUEST:
+            self.handle_airport_departure_request_event(player=player, event=event)
             return
