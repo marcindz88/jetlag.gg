@@ -202,6 +202,13 @@ class GameSession:
         event = Event(type=EventType.PLAYER_CONNECTED, data=player.serialized)
         self.broadcast_event(event=event, everyone_except=[player])
 
+        # send game info
+        player_list_event = Event(
+            type=EventType.PLAYER_LIST,
+            data={"players": self.player_list()},
+        )
+        self.send_event(event=player_list_event, player=player)
+
     def remove_session(self, ws_session: WebSocketSession):
         logging.info(f"remove_session {ws_session.id}")
         ws_session.close_connection()
