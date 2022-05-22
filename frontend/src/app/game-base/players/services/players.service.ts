@@ -1,58 +1,38 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { UserService } from '@auth/services/user.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
-import { enableLoader } from '@shared/operators/operators';
 import { ClockService } from '@shared/services/clock.service';
-import { EndpointsService } from '@shared/services/endpoints.service';
 import { MainWebsocketService } from '@shared/services/main-websocket.service';
-import { Subject } from 'rxjs';
+import { ReplaySubject } from 'rxjs';
 
 import { Player } from '../models/player';
-import { OtherPlayer, PartialPlayerWithId } from '../models/player.types';
+import { OtherPlayer, PartialPlayerWithId, PlayerList } from '../models/player.types';
 
 @UntilDestroy()
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class PlayersService {
   players = new Map<string, Player>();
   myPlayer: Player | null = null;
-  changed$ = new Subject<void>();
+  changed$ = new ReplaySubject<void>();
 
-  constructor(
-    private httpClient: HttpClient,
-    private endpointsService: EndpointsService,
-    private mainWebsocketService: MainWebsocketService,
-    private clockService: ClockService,
-    private userService: UserService
-  ) {
-    this.fetchPlayers();
-    this.setPlayersUpdateHandler();
-  }
+  constructor(private mainWebsocketService: MainWebsocketService, private clockService: ClockService) {}
 
-  fetchPlayers() {
-    this.httpClient
-      .get<OtherPlayer[]>(this.endpointsService.getEndpoint('players'))
-      .pipe(untilDestroyed(this), enableLoader)
-      .subscribe(players => {
-        players.forEach(this.addPlayer.bind(this));
-        this.myPlayer = this.players.get(this.userService.user$.value!.id)!;
-        this.changed$.next();
-      });
-  }
-
-  setPlayersUpdateHandler() {
+  setPlayersUpdateHandler(userId: string) {
     this.mainWebsocketService.playerMessages$.pipe(untilDestroyed(this)).subscribe(playerMessage => {
       switch (playerMessage.type) {
-        case ServerMessageTypeEnum.REGISTERED:
-          this.addPlayer(playerMessage.data);
+        case ServerMessageTypeEnum.PLAYER_LIST:
+          this.savePlayersList(playerMessage.data as PlayerList);
+          this.myPlayer = this.players.get(userId)!;
           break;
-        case ServerMessageTypeEnum.CONNECTED:
-        case ServerMessageTypeEnum.DISCONNECTED:
-          this.updatePlayer(playerMessage.data);
+        case ServerMessageTypeEnum.PLAYER_REGISTERED:
+          this.addPlayer(playerMessage.data as OtherPlayer);
           break;
-        case ServerMessageTypeEnum.REMOVED:
-          this.players.delete(playerMessage.data.id);
+        case ServerMessageTypeEnum.PLAYER_CONNECTED:
+        case ServerMessageTypeEnum.PLAYER_DISCONNECTED:
+          this.updatePlayer(playerMessage.data as OtherPlayer);
+          break;
+        case ServerMessageTypeEnum.PLAYER_REMOVED:
+          this.players.delete((playerMessage.data as OtherPlayer).id);
           break;
       }
       this.changed$.next();
@@ -60,7 +40,7 @@ export class PlayersService {
 
     this.mainWebsocketService.playerPositionMessages$.pipe(untilDestroyed(this)).subscribe(playerPositionMessage => {
       switch (playerPositionMessage.type) {
-        case ServerMessageTypeEnum.POSITION_UPDATED:
+        case ServerMessageTypeEnum.PLAYER_POSITION_UPDATED:
           this.updatePlayer(playerPositionMessage.data);
           break;
       }
@@ -70,10 +50,14 @@ export class PlayersService {
 
   emitPlayerPositionUpdate(player: Player) {
     this.mainWebsocketService.sendWSSMessage({
-      type: ClientMessageTypeEnum.POSITION_UPDATE_REQUEST,
+      type: ClientMessageTypeEnum.PLAYER_POSITION_UPDATE_REQUEST,
       created: this.clockService.getCurrentTime(),
       data: player.position,
     });
+  }
+
+  private savePlayersList(playersList: PlayerList) {
+    playersList.players.forEach(this.addPlayer.bind(this));
   }
 
   updatePlayer(playerData: PartialPlayerWithId | OtherPlayer) {
