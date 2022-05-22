@@ -8,6 +8,7 @@ from app.tools.timestamp import timestamp_now
 
 
 class EventType(str, enum.Enum):
+    PLAYER_LIST = "player.list"
     PLAYER_CONNECTED = "player.connected"
     PLAYER_REGISTERED = 'player.registered'
     PLAYER_DISCONNECTED = 'player.disconnected'
@@ -17,6 +18,7 @@ class EventType(str, enum.Enum):
 
 
 EVENTS_EMITTED_BY_SERVER = [
+    EventType.PLAYER_LIST,
     EventType.PLAYER_CONNECTED,
     EventType.PLAYER_REGISTERED,
     EventType.PLAYER_DISCONNECTED,
