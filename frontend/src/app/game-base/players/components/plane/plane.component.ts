@@ -2,13 +2,13 @@ import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/c
 import { NgtCamera } from '@angular-three/core';
 import { NgtPrimitive } from '@angular-three/core/primitive';
 import { BeforeRenderedObject } from '@pg/game-base/models/game.types';
-import { Player } from '@pg/players/models/player';
+import { Player } from '@pg/game-base/players/models/player';
 import { map } from 'rxjs';
 import { Object3D } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
-import { MAP_SCALE, MOVING_CIRCUMFERENCE } from '../../models/game.constants';
-import { TextureModelsService } from '../../services/texture-models.service';
+import { MAP_SCALE, MOVING_CIRCUMFERENCE } from '../../../constants/game.constants';
+import { TextureModelsService } from '../../../services/texture-models.service';
 
 @Component({
   selector: 'pg-plane',

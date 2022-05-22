@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
 import { NgtMesh } from '@angular-three/core/meshes';
-import { EARTH_RADIUS } from '@pg/game-base/models/game.constants';
+import { EARTH_RADIUS } from '@pg/game-base/constants/game.constants';
 import { TextureModelsService } from '@pg/game-base/services/texture-models.service';
 import { LoaderService } from '@shared/services/loader.service';
 

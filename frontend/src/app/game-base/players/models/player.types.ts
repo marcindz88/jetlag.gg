@@ -10,6 +10,10 @@ export type OtherPlayer = {
   position: PlanePosition;
 } & BasePlayer;
 
+export type PlayerList = {
+  players: OtherPlayer[];
+};
+
 export type PartialPlayerData = Omit<Partial<OtherPlayer>, 'id'>;
 
 export type PartialPlayerWithId = Omit<Partial<OtherPlayer>, 'id'> & Pick<OtherPlayer, 'id'>;
