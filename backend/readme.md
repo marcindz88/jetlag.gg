@@ -38,6 +38,7 @@ only 1 connection per user at a time is allowed
 > }
 
 ### Event types emitted by the server:
+* 'player.list'
 * 'player.connected'
 * 'player.registered'
 * 'player.disconnected'
