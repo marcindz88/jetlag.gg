@@ -1,6 +1,10 @@
 .players-summary {
   margin: 20px;
 
+  & &__no-players {
+    padding: 0 10px;
+  }
+
   & &__player {
     display: block;
 

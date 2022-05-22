@@ -1,11 +1,11 @@
-import { FLIGHT_ALTITUDE, VELOCITY } from '@pg/game-base/models/game.constants';
+import { FLIGHT_ALTITUDE, VELOCITY } from '@pg/game-base/constants/game.constants';
 import {
   calculateBearingFromDirectionAndRotation,
   calculatePositionAfterTimeInterval,
   transformCoordinatesIntoPoint,
   transformPointAndDirectionIntoRotation,
   transformPointIntoCoordinates,
-} from '@pg/game-base/utils/geo-utils';
+} from '@pg/shared/utils/geo-utils';
 import { ClockService } from '@shared/services/clock.service';
 import { Subject } from 'rxjs';
 import { Euler, Object3D, Vector3 } from 'three';

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { OtherPlayer, PlayerPositionUpdate } from '@pg/players/models/player.types';
+import { AirportList, AirportUpdate } from '@pg/game-base/airports/models/airport.types';
+import { OtherPlayer, PlayerList, PlayerPositionUpdate } from '@pg/game-base/players/models/player.types';
 import { ClientMessageTypeEnum, MainMessage, MessageDataType, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { AbstractWebsocketService } from '@shared/services/abstract-websocket.service';
 import { Subject } from 'rxjs';
@@ -11,7 +12,8 @@ export class MainWebsocketService extends AbstractWebsocketService<
   MainMessage,
   MainMessage<MessageDataType, ClientMessageTypeEnum>
 > {
-  playerMessages$: Subject<MainMessage<OtherPlayer>> = new Subject();
+  airportMessages$: Subject<MainMessage<AirportList | AirportUpdate>> = new Subject();
+  playerMessages$: Subject<MainMessage<PlayerList | OtherPlayer>> = new Subject();
   playerPositionMessages$: Subject<MainMessage<PlayerPositionUpdate>> = new Subject();
 
   get class(): { name: string } {
@@ -29,6 +31,10 @@ export class MainWebsocketService extends AbstractWebsocketService<
     }
     if (message.type.startsWith('player')) {
       this.playerMessages$.next(message as MainMessage<OtherPlayer>);
+      return;
+    }
+    if (message.type.startsWith('airport')) {
+      this.airportMessages$.next(message as MainMessage<AirportList | AirportUpdate>);
       return;
     }
   }

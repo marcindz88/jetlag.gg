@@ -1,15 +1,15 @@
-import { calculateCircumference } from '../utils/geo-utils';
-import { PlaneState } from './game.types';
+import { PlaneState } from '../models/game.types';
 
 export const EARTH_RADIUS = 40;
 export const REAL_EARTH_RADIUS = 6371; // km
 export const MAP_SCALE = EARTH_RADIUS / REAL_EARTH_RADIUS;
 export const FLIGHT_ALTITUDE = 200 * MAP_SCALE;
+export const AIRPORT_ALTITUDE = 80 * MAP_SCALE; // Upper end of tower
 export const CAMERA_ALTITUDE = FLIGHT_ALTITUDE + 10;
 
 export const MOVING_RADIUS = EARTH_RADIUS + FLIGHT_ALTITUDE;
 
-export const MOVING_CIRCUMFERENCE = calculateCircumference(MOVING_RADIUS);
+export const MOVING_CIRCUMFERENCE = 2 * Math.PI * MOVING_RADIUS;
 
 // km/h
 export const VELOCITY = {
@@ -23,7 +23,7 @@ export const VELOCITY = {
 export const BEARING = {
   min: 0,
   max: 360,
-  step: 2,
+  step: 4,
   default: 180,
 };
 
