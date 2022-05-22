@@ -38,16 +38,32 @@ only 1 connection per user at a time is allowed
 > }
 
 ### Event types emitted by the server:
+* 'player.list'
 * 'player.connected'
 * 'player.registered'
 * 'player.disconnected'
 * 'player.removed'
 * 'player_position.updated'
+* 'airport.list'
+* 'airport.updated'
 
 ### Event types accepted from the clients:
 * 'player_position.update_request'<br>
 sample:
 > ws.send(JSON.stringify({type: 'player_position.update_request', created: new Date().getTime(), data: {bearing: 30, velocity: 2000, timestamp: new Date().getTime()}}))
+
+* 'airport.landing_request'<br>
+sample:
+> ws.send(JSON.stringify({type: 'airport.landing_request', created: new Date().getTime(), data: {id: "d5e69764-ac04-42d4-a2cc-2f6fd8554f47"}}))
+
+where id is the id of the airport.
+
+* 'airport.departure_request'<br>
+sample:
+> ws.send(JSON.stringify({type: 'airport.departure_request', created: new Date().getTime(), data: {id: "d5e69764-ac04-42d4-a2cc-2f6fd8554f47"}}))
+
+where id is the id of the airport.
+
 
 ### Clock synchronisation
 > GET /clock/ (websocket)
