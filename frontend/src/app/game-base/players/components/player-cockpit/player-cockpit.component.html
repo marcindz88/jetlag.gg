@@ -1,5 +1,5 @@
 <div class="player-cockpit" *ngIf="player && position">
-  <pg-card class="plane-stats-container">
+  <pg-card class="player-cockpit__stats">
     <table>
       <tr>
         <td>Velocity:</td>
@@ -19,5 +19,5 @@
       </tr>
     </table>
   </pg-card>
-  <pg-compass [bearing]="position.bearing"></pg-compass>
+  <pg-compass class="player-cockpit__compass" [bearing]="position.bearing"></pg-compass>
 </div>
