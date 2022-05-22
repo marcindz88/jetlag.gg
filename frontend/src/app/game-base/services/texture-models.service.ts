@@ -6,7 +6,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 @Injectable({ providedIn: 'root' })
 export class TextureModelsService {
-  earthTextures$!: Observable<{ bump: Texture; map: Texture; spec: Texture; sheenColor: Color }>;
+  earthTextures$!: Observable<{ bump: Texture; map: Texture; spec: Texture }>;
   planeTextures$!: Observable<{ trail: Texture; model: Object3D }>;
   airportTextures$!: Observable<{
     model: Object3D;
@@ -31,7 +31,7 @@ export class TextureModelsService {
       this.ngtLoader.use(TextureLoader, 'assets/earth/earthspec.jpg'),
     ]).pipe(
       filter(textures => textures.every(Boolean)),
-      map(([bump, map, spec]) => ({ bump, map, spec, sheenColor: new Color('#ff8a00').convertSRGBToLinear() })),
+      map(([bump, map, spec]) => ({ bump, map, spec })),
       shareReplay(1)
     );
   }
