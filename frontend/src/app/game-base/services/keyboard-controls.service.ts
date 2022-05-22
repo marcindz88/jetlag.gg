@@ -13,10 +13,10 @@ export class KeyboardControlsService {
   private keyUpEvent$ = fromEvent<KeyboardEvent>(document, 'keyup').pipe(untilDestroyed(this));
 
   constructor() {
-    this.handleKeyEvent(KeyEventEnum.FORWARD, 'w', 'ArrowUp', 'Up');
-    this.handleKeyEvent(KeyEventEnum.LEFT, 'a', 'ArrowLeft', 'Left');
-    this.handleKeyEvent(KeyEventEnum.RIGHT, 'd', 'ArrowRight', 'Right');
-    this.handleKeyEvent(KeyEventEnum.BACKWARD, 's', 'ArrowDown', 'Down');
+    this.handleKeyEvent(KeyEventEnum.FORWARD, 'w', 'W', 'ArrowUp', 'Up');
+    this.handleKeyEvent(KeyEventEnum.LEFT, 'a', 'A', 'ArrowLeft', 'Left');
+    this.handleKeyEvent(KeyEventEnum.RIGHT, 'd', 'D', 'ArrowRight', 'Right');
+    this.handleKeyEvent(KeyEventEnum.BACKWARD, 's', 'S', 'ArrowDown', 'Down');
     this.handleKeyEvent(KeyEventEnum.CAMERA_FOCUS, 'c', 'C');
     this.handleKeyEvent(KeyEventEnum.CAMERA_FOLLOW, 'f', 'F');
   }

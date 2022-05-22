@@ -1,5 +1,5 @@
 <pg-card class="players-summary" *ngIf="players">
-  <h5 *ngIf="!players.size; else playersInfo">No players in session</h5>
+  <h5 class="players-summary__no-players" *ngIf="!players.size; else playersInfo">No players in session</h5>
   <ng-template #playersInfo>
     <pg-player-summary
       class="players-summary__player"

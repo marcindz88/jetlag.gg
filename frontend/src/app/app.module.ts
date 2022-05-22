@@ -6,11 +6,10 @@ import { SharedModule } from '@shared/shared.module';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
-import { PlayersModule } from './players/players.module';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [BrowserModule, AppRoutingModule, RouterModule, PlayersModule, SharedModule, AuthModule],
+  imports: [BrowserModule, AppRoutingModule, RouterModule, SharedModule, AuthModule],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { Player } from '@pg/players/models/player';
-import { PlanePosition } from '@pg/players/models/player.types';
+import { Player } from '@pg/game-base/players/models/player';
+import { PlanePosition } from '@pg/game-base/players/models/player.types';
 import { timer } from 'rxjs';
 
 @UntilDestroy()

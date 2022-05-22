@@ -1,7 +1,7 @@
 @import 'src/styles/mixins';
 
 @mixin transition {
-  //transition: transform 200ms linear;
+  transition: transform 200ms linear;
 }
 
 :host {

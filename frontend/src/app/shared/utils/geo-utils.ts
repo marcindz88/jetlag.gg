@@ -1,11 +1,8 @@
-import { EARTH_RADIUS, MAP_SCALE } from '@pg/game-base/models/game.constants';
-import { PlanePosition } from '@pg/players/models/player.types';
+import { EARTH_RADIUS, MAP_SCALE } from '@pg/game-base/constants/game.constants';
+import { GeoLocationPoint } from '@pg/game-base/models/game.types';
+import { PlanePosition } from '@pg/game-base/players/models/player.types';
 import { Euler, Spherical, Vector3 } from 'three';
 import { degToRad, radToDeg } from 'three/src/math/MathUtils';
-
-import { GeoLocationPoint } from '../models/game.types';
-
-export const calculateCircumference = (radius: number) => 2 * Math.PI * radius;
 
 const convertLocationPointToRad = (point: GeoLocationPoint): GeoLocationPoint => ({
   lat: degToRad(point.lat),
@@ -16,7 +13,7 @@ const arePointsEqual = (start: GeoLocationPoint, end: GeoLocationPoint) => {
   return Math.abs(start.lat - end.lat) < 0.00000001 && Math.abs(start.lon - end.lon) < 0.00000001;
 };
 
-const normalizeBearing = (bearing: number) => {
+export const normalizeBearing = (bearing: number) => {
   return bearing < 0 ? bearing + 360 : bearing;
 };
 
