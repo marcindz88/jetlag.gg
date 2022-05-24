@@ -1,7 +1,7 @@
 import { AirportType, AirportUpdate, Shipment } from '@pg/game-base/airports/models/airport.types';
 import { AIRPORT_ALTITUDE } from '@pg/game-base/constants/game.constants';
 import { GeoLocationPoint } from '@pg/game-base/models/game.types';
-import { transformCoordinatesIntoPoint, transformPointAndDirectionIntoRotation } from '@pg/shared/utils/geo-utils';
+import { transformCoordinatesIntoPoint, transformPointAndDirectionIntoRotation } from '@pg/game-base/utils/geo-utils';
 import { Euler, Vector3 } from 'three';
 
 export class Airport implements AirportType {

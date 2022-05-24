@@ -7,9 +7,12 @@ import { NgtAxesHelperModule } from '@angular-three/core/helpers';
 import { NgtPrimitiveModule } from '@angular-three/core/primitive';
 import { NgtSobaText3dModule } from '@angular-three/soba/abstractions';
 import { AirportComponent } from '@pg/game-base/airports/components/airport/airport.component';
+import { AirportInfoComponent } from '@pg/game-base/airports/components/airport-info/airport-info.component';
+import { NearbyAirportsComponent } from '@pg/game-base/airports/components/nearby-airports/nearby-airports.component';
+import { SharedModule } from '@shared/shared.module';
 
 @NgModule({
-  declarations: [AirportComponent],
+  declarations: [AirportComponent, NearbyAirportsComponent, AirportInfoComponent],
   imports: [
     CommonModule,
     HttpClientModule,
@@ -18,7 +21,8 @@ import { AirportComponent } from '@pg/game-base/airports/components/airport/airp
     NgtSobaText3dModule,
     NgtPiPipeModule,
     NgtAxesHelperModule,
+    SharedModule,
   ],
-  exports: [AirportComponent],
+  exports: [AirportComponent, NearbyAirportsComponent],
 })
 export class AirportsModule {}

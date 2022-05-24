@@ -40,10 +40,11 @@ export class PlaneComponent {
   constructor(private textureModelsService: TextureModelsService) {}
 
   updatePlane(event: BeforeRenderedObject) {
-    this.movePlaneForward(event.object, event.state.delta);
+    this.movePlane(event.object, event.state.delta);
+    this.focusCameraOnPlayer(event.object);
   }
 
-  private movePlaneForward(plane: Object3D, delta: number) {
+  private movePlane(plane: Object3D, delta: number) {
     const positionCopy = plane.position.clone();
 
     // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
@@ -56,15 +57,10 @@ export class PlaneComponent {
 
     // Update position and rotation up to target gradually
     this.updateByDifference(plane.position, plane.position, this.targetPosition!, 0.01);
-
-    // Move camera if focused
-    if (this.cameraFollowing) {
-      this.focusCameraOnPlayer(plane);
-    }
   }
 
   private focusCameraOnPlayer(plane: Object3D) {
-    if (this.camera) {
+    if (this.cameraFollowing && this.camera) {
       const position = plane.position.clone().multiplyScalar(1.2);
       this.camera.position.set(position.x, position.y, position.z);
     }
