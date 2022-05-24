@@ -1,0 +1,27 @@
+.table-wrapper {
+  margin: 20px;
+
+  & &__no-results {
+    padding: 0 10px;
+  }
+
+  & ::ng-deep table {
+    border-spacing: 0;
+
+    tr {
+      td {
+        padding-left: 6px;
+      }
+
+      td:last-of-type {
+        padding-right: 6px;
+      }
+    }
+
+    tr:nth-of-type(2n + 1) {
+      background-color: rgb(0 0 0 / 40%);
+    }
+  }
+
+}
+
