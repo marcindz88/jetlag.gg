@@ -1,0 +1,11 @@
+<pg-card class="table-wrapper">
+  <h5 class="table-wrapper__no-results" *ngIf="!length; else playersInfo">{{ noRecordsText }}</h5>
+  <ng-template #playersInfo>
+    <table>
+      <ng-container *ngTemplateOutlet="headerTemplate"></ng-container>
+      <ng-container *ngFor="let entry of data">
+        <ng-container *ngTemplateOutlet="rowTemplate; context: { data: entry }"></ng-container>
+      </ng-container>
+    </table>
+  </ng-template>
+</pg-card>

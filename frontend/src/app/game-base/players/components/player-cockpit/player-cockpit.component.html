@@ -1,4 +1,8 @@
 <div class="player-cockpit" *ngIf="player && position">
+  <pg-nearby-airports
+    class="player-cockpit__airports"
+    [airportList]="airportList"
+    [updateTrigger$]="airportsUpdateTrigger$"></pg-nearby-airports>
   <pg-card class="player-cockpit__stats">
     <table>
       <tr>

@@ -11,6 +11,8 @@ export const MOVING_RADIUS = EARTH_RADIUS + FLIGHT_ALTITUDE;
 
 export const MOVING_CIRCUMFERENCE = 2 * Math.PI * MOVING_RADIUS;
 
+export const NUMBER_OF_CLOSE_AIRPORTS = 4;
+
 // km/h
 export const VELOCITY = {
   min: 0,

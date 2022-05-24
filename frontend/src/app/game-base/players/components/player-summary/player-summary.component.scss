@@ -1,18 +1,6 @@
-:host {
-  display: grid;
-  grid-template-columns: 1fr 10px;
-  width: 150px;
-  align-items: center;
-}
-
 .nickname {
-  width: 150px;
+  min-width: 130px;
 }
-
-.status {
-  padding: 0 6px 0 8px;
-}
-
 
 .material-symbols-outlined {
   font-size: 12px;
