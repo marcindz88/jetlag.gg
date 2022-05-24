@@ -5,7 +5,7 @@ import {
   transformCoordinatesIntoPoint,
   transformPointAndDirectionIntoRotation,
   transformPointIntoCoordinates,
-} from '@pg/shared/utils/geo-utils';
+} from '@pg/game-base/utils/geo-utils';
 import { ClockService } from '@shared/services/clock.service';
 import { Subject } from 'rxjs';
 import { Euler, Object3D, Vector3 } from 'three';
@@ -78,16 +78,16 @@ export class Player {
 
   updateBearing(bearingChange: number) {
     this.planeObject!.rotation.z += degToRad(bearingChange);
-    this.flightParametersChanged$.next();
     this.lastChangeTimestamp = this.clockService.getCurrentTime();
+    this.flightParametersChanged$.next();
   }
 
   updateVelocity(velocityChange: number) {
     const velocity = this.velocity + velocityChange;
     if (velocity >= VELOCITY.min && velocity <= VELOCITY.max) {
       this.velocity = velocity;
-      this.flightParametersChanged$.next();
       this.lastChangeTimestamp = this.clockService.getCurrentTime();
+      this.flightParametersChanged$.next();
     }
   }
 }

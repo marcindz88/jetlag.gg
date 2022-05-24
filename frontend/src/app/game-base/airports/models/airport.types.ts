@@ -1,3 +1,4 @@
+import { Airport } from '@pg/game-base/airports/models/airport';
 import { GeoLocationPoint } from '@pg/game-base/models/game.types';
 
 export type Shipment = {
@@ -24,3 +25,8 @@ export type AirportUpdate = {
   id: string;
   occupying_player_id: string;
 };
+
+export type AirPortsMap = Map<string, Airport>;
+
+export type NearAirport = { airport: Airport; distance: number };
+export type NearAirportsList = NearAirport[];

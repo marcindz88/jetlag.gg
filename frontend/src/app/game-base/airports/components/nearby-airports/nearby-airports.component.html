@@ -1,0 +1,9 @@
+<pg-table
+  [array]="airportList"
+  [noRecordsText]="'No available airports'"
+  [rowTemplate]="airport_row"
+  [updateTrigger$]="updateTrigger$">
+</pg-table>
+<ng-template #airport_row let-nearAirport="data">
+  <tr pg-airport-info [nearAirport]="nearAirport"></tr>
+</ng-template>

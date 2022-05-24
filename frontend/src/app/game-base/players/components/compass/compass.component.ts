@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { normalizeBearing } from '@shared/utils/geo-utils';
+import { normalizeBearing } from '@pg/game-base/utils/geo-utils';
 
 @Component({
   selector: 'pg-compass',

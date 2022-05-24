@@ -1,4 +1,4 @@
-import { EARTH_RADIUS, MAP_SCALE } from '@pg/game-base/constants/game.constants';
+import { EARTH_RADIUS, MAP_SCALE, REAL_EARTH_RADIUS } from '@pg/game-base/constants/game.constants';
 import { GeoLocationPoint } from '@pg/game-base/models/game.types';
 import { PlanePosition } from '@pg/game-base/players/models/player.types';
 import { Euler, Spherical, Vector3 } from 'three';
@@ -9,7 +9,7 @@ const convertLocationPointToRad = (point: GeoLocationPoint): GeoLocationPoint =>
   lon: degToRad(point.lon),
 });
 
-const arePointsEqual = (start: GeoLocationPoint, end: GeoLocationPoint) => {
+export const arePointsEqual = (start: GeoLocationPoint, end: GeoLocationPoint) => {
   return Math.abs(start.lat - end.lat) < 0.00000001 && Math.abs(start.lon - end.lon) < 0.00000001;
 };
 
@@ -19,9 +19,10 @@ export const normalizeBearing = (bearing: number) => {
 
 export const transformPointIntoCoordinates = (vector: Vector3): GeoLocationPoint => {
   const spherical = new Spherical().setFromVector3(vector);
+  const newLon = radToDeg(spherical.theta) - 90;
   return {
     lat: -(radToDeg(spherical.phi) - 90),
-    lon: radToDeg(spherical.theta) - 90,
+    lon: newLon < -180 ? newLon + 360 : newLon,
   };
 };
 
@@ -92,4 +93,20 @@ export const calculatePositionAfterTimeInterval = (
     velocity: position.velocity,
     timestamp: currentTimestamp,
   };
+};
+
+export const calculateDistanceBetweenPoints = (point1: GeoLocationPoint, point2: GeoLocationPoint) => {
+  const { lon: lon1, lat: lat1 } = convertLocationPointToRad(point1);
+  const { lon: lon2, lat: lat2 } = convertLocationPointToRad(point2);
+
+  const half_lat_delta = (lat2 - lat1) / 2;
+  const half_lon_delta = (lon2 - lon1) / 2;
+
+  const a = Math.min(
+    1,
+    Math.pow(Math.sin(half_lat_delta), 2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(half_lon_delta), 2)
+  );
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return REAL_EARTH_RADIUS * c; // km
 };

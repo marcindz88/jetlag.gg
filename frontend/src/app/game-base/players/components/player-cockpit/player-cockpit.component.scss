@@ -21,4 +21,10 @@
     position: absolute;
     right: 0;
   }
+
+  & &__airports {
+    left: 0;
+    position: absolute;
+    top: 0;
+  }
 }
