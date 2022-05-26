@@ -28,5 +28,4 @@ export type AirportUpdate = {
 
 export type AirPortsMap = Map<string, Airport>;
 
-export type NearAirport = { airport: Airport; distance: number };
-export type NearAirportsList = NearAirport[];
+export type NearAirportsList = Airport[];

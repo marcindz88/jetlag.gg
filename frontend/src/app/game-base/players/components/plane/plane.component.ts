@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, ViewChild } from '@angular/core';
 import { NgtCamera } from '@angular-three/core';
+import { NgtGroup } from '@angular-three/core/group';
 import { NgtPrimitive } from '@angular-three/core/primitive';
 import { BeforeRenderedObject } from '@pg/game-base/models/game.types';
 import { Player } from '@pg/game-base/players/models/player';
-import { map } from 'rxjs';
-import { Euler, Object3D, Vector3 } from 'three';
+import { map, Observable } from 'rxjs';
+import { Euler, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
 import { MAP_SCALE, MOVING_CIRCUMFERENCE } from '../../../constants/game.constants';
@@ -15,9 +16,10 @@ import { TextureModelsService } from '../../../services/texture-models.service';
   templateUrl: './plane.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PlaneComponent {
-  @ViewChild(NgtPrimitive) set plane(plane: NgtPrimitive) {
+export class PlaneComponent implements OnInit {
+  @ViewChild(NgtGroup) set plane(plane: NgtPrimitive) {
     this.player.planeObject = plane?.instanceValue;
+    console.log(plane);
   }
 
   @Input() set position(position: Vector3) {
@@ -31,17 +33,33 @@ export class PlaneComponent {
   @Input() player!: Player;
   @Input() cameraFollowing = false;
 
-  readonly textures$ = this.textureModelsService.planeTextures$.pipe(
-    map(({ model, trail }) => ({ model: model.clone(true), trail }))
-  );
+  textures$?: Observable<{ model: Object3D }>;
   initialPosition?: Vector3;
   targetPosition?: Vector3;
 
+  readonly materials = this.textureModelsService.materials;
+
   constructor(private textureModelsService: TextureModelsService) {}
+
+  ngOnInit() {
+    this.textures$ = this.textureModelsService.planeTextures$.pipe(
+      map(({ model }) => {
+        model = model.clone(true);
+        const newMaterial = this.getMaterial(model).clone();
+        newMaterial.color = this.player.color;
+        (model.children[0].children[0] as Mesh).material = newMaterial;
+        return { model };
+      })
+    );
+  }
 
   updatePlane(event: BeforeRenderedObject) {
     this.movePlane(event.object, event.state.delta);
     this.focusCameraOnPlayer(event.object);
+  }
+
+  getMaterial(model: Object3D) {
+    return (model.children[0].children[0] as Mesh).material as MeshStandardMaterial;
   }
 
   private movePlane(plane: Object3D, delta: number) {
@@ -56,13 +74,14 @@ export class PlaneComponent {
     this.updateByDifference(this.targetPosition!, positionCopy, plane.position, 1, 0.0000000001);
 
     // Update position and rotation up to target gradually
-    this.updateByDifference(plane.position, plane.position, this.targetPosition!, 0.01);
+    this.updateByDifference(plane.position, plane.position, this.targetPosition!, 0.1);
   }
 
   private focusCameraOnPlayer(plane: Object3D) {
     if (this.cameraFollowing && this.camera) {
       const position = plane.position.clone().multiplyScalar(1.2);
       this.camera.position.set(position.x, position.y, position.z);
+      this.camera.lookAt(plane.position);
     }
   }
 
@@ -89,6 +108,8 @@ export class PlaneComponent {
     const difference = end[direction] - start[direction];
     if (Math.abs(difference) > accuracy) {
       target[direction] += difference * multiplier;
+    } else {
+      target[direction] = end[direction];
     }
   }
 }

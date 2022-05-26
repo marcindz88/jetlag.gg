@@ -7,6 +7,7 @@ import { ReplaySubject } from 'rxjs';
 @Component({
   selector: 'pg-nearby-airports',
   templateUrl: './nearby-airports.component.html',
+  styleUrls: ['nearby-airports.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NearbyAirportsComponent {

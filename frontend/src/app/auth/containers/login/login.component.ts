@@ -15,6 +15,7 @@ import { UserService } from '../../services/user.service';
 })
 export class LoginComponent {
   form: FormGroup;
+  serverError: 'lobby_full' | 'unknown_error' | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -23,7 +24,7 @@ export class LoginComponent {
     private cdr: ChangeDetectorRef
   ) {
     this.form = this.formBuilder.group({
-      nickname: [null, Validators.required],
+      nickname: [null, [Validators.required, Validators.maxLength(15), Validators.minLength(3)]],
     });
   }
 
@@ -33,6 +34,7 @@ export class LoginComponent {
 
   registerAndStartGame() {
     if (this.form.valid) {
+      this.serverError = null;
       this.myPlayerService.createUser(this.nicknameControl?.value as string).subscribe({
         next: () => {
           LoaderService.addLoader(); // start additional loader until earth finishes rendering
@@ -45,10 +47,10 @@ export class LoginComponent {
                 this.nicknameControl?.setErrors({ username_taken: true });
                 break;
               case HttpStatusCode.Conflict:
-                this.nicknameControl?.setErrors({ lobby_full: true });
+                this.serverError = 'lobby_full';
                 break;
               default:
-                this.nicknameControl?.setErrors({ unknown_error: true });
+                this.serverError = 'unknown_error';
                 break;
             }
             this.cdr.markForCheck();
