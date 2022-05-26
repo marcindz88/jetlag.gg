@@ -5,5 +5,8 @@
   [updateTrigger$]="updateTrigger$">
 </pg-table>
 <ng-template #airport_row let-nearAirport="data">
-  <tr pg-airport-info [nearAirport]="nearAirport"></tr>
+  <tr>
+    <td class="name">{{ nearAirport.name }}</td>
+    <td class="distance">{{ nearAirport.distance | number: '1.1-1' }} km</td>
+  </tr>
 </ng-template>
