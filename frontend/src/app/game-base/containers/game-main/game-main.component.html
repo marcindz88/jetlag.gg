@@ -8,13 +8,7 @@
     [camera]="index === focusedPlayerIndex ? ngtCanvas?.cameraRef?.value : undefined"
     [cameraFollowing]="followingPlayer"></pg-plane>
   <pg-airport *ngFor="let airport of airports.values(); trackBy: trackById" [airport]="airport"></pg-airport>
-  <ngt-soba-orbit-controls
-    [rotateSpeed]="0.3"
-    [zoomSpeed]="0.3"
-    [enableZoom]="!followingPlayer"
-    [enableRotate]="!followingPlayer"
-    [enableDamping]="!followingPlayer"
-    [enablePan]="!followingPlayer"></ngt-soba-orbit-controls>
+  <ngt-soba-orbit-controls [enabled]="!followingPlayer" [rotateSpeed]="0.3" [zoomSpeed]="0.3"></ngt-soba-orbit-controls>
 </ngt-canvas>
 <pg-players-summary *ngIf="players" class="players-summary"></pg-players-summary>
 <pg-player-cockpit

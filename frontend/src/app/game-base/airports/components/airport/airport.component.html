@@ -1,14 +1,17 @@
 <ng-container *ngIf="textures$ | async as textures">
   <ngt-group [rotation]="airport.cartesianRotation" [position]="airport.cartesianPosition">
     <ngt-group [rotation]="[0, 1 | pi, 0]">
-      <ngt-soba-text3d
-        [fontUrl]="'assets/fonts/koulen.json'"
-        [text]="airport.name"
-        [height]="0.1"
-        [position]="[0, -0.5, -0.2]"
-        [size]="0.5"
-        [material]="[textures.colorMaterialX, textures.colorMaterialY]"></ngt-soba-text3d>
+      <pg-elevated-text [text]="airport.name"></pg-elevated-text>
       <ngt-primitive [object]="textures.model" [scale]="0.5"></ngt-primitive>
+      <ngt-group *ngIf="airport.isNearby$ | async">
+        <ngt-mesh>
+          <ngt-circle-geometry [args]="[NEARBY_AIRPORT_SCALED_DISTANCE, 64]"></ngt-circle-geometry>
+          <ngt-mesh-basic-material
+            [color]="textures.shadeColor"
+            [transparent]="true"
+            [opacity]="0.4"></ngt-mesh-basic-material>
+        </ngt-mesh>
+      </ngt-group>
     </ngt-group>
   </ngt-group>
 </ng-container>

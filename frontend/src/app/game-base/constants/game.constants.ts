@@ -3,15 +3,17 @@ import { PlaneState } from '../models/game.types';
 export const EARTH_RADIUS = 40;
 export const REAL_EARTH_RADIUS = 6371; // km
 export const MAP_SCALE = EARTH_RADIUS / REAL_EARTH_RADIUS;
+
 export const FLIGHT_ALTITUDE = 200 * MAP_SCALE;
 export const AIRPORT_ALTITUDE = 80 * MAP_SCALE; // Upper end of tower
 export const CAMERA_ALTITUDE = FLIGHT_ALTITUDE + 10;
 
 export const MOVING_RADIUS = EARTH_RADIUS + FLIGHT_ALTITUDE;
-
 export const MOVING_CIRCUMFERENCE = 2 * Math.PI * MOVING_RADIUS;
 
 export const NUMBER_OF_CLOSE_AIRPORTS = 4;
+export const NEARBY_AIRPORT_DISTANCE = 500;
+export const NEARBY_AIRPORT_SCALED_DISTANCE = NEARBY_AIRPORT_DISTANCE * MAP_SCALE;
 
 // km/h
 export const VELOCITY = {
