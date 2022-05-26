@@ -2,17 +2,19 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { NgtPiPipeModule } from '@angular-three/core';
+import { NgtCircleGeometryModule } from '@angular-three/core/geometries';
 import { NgtGroupModule } from '@angular-three/core/group';
 import { NgtAxesHelperModule } from '@angular-three/core/helpers';
+import { NgtMeshBasicMaterialModule } from '@angular-three/core/materials';
+import { NgtMeshModule } from '@angular-three/core/meshes';
 import { NgtPrimitiveModule } from '@angular-three/core/primitive';
 import { NgtSobaText3dModule } from '@angular-three/soba/abstractions';
 import { AirportComponent } from '@pg/game-base/airports/components/airport/airport.component';
-import { AirportInfoComponent } from '@pg/game-base/airports/components/airport-info/airport-info.component';
 import { NearbyAirportsComponent } from '@pg/game-base/airports/components/nearby-airports/nearby-airports.component';
 import { SharedModule } from '@shared/shared.module';
 
 @NgModule({
-  declarations: [AirportComponent, NearbyAirportsComponent, AirportInfoComponent],
+  declarations: [AirportComponent, NearbyAirportsComponent],
   imports: [
     CommonModule,
     HttpClientModule,
@@ -22,6 +24,9 @@ import { SharedModule } from '@shared/shared.module';
     NgtPiPipeModule,
     NgtAxesHelperModule,
     SharedModule,
+    NgtMeshBasicMaterialModule,
+    NgtMeshModule,
+    NgtCircleGeometryModule,
   ],
   exports: [AirportComponent, NearbyAirportsComponent],
 })

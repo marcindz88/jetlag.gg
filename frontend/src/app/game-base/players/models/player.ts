@@ -1,4 +1,5 @@
 import { FLIGHT_ALTITUDE, VELOCITY } from '@pg/game-base/constants/game.constants';
+import { getRandomColorFromNickname } from '@pg/game-base/utils/color-utils';
 import {
   calculateBearingFromDirectionAndRotation,
   calculatePositionAfterTimeInterval,
@@ -8,7 +9,7 @@ import {
 } from '@pg/game-base/utils/geo-utils';
 import { ClockService } from '@shared/services/clock.service';
 import { Subject } from 'rxjs';
-import { Euler, Object3D, Vector3 } from 'three';
+import { Color, Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
 import { OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
@@ -16,6 +17,7 @@ import { OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
 export class Player {
   readonly id: string;
   readonly nickname: string;
+  readonly color: Color;
 
   connected: string;
 
@@ -32,6 +34,7 @@ export class Player {
     this.id = player.id;
     this.nickname = player.nickname;
     this.connected = player.connected;
+    this.color = new Color(getRandomColorFromNickname(this.nickname));
 
     this.position = player.position;
   }
