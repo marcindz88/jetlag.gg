@@ -13,7 +13,7 @@ export interface AirportType {
   id: string;
   name: string;
   coordinates: GeoLocationPoint;
-  occupying_player_id: string;
+  occupying_player: string;
   shipments: Shipment[];
 }
 
@@ -23,7 +23,8 @@ export type AirportList = {
 
 export type AirportUpdate = {
   id: string;
-  occupying_player_id: string;
+  occupying_player: string;
+  shipments: Shipment[];
 };
 
 export type AirportRequest = {
