@@ -3,6 +3,8 @@ export enum KeyEventEnum {
   BACKWARD = 'BACKWARD',
   LEFT = 'LEFT',
   RIGHT = 'RIGHT',
-  CAMERA_FOCUS = 'C',
-  CAMERA_FOLLOW = 'F',
+  CAMERA_FOCUS = 'FOCUS',
+  CAMERA_FOLLOW = 'FOLLOW',
+  LAND = 'LAND',
+  TAKE_OFF = 'TAKE_OFF',
 }

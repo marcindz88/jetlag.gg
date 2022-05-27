@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from
 import { NgtCanvas, NgtVector3 } from '@angular-three/core';
 import { NgtCameraOptions } from '@angular-three/core/lib/types';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { OtherPlayer } from '@pg/players/models/player.types';
-import { PlayersService } from '@pg/players/services/players.service';
+import { Airport } from '@pg/game-base/airports/models/airport';
+import { AirportsService } from '@pg/game-base/airports/services/airports.service';
+import { Player } from '@pg/game-base/players/models/player';
+import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { RENDERER_OPTIONS, SHADOW_OPTIONS } from '@shared/constants/renderer-options';
 
-import { BEARING, VELOCITY } from '../../models/game.constants';
 import { KeyEventEnum } from '../../models/keyboard.types';
 import { KeyboardControlsService } from '../../services/keyboard-controls.service';
 
@@ -22,8 +23,9 @@ export class GameMainComponent {
   readonly RENDERER_OPTIONS = RENDERER_OPTIONS;
   readonly SHADOW_OPTIONS = SHADOW_OPTIONS;
   readonly players = this.playersService.players;
+  readonly airports = this.airportsService.airports;
 
-  myPlayer = this.playersService.myPlayer;
+  myPlayer?: Player;
   focusedPlayerIndex = 0;
   followingPlayer = false;
   cameraPosition: NgtVector3 = [0, 15, 50];
@@ -35,13 +37,21 @@ export class GameMainComponent {
   constructor(
     private keyboardControlsService: KeyboardControlsService,
     private playersService: PlayersService,
+    private airportsService: AirportsService,
     private cdr: ChangeDetectorRef
   ) {
+    this.setupAirportsChanges();
     this.setupPlayersChanges();
   }
 
-  trackById(index: number, player: OtherPlayer) {
-    return player.id;
+  trackById(index: number, object: Player | Airport) {
+    return object.id;
+  }
+
+  private setupAirportsChanges() {
+    this.airportsService.changed$.pipe(untilDestroyed(this)).subscribe(() => {
+      this.cdr.markForCheck();
+    });
   }
 
   private setupPlayersChanges() {
@@ -52,24 +62,8 @@ export class GameMainComponent {
       this.myPlayer = this.playersService.myPlayer;
       this.setupPlaneUpdates();
       this.setupCameraControls();
-      this.setupPlaneControls();
       this.cdr.markForCheck();
     });
-  }
-
-  private setupPlaneControls() {
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LEFT, this, () =>
-      this.myPlayer!.updateBearing(-BEARING.step)
-    );
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.RIGHT, this, () =>
-      this.myPlayer!.updateBearing(BEARING.step)
-    );
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.BACKWARD, this, () =>
-      this.myPlayer!.updateVelocity(-VELOCITY.step)
-    );
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FORWARD, this, () =>
-      this.myPlayer!.updateVelocity(VELOCITY.step)
-    );
   }
 
   private setupPlaneUpdates() {

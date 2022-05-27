@@ -34,24 +34,20 @@ class WebSocketSession:
     token: str
     player_id: uuid.UUID
 
-    def __init__(self, websocket):
+    def __init__(self, websocket, loop: asyncio.AbstractEventLoop):
         self.id = uuid.uuid4()
         self.connection = websocket
+        self._loop = loop
 
     def close_connection(self, code=1000, reason=""):
         if self.connection.client_state == WebSocketState.DISCONNECTED:
             return
-        loop = asyncio.get_event_loop()
         coroutine = self.connection.close(code=code, reason=reason)
-        loop.run_until_complete(coroutine)
+        self._loop.create_task(coroutine)
 
     def send(self, data: dict):
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
         coroutine = self.connection.send_json(data)
-        loop.run_until_complete(coroutine)
+        self._loop.create_task(coroutine)
 
 
 class StarletteWebsocketServer:
@@ -60,7 +56,7 @@ class StarletteWebsocketServer:
         self._thread_manager = ThreadManager()
 
         async def handler(websocket: WebSocket):
-            ws_session = WebSocketSession(websocket)
+            ws_session = WebSocketSession(websocket, loop=asyncio.get_event_loop())
             if not validate(ws_session):
                 await ws_session.connection.close(code=400)
                 return

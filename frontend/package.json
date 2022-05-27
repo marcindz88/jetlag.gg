@@ -4,7 +4,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:remote": "ng serve --configuration remote",
     "build": "ng build",
+    "deploy": "firebase deploy",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint"
@@ -47,6 +49,7 @@
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
+    "firebase": "^9.8.1",
     "husky": "^7.0.4",
     "lint-staged": "^12.4.1",
     "prettier": "2.6.2",

@@ -1,0 +1,17 @@
+<pg-card class="airport-main-panel">
+  <h2>Welcome to {{ airport.name }}</h2>
+  <div class="airport-main-panel__packages-container packages-container">
+    <h3 *ngIf="!airport.shipments.length; else shipments">There are no available packages at this airport</h3>
+    <ng-template #shipments>
+      <h3>Available packages are:</h3>
+      <div class="packages-container__packages">
+        <pg-shipment-details
+          *ngFor="let shipment of airport.shipments; trackBy: trackById"
+          [shipment]="shipment"></pg-shipment-details>
+      </div>
+    </ng-template>
+  </div>
+  <div class="airport-main-panel__actions">
+    <button (click)="departureClicked.emit()">Take off [T]</button>
+  </div>
+</pg-card>

@@ -6,6 +6,7 @@ import time
 import uuid
 from typing import Optional, List
 
+from app.game.consts import AIRPORTS
 from app.game.coordinates import Coordinates
 from app.game.events import Event, EventType
 from app.game.exceptions import (
@@ -15,14 +16,57 @@ from app.game.exceptions import (
     PlayerInvalidNickname,
     ChangingPastPosition,
     ChangingFuturePosition,
+    AirportFull,
+    TooFarToLand,
+    InvalidAirport,
+    CantFlyWhenGrounded,
 )
-from app.game.models import PlayerPositionUpdateRequest
+from app.game.models import PlayerPositionUpdateRequest, AirportLandingRequest, AirportDepartureRequest
 from app.tools.encoder import encode
+from app.tools.misc import random_with_probability
 from app.tools.timestamp import timestamp_now
 from app.tools.websocket_server import WebSocketSession
 
 
 logging.getLogger().setLevel(logging.INFO)
+
+
+class Shipment:
+    id: uuid.UUID
+    name: str
+    award: int
+    destination: "Airport"
+    valid_till: Optional[int] = None
+
+    def __init__(self, destination: "Airport"):
+        self.id = uuid.uuid4()
+        self.name = random.choice(Shipment.shipment_names())
+        self.award = random.choice([100, 200, 300, 400, 500])
+        self.destination = destination
+        if random_with_probability(0.25):
+            self.valid_till = timestamp_now() + 90*1000
+
+    @staticmethod
+    def shipment_names():
+        return [
+            "Mail",
+            "Garbage from Aliexpress",
+            "Masks & Vaccines",
+            "Overpriced GPUs",
+            "Futomaki",
+            "Drones",
+            "HAZMAT",
+        ]
+
+    @property
+    def serialized(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "award": self.award,
+            "destination_id": self.destination.id,
+            "valid_till": self.valid_till,
+        }
 
 
 class PlayerPosition:
@@ -81,9 +125,12 @@ class Player:
         self._id: uuid.UUID = uuid.uuid4()
         self._nickname: str = nickname
         self._token: str = uuid.uuid4().hex
+        self._airport_id: Optional[uuid.UUID] = None
         self.disconnected_since: int = timestamp_now()
         self.session_id: Optional[uuid.UUID] = None
         self.position: PlayerPosition = PlayerPosition.random()
+        self.score: int = 0
+        self.shipment: Optional[Shipment] = None
 
     @property
     def id(self) -> uuid.UUID:
@@ -102,13 +149,86 @@ class Player:
         return bool(self.session_id)
 
     @property
+    def is_grounded(self) -> bool:
+        return bool(self._airport_id)
+
+    @property
+    def airport_id(self) -> uuid.UUID:
+        return self._airport_id
+
+    @property
     def serialized(self) -> dict:
         return {
             "id": self.id,
             "nickname": self.nickname,
             "connected": self.is_connected,
             "position": self.position.serialized,
+            "shipment": self.shipment.serialized if self.shipment else None,
+            "is_grounded": self.is_grounded,
         }
+
+
+class Airport:
+    MINIMUM_DISTANCE_TO_LAND = 500
+
+    id: uuid.UUID
+    name: str
+    coordinates: Coordinates
+    shipments: List[Shipment]
+    occupying_player: Optional[Player] = None
+
+    def __init__(self, name: str, coordinates: Coordinates):
+        self.id = uuid.uuid4()
+        self.name = name
+        self.coordinates = coordinates
+        self.shipments = []
+
+    @property
+    def serialized(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "coordinates": self.coordinates.serialized,
+            "occupying_player": self.occupying_player.id if self.occupying_player else None,
+            "shipments": [shipment.serialized for shipment in self.shipments],
+        }
+
+    def land_player(self, player: Player):
+        now = timestamp_now()
+        current_player_position = player.position.future_position(timestamp_delta=now-player.position.timestamp)
+        logging.info(
+            "land_player player coords %s, airport coords %s",
+            current_player_position.coordinates.serialized,
+            self.coordinates.serialized,
+        )
+        distance = Coordinates.distance_between(current_player_position.coordinates, self.coordinates)
+        logging.info("distance between: %s, min distance: %s", distance, Airport.MINIMUM_DISTANCE_TO_LAND)
+        if distance > Airport.MINIMUM_DISTANCE_TO_LAND:
+            raise TooFarToLand
+
+        if self.occupying_player:
+            raise AirportFull
+
+        self.occupying_player = player
+        player._airport_id = self.id
+
+        player.position.coordinates.latitude = self.coordinates.latitude
+        player.position.coordinates.longitude = self.coordinates.longitude
+        player.position.velocity = 0
+        player.position.timestamp = now
+
+    def remove_player(self, player: Player) -> bool:
+        if player != self.occupying_player:
+            return False
+        self.occupying_player = None
+        player._airport_id = None
+
+        now = timestamp_now()
+        player.position.coordinates.latitude = self.coordinates.latitude
+        player.position.coordinates.longitude = self.coordinates.longitude
+        player.position.velocity = 500000
+        player.position.timestamp = now
+        return True
 
 
 class GameSession:
@@ -118,17 +238,31 @@ class GameSession:
     def __init__(self):
         self._players = {}
         self._sessions = {}
-        t = threading.Thread(target=self.run_frontman)
-        t.start()
+        self._airports = {}
 
-    def run_frontman(self):
+        for airport_name, airport_coordinates in AIRPORTS:
+            airport = Airport(name=airport_name, coordinates=airport_coordinates)
+            self._airports[airport.id] = airport
+
+        self.schedule_background_tasks()
+
+    def schedule_background_tasks(self):
         """
         Manages the whole game runtime
         """
+        t = threading.Thread(target=self.monitor_players)
+        t.start()
+        t = threading.Thread(target=self.manage_airports)
+        t.start()
+
+    def monitor_players(self):
         while True:
-            logging.debug("FRONTMAN | loop")
             self.remove_idle_players()
-            time.sleep(0.5)
+            time.sleep(0.2)
+
+    def manage_airports(self):
+        while True:
+            time.sleep(5)
 
     def send_event(self, event: Event, player: Player):
         logging.info("send_event %s", event.type)
@@ -208,6 +342,11 @@ class GameSession:
             data={"players": self.player_list()},
         )
         self.send_event(event=player_list_event, player=player)
+        airport_list_event = Event(
+            type=EventType.AIRPORT_LIST,
+            data={"airports": [airport.serialized for airport in self._airports.values()]}
+        )
+        self.send_event(event=airport_list_event, player=player)
 
     def remove_session(self, ws_session: WebSocketSession):
         logging.info(f"remove_session {ws_session.id}")
@@ -227,6 +366,11 @@ class GameSession:
         except PlayerNotFound:
             pass
         try:
+            if player.is_grounded:
+                airport = self._airports.get(player.airport_id)
+                airport.remove_player(player)
+                airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
+                self.broadcast_event(event=airport_updated_event)
             self._players.pop(player.id)
             event = Event(type=EventType.PLAYER_REMOVED, data=player.serialized)
             self.broadcast_event(event=event, everyone_except=[player])
@@ -237,6 +381,9 @@ class GameSession:
         logging.info(f"update_player_position {player.id} timestamp: {timestamp} V={velocity} bearing={bearing}")
         last_position = player.position
         MAX_FUTURE_TIME_DEVIATION = 500  # event can be at most 500ms in the future
+
+        if player.is_grounded:
+            raise CantFlyWhenGrounded
 
         if last_position.timestamp >= timestamp:
             # ignore, we can't change the past
@@ -272,9 +419,57 @@ class GameSession:
             velocity=data_model.velocity,
         )
 
+    def handle_airport_landing_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_airport_landing_request_event {player.id} {event}")
+        data_model = AirportLandingRequest(**event.data)
+
+        airport: Airport = self._airports.get(data_model.id)
+        if not airport:
+            raise InvalidAirport
+
+        airport.land_player(player=player)
+
+        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
+        self.broadcast_event(event=airport_updated_event)
+
+        position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
+            "id": player.id,
+            "position": player.position.serialized,
+            "is_grounded": player.is_grounded,
+        })
+        self.broadcast_event(event=position_updated_event)
+
+    def handle_airport_departure_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_airport_departure_request_event {player.id} {event}")
+        data_model = AirportDepartureRequest(**event.data)
+
+        airport: Airport = self._airports.get(data_model.id)
+        if not airport:
+            raise InvalidAirport
+
+        airport.remove_player(player=player)
+
+        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
+        self.broadcast_event(event=airport_updated_event)
+
+        position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
+            "id": player.id,
+            "position": player.position.serialized,
+            "is_grounded": player.is_grounded,
+        })
+        self.broadcast_event(event=position_updated_event)
+
     def handle_event(self, player: Player, event: Event):
         logging.info(f"handle_event {player.id} {event}")
 
         if event.type == EventType.PLAYER_POSITION_UPDATE_REQUEST:
             self.handle_player_position_update_request_event(player=player, event=event)
+            return
+
+        if event.type == EventType.AIRPORT_LANDING_REQUEST:
+            self.handle_airport_landing_request_event(player=player, event=event)
+            return
+
+        if event.type == EventType.AIRPORT_DEPARTURE_REQUEST:
+            self.handle_airport_departure_request_event(player=player, event=event)
             return
