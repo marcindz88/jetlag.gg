@@ -5,5 +5,10 @@
   [updateTrigger$]="playersService.changed$">
 </pg-table>
 <ng-template #player_row let-player="data">
-  <tr pg-player-summary [player]="player"></tr>
+  <tr>
+    <td class="status">
+      <span class="material-symbols-outlined" [class.material-symbols-outlined--filled]="player.connected">circle</span>
+    </td>
+    <td class="nickname">{{ player.nickname }}</td>
+  </tr>
 </ng-template>
