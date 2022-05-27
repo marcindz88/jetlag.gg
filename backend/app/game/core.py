@@ -169,7 +169,7 @@ class Player:
 
 
 class Airport:
-    MINIMUM_DISTANCE_TO_LAND = 3000
+    MINIMUM_DISTANCE_TO_LAND = 500
 
     id: uuid.UUID
     name: str
@@ -194,14 +194,20 @@ class Airport:
         }
 
     def land_player(self, player: Player):
-        distance = Coordinates.distance_between(player.position.coordinates, self.coordinates)
+        now = timestamp_now()
+        current_player_position = player.position.future_position(timestamp_delta=now-player.position.timestamp)
+        logging.info(
+            "land_player player coords %s, airport coords %s",
+            current_player_position.coordinates.serialized,
+            self.coordinates.serialized,
+        )
+        distance = Coordinates.distance_between(current_player_position.coordinates, self.coordinates)
+        logging.info("distance between: %s, min distance: %s", distance, Airport.MINIMUM_DISTANCE_TO_LAND)
         if distance > Airport.MINIMUM_DISTANCE_TO_LAND:
             raise TooFarToLand
 
         if self.occupying_player:
             raise AirportFull
-
-        now = timestamp_now()
 
         self.occupying_player = player
         player._airport_id = self.id
