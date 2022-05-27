@@ -3,8 +3,8 @@ export const environment = <const>{
   name: 'Production',
   server: {
     domain: 'jetlag.gg',
-    apiSubDomain: 'api',
-    wsSubDomain: 'api',
+    apiSubDomain: 'api.',
+    wsSubDomain: 'api.',
   },
   protocols: { http: 'https://', ws: 'wss://' },
 };
