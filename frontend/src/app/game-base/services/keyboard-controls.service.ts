@@ -19,6 +19,8 @@ export class KeyboardControlsService {
     this.handleKeyEvent(KeyEventEnum.BACKWARD, 's', 'S', 'ArrowDown', 'Down');
     this.handleKeyEvent(KeyEventEnum.CAMERA_FOCUS, 'c', 'C');
     this.handleKeyEvent(KeyEventEnum.CAMERA_FOLLOW, 'f', 'F');
+    this.handleKeyEvent(KeyEventEnum.LAND, 'l', 'L');
+    this.handleKeyEvent(KeyEventEnum.TAKE_OFF, 't', 'T');
   }
 
   setupKeyEvent<T>(type: KeyEventEnum, destroyBase: T, handleFunction: () => void) {

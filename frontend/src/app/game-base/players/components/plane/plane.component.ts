@@ -19,7 +19,6 @@ import { TextureModelsService } from '../../../services/texture-models.service';
 export class PlaneComponent implements OnInit {
   @ViewChild(NgtGroup) set plane(plane: NgtPrimitive) {
     this.player.planeObject = plane?.instanceValue;
-    console.log(plane);
   }
 
   @Input() set position(position: Vector3) {

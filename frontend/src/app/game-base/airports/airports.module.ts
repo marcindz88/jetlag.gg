@@ -11,10 +11,12 @@ import { NgtPrimitiveModule } from '@angular-three/core/primitive';
 import { NgtSobaText3dModule } from '@angular-three/soba/abstractions';
 import { AirportComponent } from '@pg/game-base/airports/components/airport/airport.component';
 import { NearbyAirportsComponent } from '@pg/game-base/airports/components/nearby-airports/nearby-airports.component';
+import { ShipmentDetailsComponent } from '@pg/game-base/airports/components/shipment-details/shipment-details.component';
+import { AirportMainPanelComponent } from '@pg/game-base/airports/containers/airport-main-panel/airport-main-panel.component';
 import { SharedModule } from '@shared/shared.module';
 
 @NgModule({
-  declarations: [AirportComponent, NearbyAirportsComponent],
+  declarations: [AirportComponent, NearbyAirportsComponent, ShipmentDetailsComponent, AirportMainPanelComponent],
   imports: [
     CommonModule,
     HttpClientModule,
@@ -28,6 +30,6 @@ import { SharedModule } from '@shared/shared.module';
     NgtMeshModule,
     NgtCircleGeometryModule,
   ],
-  exports: [AirportComponent, NearbyAirportsComponent],
+  exports: [AirportComponent, NearbyAirportsComponent, AirportMainPanelComponent],
 })
 export class AirportsModule {}

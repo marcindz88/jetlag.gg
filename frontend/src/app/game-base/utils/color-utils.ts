@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 const AVAILABLE_PLANE_COLORS = [
   '#E53935', '#D32F2F', '#C62828', '#B71C1C', '#D50000', // RED
   '#E91E63', '#D81B60', '#C2185B', '#AD1457', '#880E4F', // PINK
@@ -14,11 +15,12 @@ const AVAILABLE_PLANE_COLORS = [
   '#757575', '#424242',                                  // GRAY
   '#607D8B', '#546E7A', '#455A64', '#37474F', '#263238'  // BLUE GRAY
 ]
+/* eslint-enable prettier/prettier */
 
 export const getRandomColorFromNickname = (nickname: string): string => {
   let sum = 0;
-  for (let i =0; i < nickname.length; i++) {
+  for (let i = 0; i < nickname.length; i++) {
     sum += nickname.charCodeAt(i);
   }
   return AVAILABLE_PLANE_COLORS[sum % AVAILABLE_PLANE_COLORS.length];
-}
+};

@@ -1,4 +1,4 @@
-import { AirportList, AirportUpdate } from '@pg/game-base/airports/models/airport.types';
+import { AirportList, AirportRequest, AirportUpdate } from '@pg/game-base/airports/models/airport.types';
 import { PlaneStateUpdateRequest } from '@pg/game-base/models/game.types';
 import { OtherPlayer, PlayerList, PlayerPositionUpdate } from '@pg/game-base/players/models/player.types';
 
@@ -9,6 +9,7 @@ export type MessageDataType =
   | PlayerPositionUpdate
   | AirportList
   | AirportUpdate
+  | AirportRequest
   | Record<string, never>;
 
 export type MessageTypeEnum = ServerMessageTypeEnum | ClientMessageTypeEnum;
@@ -38,10 +39,11 @@ export enum ServerMessageTypeEnum {
   PLAYER_REMOVED = 'player.removed',
   PLAYER_POSITION_UPDATED = 'player_position.updated',
   AIRPORT_LIST = 'airport.list',
-  AIRPORT_PLANE_LANDED = 'airport.plane_landed',
+  AIRPORT_UPDATED = 'airport.updated',
 }
 
 export enum ClientMessageTypeEnum {
   PLAYER_POSITION_UPDATE_REQUEST = 'player_position.update_request',
   AIRPORT_LANDING_REQUEST = 'airport.landing_request',
+  AIRPORT_DEPARTURE_REQUEST = 'airport.departure_request',
 }
