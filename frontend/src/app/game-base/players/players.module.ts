@@ -11,17 +11,10 @@ import { PlaneComponent } from '@pg/game-base/players/components/plane/plane.com
 import { PlayerCockpitComponent } from '@pg/game-base/players/components/player-cockpit/player-cockpit.component';
 import { SharedModule } from '@shared/shared.module';
 
-import { PlayerSummaryComponent } from './components/player-summary/player-summary.component';
 import { PlayersSummaryComponent } from './components/players-summary/players-summary.component';
 
 @NgModule({
-  declarations: [
-    PlaneComponent,
-    PlayersSummaryComponent,
-    PlayerSummaryComponent,
-    PlayerCockpitComponent,
-    CompassComponent,
-  ],
+  declarations: [PlaneComponent, PlayersSummaryComponent, PlayerCockpitComponent, CompassComponent],
   imports: [
     CommonModule,
     HttpClientModule,
