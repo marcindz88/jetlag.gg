@@ -7,6 +7,7 @@ import { PlayersService } from '../../services/players.service';
 @Component({
   selector: 'pg-players-summary',
   templateUrl: './players-summary.component.html',
+  styleUrls: ['players-summary.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayersSummaryComponent {
