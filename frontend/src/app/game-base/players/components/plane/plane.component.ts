@@ -62,15 +62,17 @@ export class PlaneComponent implements OnInit {
   }
 
   private movePlane(plane: Object3D, delta: number) {
-    const positionCopy = plane.position.clone();
+    if (this.player.velocity) {
+      const positionCopy = plane.position.clone();
 
-    // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
-    const displacement = (this.player.velocity / 3600) * MAP_SCALE * delta; // delta in s convert to h
-    plane.rotateX(degToRad((displacement / MOVING_CIRCUMFERENCE) * 360));
-    plane.translateY(displacement);
+      // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
+      const displacement = (this.player.velocity / 3600) * MAP_SCALE * delta; // delta in s convert to h
+      plane.rotateX(degToRad((displacement / MOVING_CIRCUMFERENCE) * 360));
+      plane.translateY(displacement);
 
-    // Update targets by current movement
-    this.updateByDifference(this.targetPosition!, positionCopy, plane.position, 1, 0.0000000001);
+      // Update targets by current movement
+      this.updateByDifference(this.targetPosition!, positionCopy, plane.position, 1, 0.0000000001);
+    }
 
     // Update position and rotation up to target gradually
     this.updateByDifference(plane.position, plane.position, this.targetPosition!, 0.1);
