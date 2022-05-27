@@ -1,0 +1,39 @@
+.player-cockpit {
+  & &__stats {
+    bottom: 0;
+    height: min-content;
+    left: 0;
+    padding: 10px 20px;
+    position: absolute;
+    width: 170px;
+
+    p {
+      margin-top: 0;
+    }
+
+    td {
+      text-align: left;
+    }
+  }
+
+  & &__compass {
+    bottom: 0;
+    position: absolute;
+    right: 0;
+  }
+
+  & &__airports {
+    left: 0;
+    position: absolute;
+    top: 0;
+  }
+
+  & &__airport_panel {
+    bottom: 0;
+    left: 0;
+    margin: auto;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+}

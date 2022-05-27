@@ -1,0 +1,35 @@
+<div class="player-cockpit" *ngIf="player && position">
+  <ng-container *ngIf="!player.isGrounded; else airportMainPanel">
+    <pg-nearby-airports
+      class="player-cockpit__airports"
+      [airportList]="airportList"
+      [updateTrigger$]="airportsUpdateTrigger$"></pg-nearby-airports>
+    <pg-card class="player-cockpit__stats">
+      <table>
+        <tr>
+          <td>Velocity:</td>
+          <td>{{ player.velocity }} km/h</td>
+        </tr>
+        <tr>
+          <td>Bearing:</td>
+          <td>{{ position.bearing | number: '2.2-2' }} deg</td>
+        </tr>
+        <tr>
+          <td>Latitude:</td>
+          <td>{{ position.coordinates.lat | number: '2.5-5' }} deg</td>
+        </tr>
+        <tr>
+          <td>Longitude:</td>
+          <td>{{ position.coordinates.lon | number: '2.5-5' }} deg</td>
+        </tr>
+      </table>
+    </pg-card>
+    <pg-compass class="player-cockpit__compass" [bearing]="position.bearing"></pg-compass>
+  </ng-container>
+  <ng-template #airportMainPanel>
+    <pg-airport-main-panel
+      class="player-cockpit__airport_panel"
+      [airport]="airportList[0]"
+      (departureClicked)="startDepartureProcedure()"></pg-airport-main-panel>
+  </ng-template>
+</div>

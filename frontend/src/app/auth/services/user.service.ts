@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { OtherPlayer } from '@pg/players/models/player.types';
+import { AirportsService } from '@pg/game-base/airports/services/airports.service';
+import { OtherPlayer } from '@pg/game-base/players/models/player.types';
+import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { enableLoader } from '@shared/operators/operators';
 import { EndpointsService } from '@shared/services/endpoints.service';
 import { MainWebsocketService } from '@shared/services/main-websocket.service';
@@ -19,7 +21,9 @@ export class UserService {
   constructor(
     private httpClient: HttpClient,
     private endpointsService: EndpointsService,
-    private mainWebsocketService: MainWebsocketService
+    private mainWebsocketService: MainWebsocketService,
+    private playersService: PlayersService,
+    private airportService: AirportsService
   ) {
     // TODO this.restoreUser();
   }
@@ -41,6 +45,8 @@ export class UserService {
     this.user$.next(user);
     // TEMP localStorage.setItem(this.playerKey, JSON.stringify(user));
     this.mainWebsocketService.setupGameWebsocket(user.token);
+    this.playersService.setPlayersUpdateHandler(user.id);
+    this.airportService.setAirportsUpdateHandler();
   }
 
   restoreUser() {

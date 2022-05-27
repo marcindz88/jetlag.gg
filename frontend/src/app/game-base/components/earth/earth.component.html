@@ -1,14 +1,11 @@
 <ngt-mesh *ngIf="textures$ | async as textures" [receiveShadow]="true">
-  <ngt-sphere-geometry [args]="[EARTH_RADIUS, 70, 70]"> </ngt-sphere-geometry>
+  <ngt-sphere-geometry [args]="[EARTH_RADIUS, 64, 32]"> </ngt-sphere-geometry>
   <ngt-mesh-physical-material
     [map]="textures.map"
     [roughnessMap]="textures.spec"
     [bumpMap]="textures.bump"
     [displacementMap]="textures.bump"
-    [displacementScale]="1.1"
-    [sheen]="1"
-    [sheenRoughness]="0.75"
-    [sheenColor]="textures.sheenColor"
-    [clearcoat]="0.5">
+    [displacementScale]="0.8"
+    [clearcoat]="1">
   </ngt-mesh-physical-material>
 </ngt-mesh>
