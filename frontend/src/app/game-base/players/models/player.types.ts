@@ -6,8 +6,9 @@ export type BasePlayer = {
 };
 
 export type OtherPlayer = {
-  connected: string;
+  connected: boolean;
   position: PlanePosition;
+  is_grounded: boolean;
 } & BasePlayer;
 
 export type PlayerList = {
@@ -28,4 +29,5 @@ export type PlanePosition = {
 export type PlayerPositionUpdate = {
   id: string;
   position: PlanePosition;
+  is_grounded?: boolean;
 };

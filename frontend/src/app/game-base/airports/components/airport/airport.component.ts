@@ -15,6 +15,7 @@ export class AirportComponent {
   @Input() cameraFollowing = false;
 
   readonly NEARBY_AIRPORT_SCALED_DISTANCE = NEARBY_AIRPORT_SCALED_DISTANCE;
+  readonly materials = this.textureModelsService.materials;
   readonly textures$ = this.textureModelsService.airportTextures$.pipe(
     map(({ model, ...colors }) => ({ model: model.clone(true), ...colors }))
   );

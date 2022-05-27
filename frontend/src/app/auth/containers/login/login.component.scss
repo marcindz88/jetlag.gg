@@ -45,21 +45,4 @@
   flex-direction: column;
   flex-grow: 1;
   justify-content: flex-end;
-
-  &__button {
-    background-color: var(--accent-color);
-    border: 0;
-    cursor: pointer;
-    padding: 10px;
-    width: 100%;
-
-    &:disabled {
-      background-color: var(--accent-darker-color);
-      cursor: not-allowed;
-    }
-
-    &:hover:not(:disabled) {
-      background-color: var(--accent-lighter-color);
-    }
-  }
 }

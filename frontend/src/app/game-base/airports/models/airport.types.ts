@@ -26,6 +26,10 @@ export type AirportUpdate = {
   occupying_player_id: string;
 };
 
+export type AirportRequest = {
+  id: string;
+};
+
 export type AirPortsMap = Map<string, Airport>;
 
 export type NearAirportsList = Airport[];

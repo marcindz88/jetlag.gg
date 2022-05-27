@@ -5,11 +5,9 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Airport } from '@pg/game-base/airports/models/airport';
 import { AirportsService } from '@pg/game-base/airports/services/airports.service';
 import { Player } from '@pg/game-base/players/models/player';
-import { OtherPlayer } from '@pg/game-base/players/models/player.types';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { RENDERER_OPTIONS, SHADOW_OPTIONS } from '@shared/constants/renderer-options';
 
-import { BEARING, VELOCITY } from '../../constants/game.constants';
 import { KeyEventEnum } from '../../models/keyboard.types';
 import { KeyboardControlsService } from '../../services/keyboard-controls.service';
 
@@ -46,7 +44,7 @@ export class GameMainComponent {
     this.setupPlayersChanges();
   }
 
-  trackById(index: number, object: OtherPlayer | Airport) {
+  trackById(index: number, object: Player | Airport) {
     return object.id;
   }
 
@@ -64,24 +62,8 @@ export class GameMainComponent {
       this.myPlayer = this.playersService.myPlayer;
       this.setupPlaneUpdates();
       this.setupCameraControls();
-      this.setupPlaneControls();
       this.cdr.markForCheck();
     });
-  }
-
-  private setupPlaneControls() {
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LEFT, this, () =>
-      this.myPlayer!.updateBearing(-BEARING.step)
-    );
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.RIGHT, this, () =>
-      this.myPlayer!.updateBearing(BEARING.step)
-    );
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.BACKWARD, this, () =>
-      this.myPlayer!.updateVelocity(-VELOCITY.step)
-    );
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FORWARD, this, () =>
-      this.myPlayer!.updateVelocity(VELOCITY.step)
-    );
   }
 
   private setupPlaneUpdates() {
