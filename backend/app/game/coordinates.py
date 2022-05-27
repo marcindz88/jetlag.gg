@@ -40,7 +40,7 @@ class Coordinates:
         delta_lat = lat2 - lat1
         delta_lon = lon2 - lon1
         a = sin(delta_lat/2)**2 + cos(lat1)*cos(lat2)*sin(delta_lon/2)**2
-        c = 2 * atan2(sqrt(a), sqrt(min(1 - a, 0)))
+        c = 2 * atan2(sqrt(a), sqrt(max(1 - a, 0)))
         d = Coordinates._earth_radius() * c
         return d
 
