@@ -19,7 +19,8 @@ export class Player {
   readonly nickname: string;
   readonly color: Color;
 
-  connected: string;
+  connected: boolean;
+  isGrounded = false;
 
   planeObject?: Object3D;
   cartesianPosition!: Vector3;
@@ -34,6 +35,7 @@ export class Player {
     this.id = player.id;
     this.nickname = player.nickname;
     this.connected = player.connected;
+    this.isGrounded = player.is_grounded;
     this.color = new Color(getRandomColorFromNickname(this.nickname));
 
     this.position = player.position;
@@ -71,11 +73,14 @@ export class Player {
   }
 
   updatePlayer(playerData: PartialPlayerData) {
-    if (playerData.connected) {
-      this.connected = playerData.connected;
-    }
     if (playerData.position) {
       this.position = playerData.position;
+    }
+    if ('connected' in playerData) {
+      this.connected = !!playerData.connected;
+    }
+    if ('is_grounded' in playerData) {
+      this.isGrounded = !!playerData.is_grounded;
     }
   }
 

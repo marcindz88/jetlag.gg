@@ -14,8 +14,8 @@ export class TextureModelsService {
   }>;
 
   materials = {
-    textMaterialX: new MeshStandardMaterial({ color: new Color('#ffffff') }),
-    textMaterialY: new MeshStandardMaterial({ color: new Color('#1a1919') }),
+    textMaterialLight: new MeshStandardMaterial({ color: new Color('#ffffff') }),
+    textMaterialDark: new MeshStandardMaterial({ color: new Color('#1a1919') }),
   };
 
   constructor(private ngtLoader: NgtLoader) {
