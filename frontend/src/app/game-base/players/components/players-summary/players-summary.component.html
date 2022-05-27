@@ -1,0 +1,14 @@
+<pg-table
+  [map]="players"
+  [noRecordsText]="'No players in session'"
+  [rowTemplate]="player_row"
+  [updateTrigger$]="playersService.changed$">
+</pg-table>
+<ng-template #player_row let-player="data">
+  <tr>
+    <td class="status">
+      <span class="material-symbols-outlined" [class.material-symbols-outlined--filled]="player.connected">circle</span>
+    </td>
+    <td class="nickname">{{ player.nickname }}</td>
+  </tr>
+</ng-template>

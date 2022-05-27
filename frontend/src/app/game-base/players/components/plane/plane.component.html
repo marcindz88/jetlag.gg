@@ -1,0 +1,11 @@
+<ng-container *ngIf="textures$ | async as textures">
+  <ngt-group [position]="initialPosition" [rotation]="player.cartesianRotation" (beforeRender)="updatePlane($event)">
+    <ngt-group [rotation]="[0, 1 | pi, 0]">
+      <pg-elevated-text
+        [text]="player.nickname"
+        [position]="[0, -0.8, 0]"
+        [colors]="[getMaterial(textures.model), materials.textMaterialLight]"></pg-elevated-text>
+    </ngt-group>
+    <ngt-primitive [receiveShadow]="true" [object]="textures.model" [scale]="0.01"></ngt-primitive>
+  </ngt-group>
+</ng-container>
