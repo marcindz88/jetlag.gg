@@ -429,6 +429,7 @@ class GameSession:
         position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
             "id": player.id,
             "position": player.position.serialized,
+            "is_grounded": player.is_grounded,
         })
         self.broadcast_event(event=position_updated_event)
 
@@ -448,6 +449,7 @@ class GameSession:
         position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
             "id": player.id,
             "position": player.position.serialized,
+            "is_grounded": player.is_grounded,
         })
         self.broadcast_event(event=position_updated_event)
 

@@ -2,9 +2,13 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } 
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Airport } from '@pg/game-base/airports/models/airport';
 import { NearAirportsList } from '@pg/game-base/airports/models/airport.types';
+import { AirportsService } from '@pg/game-base/airports/services/airports.service';
 import { determineAirportsInProximity } from '@pg/game-base/airports/utils/utils';
+import { BEARING, VELOCITY } from '@pg/game-base/constants/game.constants';
+import { KeyEventEnum } from '@pg/game-base/models/keyboard.types';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlanePosition } from '@pg/game-base/players/models/player.types';
+import { KeyboardControlsService } from '@pg/game-base/services/keyboard-controls.service';
 import { arePointsEqual } from '@pg/game-base/utils/geo-utils';
 import { ReplaySubject, timer } from 'rxjs';
 
@@ -23,11 +27,49 @@ export class PlayerCockpitComponent implements OnInit {
   airportList: NearAirportsList = [];
   airportsUpdateTrigger$ = new ReplaySubject<void>();
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private keyboardControlsService: KeyboardControlsService,
+    private airportsService: AirportsService
+  ) {}
 
   ngOnInit() {
     this.setUpdatePositionAndAirportsHandler();
     this.setFlightParametersChangeHandler();
+    this.setupPlaneControls();
+  }
+
+  startDepartureProcedure() {
+    if (this.player.isGrounded) {
+      this.airportsService.requestDeparturePermission(this.airportList[0].id);
+    }
+  }
+
+  private setupPlaneControls() {
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LEFT, this, () => this.updateBearing(-1));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.RIGHT, this, () => this.updateBearing(1));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.BACKWARD, this, () => this.updateVelocity(-1));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FORWARD, this, () => this.updateVelocity(1));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LAND, this, this.startLandingProcedure.bind(this));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.TAKE_OFF, this, this.startDepartureProcedure.bind(this));
+  }
+
+  private updateBearing(multiplier: number) {
+    if (!this.player.isGrounded) {
+      this.player.updateBearing(multiplier * BEARING.step);
+    }
+  }
+
+  private updateVelocity(multiplier: number) {
+    if (!this.player.isGrounded) {
+      this.player.updateVelocity(multiplier * VELOCITY.step);
+    }
+  }
+
+  private startLandingProcedure() {
+    if (!this.player.isGrounded && this.airportList[0]?.isNearby$.value) {
+      this.airportsService.requestLandingPermission(this.airportList[0].id);
+    }
   }
 
   private setFlightParametersChangeHandler() {

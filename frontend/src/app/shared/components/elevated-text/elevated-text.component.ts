@@ -17,8 +17,8 @@ export class ElevatedTextComponent {
   @Input() height = 0.1;
   @Input() size = 0.5;
   @Input() colors: Material[] = [
-    this.textureModelsService.materials.textMaterialX,
-    this.textureModelsService.materials.textMaterialY,
+    this.textureModelsService.materials.textMaterialLight,
+    this.textureModelsService.materials.textMaterialDark,
   ];
 
   constructor(private textureModelsService: TextureModelsService) {}
