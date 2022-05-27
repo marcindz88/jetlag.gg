@@ -1,0 +1,37 @@
+name: Build and deploy on server
+on:
+  push:
+    paths: 
+      - 'backend/**'
+    branches:
+      - deploy
+defaults:
+  run:
+    working-directory: backend
+
+
+jobs:
+  docker:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+    -
+      name: Checkout
+      uses: actions/checkout@v2
+    -
+      name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    -
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    -
+      name: Build image
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        platforms: linux/amd64
+        push: false
+    -
+      name: Push image
+      run: |    
+        echo "$(docker images)"
