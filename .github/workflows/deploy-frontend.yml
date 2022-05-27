@@ -1,0 +1,33 @@
+name: Build and Deploy to Firebase
+on:
+  push:
+    paths: 
+      - 'frontend/**'
+    branches:
+      - deploy
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  build:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@master
+      - name: Cache node modules
+        id: cache  
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Firebase deploy
+        run: npm run deploy -- --token '${{ secrets.FIREBASE_TOKEN }}'
