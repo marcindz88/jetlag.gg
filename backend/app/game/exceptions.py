@@ -38,5 +38,5 @@ class InvalidAirport(Exception):
     pass
 
 
-class CantFlyWhenLanded(Exception):
+class CantFlyWhenGrounded(Exception):
     pass
