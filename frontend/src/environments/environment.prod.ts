@@ -2,9 +2,9 @@ export const environment = <const>{
   production: true,
   name: 'Production',
   server: {
-    domain: 'api.jetlag.gg',
-    apiSubDomain: '',
-    wsSubDomain: '',
+    domain: 'jetlag.gg',
+    apiSubDomain: 'api',
+    wsSubDomain: 'api',
   },
   protocols: { http: 'https://', ws: 'wss://' },
 };
