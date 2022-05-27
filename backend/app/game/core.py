@@ -19,7 +19,7 @@ from app.game.exceptions import (
     AirportFull,
     TooFarToLand,
     InvalidAirport,
-    CantFlyWhenLanded,
+    CantFlyWhenGrounded,
 )
 from app.game.models import PlayerPositionUpdateRequest, AirportLandingRequest, AirportDepartureRequest
 from app.tools.encoder import encode
@@ -149,7 +149,7 @@ class Player:
         return bool(self.session_id)
 
     @property
-    def is_landed(self) -> bool:
+    def is_grounded(self) -> bool:
         return bool(self._airport_id)
 
     @property
@@ -164,6 +164,7 @@ class Player:
             "connected": self.is_connected,
             "position": self.position.serialized,
             "shipment": self.shipment.serialized if self.shipment else None,
+            "is_grounded": self.is_grounded,
         }
 
 
@@ -359,7 +360,7 @@ class GameSession:
         except PlayerNotFound:
             pass
         try:
-            if player.is_landed:
+            if player.is_grounded:
                 airport = self._airports.get(player.airport_id)
                 airport.remove_player(player)
                 airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
@@ -375,8 +376,8 @@ class GameSession:
         last_position = player.position
         MAX_FUTURE_TIME_DEVIATION = 500  # event can be at most 500ms in the future
 
-        if player.is_landed:
-            raise CantFlyWhenLanded
+        if player.is_grounded:
+            raise CantFlyWhenGrounded
 
         if last_position.timestamp >= timestamp:
             # ignore, we can't change the past
