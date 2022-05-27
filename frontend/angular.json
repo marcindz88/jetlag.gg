@@ -53,6 +53,20 @@
               ],
               "outputHashing": "all"
             },
+            "remote": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.remote.ts"
+                }
+              ]
+            },
             "development": {
               "buildOptimizer": false,
               "optimization": false,
@@ -69,6 +83,9 @@
           "configurations": {
             "production": {
               "browserTarget": "frontend:build:production"
+            },
+            "remote": {
+              "browserTarget": "frontend:build:remote"
             },
             "development": {
               "browserTarget": "frontend:build:development"
