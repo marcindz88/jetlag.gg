@@ -1,0 +1,166 @@
+@import 'src/styles/mixins';
+
+@mixin transition {
+  transition: transform 100ms linear;
+}
+
+:host {
+  align-items: center;
+  border-radius: 50%;
+  display: flex;
+  height: 280px;
+  justify-content: center;
+  width: 280px;
+}
+
+.compass-moving {
+  @include transition;
+
+  & &__arrow {
+    border-bottom: 4px solid transparent;
+    border-right: 6px solid var(--compass-arrow-color);
+    border-top: 4px solid transparent;
+    content: ' ';
+    display: block;
+    height: 0.4px;
+    left: -2.4px;
+    position: absolute;
+    top: -106px;
+    transform: rotate(90deg);
+  }
+
+  &__separators {
+    div {
+      &::after {
+        background: var(--accent-color);
+        border-radius: 5%;
+        content: ' ';
+        display: block;
+        height: 0.4px;
+        left: 80px;
+        position: absolute;
+        top: 0;
+        width: 16px;
+      }
+
+      &:nth-of-type(15n + 1)::after {
+        border: var(--accent-color) solid 0.22px;
+        border-left: 0;
+        border-right: 0;
+        right: -0.8px;
+      }
+
+      @for $i from 1 through 180 {
+        &:nth-of-type(#{$i}) {
+          transform: rotate(($i * 2deg) - 2deg);
+        }
+      }
+    }
+  }
+}
+
+.compass-not-moving {
+  position: relative;
+
+  & &__marker,
+  & &__cross-x,
+  & &__cross-y {
+    background: var(--accent-darker-color);
+    display: block;
+  }
+
+  & &__marker {
+    background: var(--accent-color);
+    border: var(--accent-color) solid 0.22px;
+    border-bottom: 0;
+    border-top: 0;
+    height: 36px;
+    position: absolute;
+    top: -116px;
+    width: 0.7px;
+  }
+
+  & &__cross-y {
+    height: 100px;
+    left: -0.8px;
+    position: absolute;
+    top: -50px;
+    width: 0.6px;
+  }
+
+  & &__cross-x {
+    height: 0.6px;
+    left: -50px;
+    position: absolute;
+    top: 0.25px;
+    width: 100px;
+  }
+}
+
+.directions {
+  position: absolute;
+
+  & &__direction-N,
+  & &__direction-E,
+  & &__direction-S,
+  & &__direction-W {
+    @include orbitron-font(11px);
+    @include transition;
+
+    color: var(--accent-color);
+    position: absolute;
+  }
+
+  & &__direction-N {
+    left: -5px;
+    top: -66px;
+  }
+
+  & &__direction-E {
+    left: 54px;
+    top: -6.8px;
+  }
+
+  & &__direction-S {
+    left: -5px;
+    top: 50px;
+  }
+
+  & &__direction-W {
+    left: -66px;
+    top: -6.8px;
+  }
+}
+
+.angle-labels {
+  left: 130px;
+  position: absolute;
+  top: 7.5px;
+  transform: rotate(180deg);
+
+  div {
+    @include orbitron-font(9px);
+
+    color: var(--accent-color);
+    display: block;
+    height: 12.5px;
+    position: absolute;
+    top: 0;
+    width: 260px;
+
+    @for $i from 1 through 12 {
+      &:nth-of-type(#{$i}) {
+        transform: rotate(($i * 30deg) - 120deg);
+      }
+    }
+
+    span {
+      @include transition;
+
+      display: block;
+      position: absolute;
+      text-align: center;
+      width: 22px;
+    }
+  }
+}

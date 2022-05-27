@@ -1,0 +1,6 @@
+<pg-card>
+  <h3>{{ shipment.name }}</h3>
+  <p>Available cash award: {{ shipment.award }}</p>
+  <p>Valid till: {{ shipment.valid_till | date: 'shortTime' }}</p>
+  <p>Destination: {{ destination }}</p>
+</pg-card>

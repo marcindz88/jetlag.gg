@@ -1,0 +1,29 @@
+@import 'src/styles/variables';
+
+:host {
+  display: block;
+  height: fit-content;
+  width: fit-content;
+}
+
+.airport-main-panel {
+  background: var(--card-background-darker-color);
+  display: flex;
+  flex-direction: column;
+  height: min(495px, 80vh);
+  padding: 20px;
+  width: min(650px, 85vw);
+
+  & &__packages-container {
+    flex-grow: 1;
+
+    & &__packages {
+      column-gap: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      row-gap: 20px;
+    }
+  }
+}
+
+
