@@ -43,6 +43,7 @@ only 1 connection per user at a time is allowed
 * 'player.registered'
 * 'player.disconnected'
 * 'player.removed'
+* 'player.updated'
 * 'player_position.updated'
 * 'airport.list'
 * 'airport.updated'
@@ -63,6 +64,20 @@ sample:
 > ws.send(JSON.stringify({type: 'airport.departure_request', created: new Date().getTime(), data: {id: "d5e69764-ac04-42d4-a2cc-2f6fd8554f47"}}))
 
 where id is the id of the airport.
+
+
+* 'airport.shipment_dispatch_request'<br>
+sample:
+> ws.send(JSON.stringify({type: 'airport.shipment_dispatch_request', created: new Date().getTime(), data: {id: "d5e69764-ac04-42d4-a2cc-2f6fd8554f47"}}))
+
+where id is the id of the shipment. Player has to be grounded and shipment must be present on the airport player is grounded on.
+
+
+* 'airport.shipment_delivery_request'<br>
+sample:
+> ws.send(JSON.stringify({type: 'airport.shipment_delivery_request', created: new Date().getTime(), data: null}))
+
+player has to carry a shipment and be grounded on the destination airport of the shipment.
 
 
 ### Clock synchronisation
