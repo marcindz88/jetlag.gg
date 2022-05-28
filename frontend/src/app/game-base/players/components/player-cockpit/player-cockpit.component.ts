@@ -36,22 +36,16 @@ export class PlayerCockpitComponent implements OnInit {
   ngOnInit() {
     this.setUpdatePositionAndAirportsHandler();
     this.setFlightParametersChangeHandler();
-    this.setupPlaneControls();
+    this.setupCockpitControls();
+    this.setUpdateAirportsHandler();
   }
 
-  startDepartureProcedure() {
-    if (this.player.isGrounded) {
-      this.airportsService.requestDeparturePermission(this.airportList[0].id);
-    }
-  }
-
-  private setupPlaneControls() {
+  private setupCockpitControls() {
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LEFT, this, () => this.updateBearing(-1));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.RIGHT, this, () => this.updateBearing(1));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.BACKWARD, this, () => this.updateVelocity(-1));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FORWARD, this, () => this.updateVelocity(1));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LAND, this, this.startLandingProcedure.bind(this));
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.TAKE_OFF, this, this.startDepartureProcedure.bind(this));
   }
 
   private updateBearing(multiplier: number) {
@@ -67,7 +61,7 @@ export class PlayerCockpitComponent implements OnInit {
   }
 
   private startLandingProcedure() {
-    if (!this.player.isGrounded && this.airportList[0]?.isNearby$.value) {
+    if (!this.player.isGrounded && this.airportList[0]?.isNearbyAndAvailable$.value) {
       this.airportsService.requestLandingPermission(this.airportList[0].id);
     }
   }
@@ -90,5 +84,9 @@ export class PlayerCockpitComponent implements OnInit {
         this.position = newPosition;
         this.cdr.markForCheck();
       });
+  }
+
+  private setUpdateAirportsHandler() {
+    this.airportsService.updated$.pipe(untilDestroyed(this)).subscribe(() => this.airportsUpdateTrigger$.next());
   }
 }
