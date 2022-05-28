@@ -40,3 +40,23 @@ class InvalidAirport(Exception):
 
 class CantFlyWhenGrounded(Exception):
     pass
+
+
+class ShipmentNotFound(Exception):
+    pass
+
+
+class ShipmentOperationWhenFlying(Exception):
+    pass
+
+
+class ShipmentExpired(Exception):
+    pass
+
+
+class ShipmentDestinationInvalid(Exception):
+    pass
+
+
+class InvalidOperation(Exception):
+    pass
