@@ -7,6 +7,6 @@ export enum KeyEventEnum {
   CAMERA_FOLLOW = 'FOLLOW',
   LAND = 'LAND',
   TAKE_OFF = 'TAKE_OFF',
-  SELECT = 'SELECT',
+  ENTER = 'ENTER',
   FUEL = 'FUEL',
 }

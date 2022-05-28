@@ -44,6 +44,14 @@ export class AirportsService {
     this.sendAirportRequest(shipmentId, ClientMessageTypeEnum.AIRPORT_SHIPMENT_DISPATCH_REQUEST);
   }
 
+  requestShipmentDelivery() {
+    this.mainWebsocketService.sendWSSMessage({
+      type: ClientMessageTypeEnum.AIRPORT_SHIPMENT_DELIVERY_REQUEST,
+      created: this.clockService.getCurrentTime(),
+      data: {},
+    });
+  }
+
   private sendAirportRequest(
     id: string,
     type:

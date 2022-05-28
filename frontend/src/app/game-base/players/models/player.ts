@@ -1,3 +1,4 @@
+import { Shipment } from '@pg/game-base/airports/models/airport.types';
 import { FLIGHT_ALTITUDE, VELOCITY } from '@pg/game-base/constants/game.constants';
 import { getRandomColorFromNickname } from '@pg/game-base/utils/color-utils';
 import {
@@ -21,7 +22,7 @@ export class Player {
 
   connected: boolean;
   isGrounded = false;
-  shipmentId: null | string = null;
+  shipment: null | Shipment = null;
 
   planeObject?: Object3D;
   cartesianPosition!: Vector3;
@@ -37,7 +38,7 @@ export class Player {
     this.nickname = player.nickname;
     this.connected = player.connected;
     this.isGrounded = player.is_grounded;
-    this.shipmentId = player.shipment_id;
+    this.shipment = player.shipment;
     this.color = new Color(getRandomColorFromNickname(this.nickname));
 
     this.position = player.position;
@@ -83,6 +84,9 @@ export class Player {
     }
     if ('is_grounded' in playerData) {
       this.isGrounded = !!playerData.is_grounded;
+    }
+    if ('shipment' in playerData) {
+      this.shipment = playerData.shipment || null;
     }
   }
 
