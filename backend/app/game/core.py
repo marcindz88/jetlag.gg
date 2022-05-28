@@ -282,7 +282,7 @@ class Airport:
 class GameSession:
     MAX_PLAYERS = 16
     PLAYER_TIME_TO_CONNECT = 5000  # 5 seconds
-    MAX_SHIPMENTS_IN_GAME = 12
+    MAX_SHIPMENTS_IN_GAME = 40
 
     def __init__(self):
         self._players = {}
@@ -313,8 +313,8 @@ class GameSession:
     def manage_airports(self):
         while True:
             self.remove_expired_shipments()
-            time.sleep(3)
-            if random_with_probability(0.4):
+            time.sleep(0.2)
+            if random_with_probability(0.04):
                 self.add_random_airport_shipment()
 
     def send_event(self, event: Event, player: Player):
@@ -478,16 +478,20 @@ class GameSession:
     def remove_expired_shipments(self):
         shipments_to_remove = []
         for shipment in self._shipments.values():
-            if shipment.valid_till > timestamp_now() + 5*1000:
+            if shipment.valid_till + 5*1000 < timestamp_now():
                 shipments_to_remove.append(shipment)
         for shipment in shipments_to_remove:
             self._shipments.pop(shipment.id)
             player: Player = self._players.get(shipment.player_id)
             if player:
                 player.shipment = None
+                player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
+                self.broadcast_event(event=player_updated_event)
             else:
                 airport: Airport = self._airports.get(shipment.origin_id)
                 airport.shipments.pop(shipment.id)
+                airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
+                self.broadcast_event(event=airport_updated_event)
 
     def handle_player_position_update_request_event(self, player: Player, event: Event):
         logging.info(f"handle_player_position_update_request_event {player.id} {event}")
