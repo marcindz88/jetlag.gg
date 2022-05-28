@@ -21,6 +21,7 @@ export class Player {
 
   connected: boolean;
   isGrounded = false;
+  shipmentId: null | string = null;
 
   planeObject?: Object3D;
   cartesianPosition!: Vector3;
@@ -36,6 +37,7 @@ export class Player {
     this.nickname = player.nickname;
     this.connected = player.connected;
     this.isGrounded = player.is_grounded;
+    this.shipmentId = player.shipment_id;
     this.color = new Color(getRandomColorFromNickname(this.nickname));
 
     this.position = player.position;

@@ -10,20 +10,39 @@
   background: var(--card-background-darker-color);
   display: flex;
   flex-direction: column;
-  height: min(495px, 80vh);
+  min-height: min(495px, 80vh);
   padding: 20px;
   width: min(650px, 85vw);
 
-  & &__packages-container {
-    flex-grow: 1;
-
-    & &__packages {
-      column-gap: 20px;
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      row-gap: 20px;
-    }
+  & &__actions {
+    column-gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
+.packages-container {
+  flex-grow: 1;
 
+  & &__title {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+
+    button {
+      padding: 2px;
+      width: min-content;
+    }
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  & &__packages {
+    column-gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
