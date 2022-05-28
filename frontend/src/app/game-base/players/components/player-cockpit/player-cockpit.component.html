@@ -25,11 +25,16 @@
       </table>
     </pg-card>
     <pg-compass class="player-cockpit__compass" [bearing]="position.bearing"></pg-compass>
+    <pg-shipment-details
+      class="player-cockpit__shipment"
+      *ngIf="player.shipment"
+      [shipment]="player.shipment"
+      [isSelectable]="false"></pg-shipment-details>
   </ng-container>
   <ng-template #airportMainPanel>
     <pg-airport-main-panel
       class="player-cockpit__airport_panel"
       [airport]="airportList[0]"
-      [carriedPackageId]="player.shipmentId"></pg-airport-main-panel>
+      [playerShipment]="player.shipment"></pg-airport-main-panel>
   </ng-template>
 </div>

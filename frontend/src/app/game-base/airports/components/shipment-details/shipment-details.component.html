@@ -1,9 +1,9 @@
-<pg-card class="shipment-details" [class.shipment-details--selected]="isSelected">
+<pg-card class="shipment-details" [class.shipment-details--selected]="isFocused">
   <h3>{{ shipment.name }}</h3>
   <p>Cash award: {{ shipment.award }}$</p>
   <p>Valid till: {{ shipment.valid_till | date: 'mediumTime' }}</p>
   <p>To: {{ destination }}</p>
-  <button (click)="requested.emit()" [disabled]="!isSelected || isCarried">
-    {{ isCarried ? 'Selected' : 'Select [S]' }}
+  <button *ngIf="isSelectable" (click)="selected.emit()" [disabled]="!isFocused">
+    {{ isSelected ? 'Deselect [↩]' : 'Select [↩]' }}
   </button>
 </pg-card>

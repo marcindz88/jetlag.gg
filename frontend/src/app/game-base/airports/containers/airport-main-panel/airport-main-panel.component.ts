@@ -15,9 +15,10 @@ import { KeyboardControlsService } from '@pg/game-base/services/keyboard-control
 })
 export class AirportMainPanelComponent implements OnInit {
   @Input() airport!: Airport;
-  @Input() carriedPackageId: string | null = null;
+  @Input() playerShipment: Shipment | null = null;
 
-  selectedIndex = 0;
+  selectedId: string | null = null;
+  focusedId: string | null = null;
   firstPackageIndex = 0;
 
   constructor(
@@ -27,6 +28,8 @@ export class AirportMainPanelComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.returnPackage();
+    this.resetFocusedId();
     this.setKeyboardControls();
     this.setAirportUpdater();
   }
@@ -36,11 +39,10 @@ export class AirportMainPanelComponent implements OnInit {
   }
 
   startDepartureProcedure() {
+    if (this.selectedId) {
+      this.airportsService.requestShipmentDispatch(this.selectedId);
+    }
     this.airportsService.requestDeparturePermission(this.airport.id);
-  }
-
-  requestShipment() {
-    this.airportsService.requestShipmentDispatch(this.airport.shipments[this.selectedIndex].id);
   }
 
   startFuelingProcedure() {
@@ -48,12 +50,13 @@ export class AirportMainPanelComponent implements OnInit {
   }
 
   goToNextPackage() {
-    if (this.selectedIndex + 1 === this.airport.shipments.length) {
-      this.selectedIndex = 0;
+    let focusedIndex = this.getIndexOfFocusedPackage();
+    if (focusedIndex + 1 === this.airport.shipments.length) {
+      this.focusedId = this.getPackageId(0);
       this.firstPackageIndex = 0;
     } else {
-      this.selectedIndex++;
-      if (this.selectedIndex > 2 && this.firstPackageIndex < this.airport.shipments.length - 3) {
+      this.focusedId = this.getPackageId(++focusedIndex);
+      if (focusedIndex > 2 && this.firstPackageIndex < this.airport.shipments.length - 3) {
         this.firstPackageIndex++;
       }
     }
@@ -61,26 +64,66 @@ export class AirportMainPanelComponent implements OnInit {
   }
 
   goToPreviousPackage() {
-    if (this.selectedIndex === 0) {
-      this.selectedIndex = this.airport.shipments.length - 1;
+    let focusedIndex = this.getIndexOfFocusedPackage();
+    if (focusedIndex === 0) {
+      this.focusedId = this.getPackageId(this.airport.shipments.length - 1);
       this.firstPackageIndex = Math.max(this.airport.shipments.length - 3, 0);
     } else {
-      this.selectedIndex--;
-      if (this.firstPackageIndex && this.selectedIndex < 3) {
+      this.focusedId = this.getPackageId(--focusedIndex);
+      if (this.firstPackageIndex && focusedIndex < 3) {
         this.firstPackageIndex--;
       }
     }
     this.cdr.markForCheck();
   }
 
+  focusPackage(id: string) {
+    this.focusedId = id;
+  }
+
+  selectOrDeselectPackage(id: string | null) {
+    if (!id || this.selectedId === id || this.playerShipment) {
+      this.selectedId = null;
+    } else {
+      this.selectedId = id;
+    }
+  }
+
+  private returnPackage() {
+    if (this.playerShipment && this.playerShipment.destination_id === this.airport.id) {
+      this.airportsService.requestShipmentDelivery();
+    }
+  }
+
+  private getPackageId(index: number): string | null {
+    return this.airport.shipments[index]?.id || null;
+  }
+
+  private getIndexOfFocusedPackage() {
+    return this.focusedId ? this.airport.shipments.findIndex(shipment => shipment.id === this.focusedId) : -1;
+  }
+
   private setKeyboardControls() {
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.RIGHT, this, this.goToNextPackage.bind(this));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LEFT, this, this.goToPreviousPackage.bind(this));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.TAKE_OFF, this, this.startDepartureProcedure.bind(this));
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.SELECT, this, this.requestShipment.bind(this));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.ENTER, this, () => {
+      this.selectOrDeselectPackage(this.focusedId);
+      this.cdr.markForCheck();
+    });
   }
 
   private setAirportUpdater() {
-    this.airport.changed$.pipe(untilDestroyed(this)).subscribe(() => this.cdr.markForCheck());
+    this.airport.changed$.pipe(untilDestroyed(this)).subscribe(() => {
+      if (this.getIndexOfFocusedPackage() === -1) {
+        this.resetFocusedId();
+      }
+      this.cdr.markForCheck();
+    });
+  }
+
+  private resetFocusedId() {
+    this.focusedId = this.getPackageId(0) || null;
+    this.firstPackageIndex = 0;
   }
 }
