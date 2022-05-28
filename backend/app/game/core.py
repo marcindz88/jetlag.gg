@@ -553,11 +553,11 @@ class GameSession:
         airport: Airport = self._airports.get(player.airport_id)
         airport.dispatch_shipment(shipment_id=data_model.id, player=player)
 
-        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
-        self.broadcast_event(event=airport_updated_event)
-
         player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
         self.broadcast_event(event=player_updated_event)
+
+        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
+        self.broadcast_event(event=airport_updated_event)
 
     def handle_shipment_delivery_request_event(self, player: Player, event: Event):
         logging.info(f"handle_shipment_delivery_request_event {player.id} {event}")
