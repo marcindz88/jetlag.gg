@@ -19,10 +19,11 @@ export class ShipmentDetailsComponent {
     return this._shipment;
   }
 
+  @Input() isFocused = false;
   @Input() isSelected = false;
-  @Input() isCarried = false;
+  @Input() isSelectable = true;
 
-  @Output() requested = new EventEmitter();
+  @Output() selected = new EventEmitter();
 
   destination!: string;
   private _shipment!: Shipment;

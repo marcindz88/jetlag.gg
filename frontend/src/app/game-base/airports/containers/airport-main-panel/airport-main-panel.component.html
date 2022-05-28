@@ -7,7 +7,11 @@
         <button *ngIf="airport.shipments.length > 3" class="material-symbols-outlined" (click)="goToPreviousPackage()">
           chevron_left
         </button>
-        <h3>Available packages</h3>
+        <h3>
+          Available packages<span *ngIf="playerShipment"
+            >(You can't pick a package, as you already have {{ playerShipment.name }} on board)</span
+          >
+        </h3>
         <button *ngIf="airport.shipments.length > 3" class="material-symbols-outlined" (click)="goToNextPackage()">
           chevron_right
         </button>
@@ -19,10 +23,11 @@
             trackBy: trackById;
             index as index
           "
-          (click)="selectedIndex = index + firstPackageIndex"
-          (requested)="requestShipment()"
-          [isSelected]="index + firstPackageIndex === selectedIndex"
-          [isCarried]="carriedPackageId === shipment.id"
+          (click)="focusPackage(shipment.id)"
+          (selected)="selectOrDeselectPackage(shipment.id)"
+          [isSelectable]="!playerShipment"
+          [isFocused]="shipment.id === focusedId"
+          [isSelected]="shipment.id === selectedId"
           [shipment]="shipment"></pg-shipment-details>
       </div>
     </ng-template>
