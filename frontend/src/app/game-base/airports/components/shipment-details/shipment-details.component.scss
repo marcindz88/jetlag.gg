@@ -1,0 +1,10 @@
+.shipment-details {
+  border: 2px solid transparent;
+  height: auto;
+  margin: 0;
+  padding: 10px;
+
+  &--selected {
+    border-color: var(--accent-color);
+  }
+}

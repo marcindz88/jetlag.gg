@@ -9,6 +9,7 @@ export type OtherPlayer = {
   connected: boolean;
   position: PlanePosition;
   is_grounded: boolean;
+  shipment_id: string | null;
 } & BasePlayer;
 
 export type PlayerList = {
