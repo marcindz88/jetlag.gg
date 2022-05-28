@@ -49,7 +49,7 @@ export class GameMainComponent {
   }
 
   private setupAirportsChanges() {
-    this.airportsService.changed$.pipe(untilDestroyed(this)).subscribe(() => {
+    this.airportsService.listChanged$.pipe(untilDestroyed(this)).subscribe(() => {
       this.cdr.markForCheck();
     });
   }

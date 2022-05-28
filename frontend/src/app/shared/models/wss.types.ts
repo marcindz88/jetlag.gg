@@ -46,4 +46,5 @@ export enum ClientMessageTypeEnum {
   PLAYER_POSITION_UPDATE_REQUEST = 'player_position.update_request',
   AIRPORT_LANDING_REQUEST = 'airport.landing_request',
   AIRPORT_DEPARTURE_REQUEST = 'airport.departure_request',
+  AIRPORT_SHIPMENT_DISPATCH_REQUEST = 'airport.shipment_dispatch_request',
 }
