@@ -177,7 +177,7 @@ class Player:
             "nickname": self.nickname,
             "connected": self.is_connected,
             "position": self.position.serialized,
-            "shipment_id": self.shipment.id if self.shipment else None,
+            "shipment": self.shipment.serialized if self.shipment else None,
             "is_grounded": self.is_grounded,
         }
 
