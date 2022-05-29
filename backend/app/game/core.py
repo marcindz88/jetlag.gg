@@ -176,9 +176,10 @@ class Player:
             "id": self.id,
             "nickname": self.nickname,
             "connected": self.is_connected,
+            "is_grounded": self.is_grounded,
+            "score": self.score,
             "position": self.position.serialized,
             "shipment": self.shipment.serialized if self.shipment else None,
-            "is_grounded": self.is_grounded,
         }
 
 
@@ -478,7 +479,7 @@ class GameSession:
     def remove_expired_shipments(self):
         shipments_to_remove = []
         for shipment in self._shipments.values():
-            if shipment.valid_till + 5*1000 < timestamp_now():
+            if shipment.valid_till + 3*1000 < timestamp_now():
                 shipments_to_remove.append(shipment)
         for shipment in shipments_to_remove:
             self._shipments.pop(shipment.id)
@@ -518,8 +519,8 @@ class GameSession:
 
         position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
             "id": player.id,
-            "position": player.position.serialized,
             "is_grounded": player.is_grounded,
+            "position": player.position.serialized,
         })
         self.broadcast_event(event=position_updated_event)
 
@@ -538,8 +539,8 @@ class GameSession:
 
         position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
             "id": player.id,
-            "position": player.position.serialized,
             "is_grounded": player.is_grounded,
+            "position": player.position.serialized,
         })
         self.broadcast_event(event=position_updated_event)
 
