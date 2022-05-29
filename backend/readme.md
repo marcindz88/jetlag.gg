@@ -75,7 +75,7 @@ where id is the id of the shipment. Player has to be grounded and shipment must 
 
 * 'airport.shipment_delivery_request'<br>
 sample:
-> ws.send(JSON.stringify({type: 'airport.shipment_delivery_request', created: new Date().getTime(), data: null}))
+> ws.send(JSON.stringify({type: 'airport.shipment_delivery_request', created: new Date().getTime(), data: {}}))
 
 player has to carry a shipment and be grounded on the destination airport of the shipment.
 
