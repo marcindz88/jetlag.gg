@@ -5,13 +5,13 @@
     *ngFor="let player of players.values(); trackBy: trackById; index as index"
     [player]="player"
     [position]="player.cartesianPosition"
-    [camera]="index === focusedPlayerIndex ? camera : undefined"
-    [cameraFollowing]="cameraMode === CAMERA_TYPES.FOLLOW"
-    [cameraPositioning]="cameraMode === CAMERA_TYPES.POSITION"></pg-plane>
+    [camera]="camera"
+    [cameraMode]="cameraMode"
+    [isFocused]="focusedPlayerIndex === index"></pg-plane>
   <pg-airport *ngFor="let airport of airports.values(); trackBy: trackById" [airport]="airport"></pg-airport>
   <ngt-soba-stars [count]="3000" [factor]="2" [fade]="true" [speed]="2"></ngt-soba-stars>
   <ngt-soba-orbit-controls
-    [enabled]="cameraMode === CAMERA_TYPES.FREE"
+    [enabled]="cameraMode === CameraModesEnum.FREE"
     [rotateSpeed]="CAMERA.rotateSpeed"
     [zoomSpeed]="CAMERA.zoomSpeed"
     [minDistance]="CAMERA.minHeight"
