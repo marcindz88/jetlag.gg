@@ -6,7 +6,7 @@ export type Shipment = {
   name: string;
   award: number;
   destination_id: string;
-  valid_till?: number;
+  valid_till: number;
 };
 
 export interface AirportType {

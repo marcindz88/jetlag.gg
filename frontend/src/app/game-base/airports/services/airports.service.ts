@@ -12,7 +12,8 @@ import { AirportList, AirportUpdate } from '../models/airport.types';
 @Injectable({ providedIn: 'root' })
 export class AirportsService {
   airports = new Map<string, Airport>();
-  changed$ = new ReplaySubject<void>();
+  listChanged$ = new ReplaySubject<void>();
+  updated$ = new ReplaySubject<void>();
 
   constructor(private mainWebsocketService: MainWebsocketService, private clockService: ClockService) {}
 
@@ -21,12 +22,13 @@ export class AirportsService {
       switch (airportMessage.type) {
         case ServerMessageTypeEnum.AIRPORT_LIST:
           this.saveAirportList(airportMessage.data as AirportList);
+          this.listChanged$.next();
           break;
         case ServerMessageTypeEnum.AIRPORT_UPDATED:
           this.updateAirport(airportMessage.data as AirportUpdate);
           break;
       }
-      this.changed$.next();
+      this.updated$.next();
     });
   }
 
@@ -38,9 +40,24 @@ export class AirportsService {
     this.sendAirportRequest(airportId, ClientMessageTypeEnum.AIRPORT_DEPARTURE_REQUEST);
   }
 
+  requestShipmentDispatch(shipmentId: string) {
+    this.sendAirportRequest(shipmentId, ClientMessageTypeEnum.AIRPORT_SHIPMENT_DISPATCH_REQUEST);
+  }
+
+  requestShipmentDelivery() {
+    this.mainWebsocketService.sendWSSMessage({
+      type: ClientMessageTypeEnum.AIRPORT_SHIPMENT_DELIVERY_REQUEST,
+      created: this.clockService.getCurrentTime(),
+      data: {},
+    });
+  }
+
   private sendAirportRequest(
     id: string,
-    type: ClientMessageTypeEnum.AIRPORT_DEPARTURE_REQUEST | ClientMessageTypeEnum.AIRPORT_LANDING_REQUEST
+    type:
+      | ClientMessageTypeEnum.AIRPORT_DEPARTURE_REQUEST
+      | ClientMessageTypeEnum.AIRPORT_LANDING_REQUEST
+      | ClientMessageTypeEnum.AIRPORT_SHIPMENT_DISPATCH_REQUEST
   ) {
     this.mainWebsocketService.sendWSSMessage({
       type,
