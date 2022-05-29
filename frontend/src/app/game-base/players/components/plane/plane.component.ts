@@ -79,7 +79,7 @@ export class PlaneComponent implements OnInit {
   }
 
   private focusCameraOnPlayer(plane: Object3D) {
-    if (this.cameraFollowing && this.camera) {
+    if ((this.cameraFollowing || this.cameraPositioning) && this.camera) {
       const position = plane.position.clone().multiplyScalar(1.2);
       const mock = this.camera.clone();
       mock.position.set(position.x, position.y, position.z);

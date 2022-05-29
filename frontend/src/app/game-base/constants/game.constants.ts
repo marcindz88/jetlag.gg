@@ -20,7 +20,14 @@ export const CAMERA = {
   defaultZoom: 1 / 3,
   zoomSpeed: 0.3,
   rotateSpeed: 0.3,
+  cameraModes: 3,
 };
+
+export enum CAMERA_TYPES {
+  FREE,
+  FOLLOW,
+  POSITION,
+}
 
 // km/h
 export const VELOCITY = {
