@@ -4,6 +4,7 @@ import logging
 from fastapi import FastAPI, WebSocket, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import constr, BaseModel
+from fastapi.websockets import WebSocketDisconnect
 
 from app.game import exceptions
 from app.game.core import GameSession
@@ -104,5 +105,8 @@ async def websocket_endpoint(websocket: WebSocket):
 async def clock_websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     while True:
-        data = await websocket.receive_text()
-        await websocket.send_json({"t": timestamp_now(), "ref": data})
+        try:
+            data = await websocket.receive_text()
+            await websocket.send_json({"t": timestamp_now(), "ref": data})
+        except WebSocketDisconnect:
+            break
