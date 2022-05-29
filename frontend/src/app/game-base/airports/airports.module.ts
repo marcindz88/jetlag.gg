@@ -30,6 +30,6 @@ import { SharedModule } from '@shared/shared.module';
     NgtMeshModule,
     NgtCircleGeometryModule,
   ],
-  exports: [AirportComponent, NearbyAirportsComponent, AirportMainPanelComponent],
+  exports: [AirportComponent, NearbyAirportsComponent, AirportMainPanelComponent, ShipmentDetailsComponent],
 })
 export class AirportsModule {}

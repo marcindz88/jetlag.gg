@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit, ViewChild } from '@angular/core';
-import { NgtCamera } from '@angular-three/core';
 import { NgtGroup } from '@angular-three/core/group';
 import { NgtPrimitive } from '@angular-three/core/primitive';
 import { BeforeRenderedObject } from '@pg/game-base/models/game.types';
 import { Player } from '@pg/game-base/players/models/player';
 import { map, Observable } from 'rxjs';
-import { Euler, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
+import { Camera, Euler, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
 import { MAP_SCALE, MOVING_CIRCUMFERENCE } from '../../../constants/game.constants';
@@ -28,9 +27,10 @@ export class PlaneComponent implements OnInit {
     this.targetPosition = position;
   }
 
-  @Input() camera?: NgtCamera;
+  @Input() camera?: Camera;
   @Input() player!: Player;
   @Input() cameraFollowing = false;
+  @Input() cameraPositioning = false;
 
   textures$?: Observable<{ model: Object3D }>;
   initialPosition?: Vector3;
@@ -74,15 +74,21 @@ export class PlaneComponent implements OnInit {
       this.updateByDifference(this.targetPosition!, positionCopy, plane.position, 1, 0.0000000001);
     }
 
-    // Update position and rotation up to target gradually
+    // Update position up to target gradually
     this.updateByDifference(plane.position, plane.position, this.targetPosition!, 0.1);
   }
 
   private focusCameraOnPlayer(plane: Object3D) {
-    if (this.cameraFollowing && this.camera) {
+    if ((this.cameraFollowing || this.cameraPositioning) && this.camera) {
       const position = plane.position.clone().multiplyScalar(1.2);
+      const mock = this.camera.clone();
+      mock.position.set(position.x, position.y, position.z);
+      mock.lookAt(plane.position);
+      if (this.cameraPositioning) {
+        mock.rotation.z -= plane.rotation.z;
+      }
       this.camera.position.set(position.x, position.y, position.z);
-      this.camera.lookAt(plane.position);
+      this.camera.quaternion.slerp(mock.quaternion, 0.1);
     }
   }
 
@@ -93,24 +99,34 @@ export class PlaneComponent implements OnInit {
     multiplier = 1,
     accuracy = 0.00001
   ): void {
-    this.updateOneByDifference('x', target, start, end, multiplier, accuracy);
-    this.updateOneByDifference('y', target, start, end, multiplier, accuracy);
-    this.updateOneByDifference('z', target, start, end, multiplier, accuracy);
+    if (this.isDifferenceNegligible(start, end, accuracy)) {
+      ['x', 'y', 'z'].forEach(direction => {
+        target[direction as 'x' | 'y' | 'z'] = end[direction as 'x' | 'y' | 'z'];
+      });
+      return;
+    }
+    ['x', 'y', 'z'].forEach(direction => {
+      this.updateDirectionByDifference(direction as 'x' | 'y' | 'z', target, start, end, multiplier);
+    });
   }
 
-  private updateOneByDifference<T extends Euler | Vector3>(
+  private isDifferenceNegligible<T extends Euler | Vector3>(start: T, end: T, accuracy: number) {
+    return ['x', 'y', 'z'].every(
+      (directionValue: string) =>
+        Math.abs(end[directionValue as 'x' | 'y' | 'z'] - start[directionValue as 'x' | 'y' | 'z']) < accuracy
+    );
+  }
+
+  private updateDirectionByDifference<T extends Euler | Vector3>(
     direction: 'x' | 'y' | 'z',
     target: T,
     start: T,
     end: T,
-    multiplier: number,
-    accuracy: number
+    multiplier: number
   ) {
     const difference = end[direction] - start[direction];
-    if (Math.abs(difference) > accuracy) {
+    if (difference) {
       target[direction] += difference * multiplier;
-    } else {
-      target[direction] = end[direction];
     }
   }
 }
