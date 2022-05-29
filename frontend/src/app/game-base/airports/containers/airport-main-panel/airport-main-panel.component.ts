@@ -106,7 +106,11 @@ export class AirportMainPanelComponent implements OnInit {
   private setKeyboardControls() {
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.RIGHT, this, this.goToNextPackage.bind(this));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LEFT, this, this.goToPreviousPackage.bind(this));
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.TAKE_OFF, this, this.startDepartureProcedure.bind(this));
+    this.keyboardControlsService.setupKeyEvent(
+      KeyEventEnum.LAND_OR_TAKE_OFF,
+      this,
+      this.startDepartureProcedure.bind(this)
+    );
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.ENTER, this, () => {
       this.selectOrDeselectPackage(this.focusedId);
       this.cdr.markForCheck();

@@ -4,7 +4,7 @@ import { NgtCameraOptions } from '@angular-three/core/lib/types';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Airport } from '@pg/game-base/airports/models/airport';
 import { AirportsService } from '@pg/game-base/airports/services/airports.service';
-import { CAMERA } from '@pg/game-base/constants/game.constants';
+import { CAMERA, CAMERA_TYPES } from '@pg/game-base/constants/game.constants';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { RENDERER_OPTIONS, SHADOW_OPTIONS } from '@shared/constants/renderer-options';
@@ -28,14 +28,14 @@ export class GameMainComponent {
   }
   readonly RENDERER_OPTIONS = RENDERER_OPTIONS;
   readonly SHADOW_OPTIONS = SHADOW_OPTIONS;
+  readonly CAMERA_TYPES = CAMERA_TYPES;
   readonly CAMERA = CAMERA;
   readonly players = this.playersService.players;
   readonly airports = this.airportsService.airports;
 
   myPlayer?: Player;
   focusedPlayerIndex = 0;
-  followingPlayer = false;
-  positioningWithPlayer = false;
+  cameraMode = CAMERA_TYPES.FREE;
   cameraPosition: NgtVector3 = [0, 15, 50];
   cameraOptions: NgtCameraOptions = {
     zoom: CAMERA.defaultZoom,
@@ -83,13 +83,8 @@ export class GameMainComponent {
   }
 
   private setupCameraControls() {
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA_FOCUS, this, this.switchCameraFocus.bind(this));
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA_FOLLOW, this, this.switchCameraFollowing.bind(this));
-    this.keyboardControlsService.setupKeyEvent(
-      KeyEventEnum.CAMERA_POSITION,
-      this,
-      this.switchCameraPositioning.bind(this)
-    );
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.PLAYER_FOCUS, this, this.switchCameraFocus.bind(this));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA, this, this.switchCameraMode.bind(this));
   }
 
   private switchCameraFocus() {
@@ -100,14 +95,11 @@ export class GameMainComponent {
     }
   }
 
-  private switchCameraFollowing() {
-    this.followingPlayer = !this.followingPlayer;
-  }
-
-  private switchCameraPositioning() {
-    this.positioningWithPlayer = !this.positioningWithPlayer;
-    if (this.positioningWithPlayer) {
-      this.followingPlayer = true;
+  private switchCameraMode() {
+    if (this.cameraMode + 1 >= CAMERA.cameraModes) {
+      this.cameraMode = CAMERA_TYPES.FREE;
+    } else {
+      this.cameraMode++;
     }
   }
 }
