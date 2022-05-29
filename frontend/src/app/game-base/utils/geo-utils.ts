@@ -63,6 +63,10 @@ export const calculatePositionAfterTimeInterval = (
   altitude: number,
   currentTimestamp: number
 ): PlanePosition => {
+  if (currentTimestamp === position.timestamp) {
+    return position;
+  }
+
   const distance = (position.velocity * MAP_SCALE * (currentTimestamp - position.timestamp)) / 3600000;
 
   const r = EARTH_RADIUS + altitude;

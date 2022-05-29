@@ -20,8 +20,18 @@ from app.game.exceptions import (
     TooFarToLand,
     InvalidAirport,
     CantFlyWhenGrounded,
+    ShipmentOperationWhenFlying,
+    ShipmentNotFound,
+    InvalidOperation,
+    ShipmentExpired,
+    ShipmentDestinationInvalid,
 )
-from app.game.models import PlayerPositionUpdateRequest, AirportLandingRequest, AirportDepartureRequest
+from app.game.models import (
+    PlayerPositionUpdateRequest,
+    AirportLandingRequest,
+    AirportDepartureRequest,
+    ShipmentRequest,
+)
 from app.tools.encoder import encode
 from app.tools.misc import random_with_probability
 from app.tools.timestamp import timestamp_now
@@ -35,16 +45,19 @@ class Shipment:
     id: uuid.UUID
     name: str
     award: int
-    destination: "Airport"
-    valid_till: Optional[int] = None
+    origin_id: uuid.UUID
+    destination_id: uuid.UUID
+    valid_till: int
+    player_id: Optional[uuid.UUID] = None  # id of the player that is transporting the shipment
 
-    def __init__(self, destination: "Airport"):
+    def __init__(self, origin_id: uuid.UUID, destination_id: uuid.UUID):
         self.id = uuid.uuid4()
         self.name = random.choice(Shipment.shipment_names())
         self.award = random.choice([100, 200, 300, 400, 500])
-        self.destination = destination
-        if random_with_probability(0.25):
-            self.valid_till = timestamp_now() + 90*1000
+        self.destination_id = destination_id
+        self.origin_id = origin_id
+        self.valid_till = timestamp_now() + 90*1000
+        self.player_id = None
 
     @staticmethod
     def shipment_names():
@@ -64,7 +77,8 @@ class Shipment:
             "id": self.id,
             "name": self.name,
             "award": self.award,
-            "destination_id": self.destination.id,
+            "origin_id": self.origin_id,
+            "destination_id": self.destination_id,
             "valid_till": self.valid_till,
         }
 
@@ -162,9 +176,10 @@ class Player:
             "id": self.id,
             "nickname": self.nickname,
             "connected": self.is_connected,
+            "is_grounded": self.is_grounded,
+            "score": self.score,
             "position": self.position.serialized,
             "shipment": self.shipment.serialized if self.shipment else None,
-            "is_grounded": self.is_grounded,
         }
 
 
@@ -174,14 +189,14 @@ class Airport:
     id: uuid.UUID
     name: str
     coordinates: Coordinates
-    shipments: List[Shipment]
+    shipments: dict = {}
     occupying_player: Optional[Player] = None
 
     def __init__(self, name: str, coordinates: Coordinates):
         self.id = uuid.uuid4()
         self.name = name
         self.coordinates = coordinates
-        self.shipments = []
+        self.shipments = {}
 
     @property
     def serialized(self) -> dict:
@@ -190,7 +205,7 @@ class Airport:
             "name": self.name,
             "coordinates": self.coordinates.serialized,
             "occupying_player": self.occupying_player.id if self.occupying_player else None,
-            "shipments": [shipment.serialized for shipment in self.shipments],
+            "shipments": [shipment.serialized for shipment in self.shipments.values()],
         }
 
     def land_player(self, player: Player):
@@ -230,15 +245,51 @@ class Airport:
         player.position.timestamp = now
         return True
 
+    def dispatch_shipment(self, shipment_id: uuid.UUID, player: Player) -> Shipment:
+        if player != self.occupying_player:
+            raise InvalidOperation
+
+        if player.shipment:
+            raise InvalidOperation
+
+        shipment: Shipment = self.shipments.get(shipment_id)
+        if not shipment:
+            raise ShipmentNotFound
+
+        shipment.player_id = player.id
+        player.shipment = shipment
+        self.shipments.pop(shipment_id)
+        return shipment
+
+    def accept_shipment_delivery(self, player: Player) -> Shipment:
+        if player != self.occupying_player:
+            raise InvalidOperation
+
+        shipment = player.shipment
+        if not shipment:
+            raise ShipmentNotFound
+
+        if shipment.destination_id != self.id:
+            raise ShipmentDestinationInvalid
+
+        if shipment.valid_till < timestamp_now():
+            raise ShipmentExpired
+
+        player.score += player.shipment.award
+        player.shipment = None
+        return shipment
+
 
 class GameSession:
     MAX_PLAYERS = 16
     PLAYER_TIME_TO_CONNECT = 5000  # 5 seconds
+    MAX_SHIPMENTS_IN_GAME = 40
 
     def __init__(self):
         self._players = {}
         self._sessions = {}
         self._airports = {}
+        self._shipments = {}
 
         for airport_name, airport_coordinates in AIRPORTS:
             airport = Airport(name=airport_name, coordinates=airport_coordinates)
@@ -262,7 +313,10 @@ class GameSession:
 
     def manage_airports(self):
         while True:
-            time.sleep(5)
+            self.remove_expired_shipments()
+            time.sleep(0.2)
+            if random_with_probability(0.04):
+                self.add_random_airport_shipment()
 
     def send_event(self, event: Event, player: Player):
         logging.info("send_event %s", event.type)
@@ -409,6 +463,37 @@ class GameSession:
         })
         self.broadcast_event(event=event)
 
+    def add_random_airport_shipment(self):
+        if len(self._shipments) >= GameSession.MAX_SHIPMENTS_IN_GAME:
+            return
+        origin_airport_id = random.choice(list(self._airports.keys()))
+        destination_airport_id = random.choice(list(set(self._airports.keys()) - {origin_airport_id}))
+
+        shipment = Shipment(destination_id=destination_airport_id, origin_id=origin_airport_id)
+        self._shipments[shipment.id] = shipment
+        origin_airport = self._airports[origin_airport_id]
+        origin_airport.shipments[shipment.id] = shipment
+        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=origin_airport.serialized)
+        self.broadcast_event(event=airport_updated_event)
+
+    def remove_expired_shipments(self):
+        shipments_to_remove = []
+        for shipment in self._shipments.values():
+            if shipment.valid_till + 3*1000 < timestamp_now():
+                shipments_to_remove.append(shipment)
+        for shipment in shipments_to_remove:
+            self._shipments.pop(shipment.id)
+            player: Player = self._players.get(shipment.player_id)
+            if player:
+                player.shipment = None
+                player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
+                self.broadcast_event(event=player_updated_event)
+            else:
+                airport: Airport = self._airports.get(shipment.origin_id)
+                airport.shipments.pop(shipment.id)
+                airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
+                self.broadcast_event(event=airport_updated_event)
+
     def handle_player_position_update_request_event(self, player: Player, event: Event):
         logging.info(f"handle_player_position_update_request_event {player.id} {event}")
         data_model = PlayerPositionUpdateRequest(**event.data)
@@ -434,8 +519,8 @@ class GameSession:
 
         position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
             "id": player.id,
-            "position": player.position.serialized,
             "is_grounded": player.is_grounded,
+            "position": player.position.serialized,
         })
         self.broadcast_event(event=position_updated_event)
 
@@ -454,10 +539,39 @@ class GameSession:
 
         position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
             "id": player.id,
-            "position": player.position.serialized,
             "is_grounded": player.is_grounded,
+            "position": player.position.serialized,
         })
         self.broadcast_event(event=position_updated_event)
+
+    def handle_shipment_dispatch_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_shipment_dispatch_request_event {player.id} {event}")
+        data_model = ShipmentRequest(**event.data)
+
+        if not player.is_grounded:
+            raise ShipmentOperationWhenFlying
+
+        airport: Airport = self._airports.get(player.airport_id)
+        airport.dispatch_shipment(shipment_id=data_model.id, player=player)
+
+        player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
+        self.broadcast_event(event=player_updated_event)
+
+        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
+        self.broadcast_event(event=airport_updated_event)
+
+    def handle_shipment_delivery_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_shipment_delivery_request_event {player.id} {event}")
+
+        if not player.is_grounded:
+            raise ShipmentOperationWhenFlying
+
+        airport: Airport = self._airports.get(player.airport_id)
+        shipment = airport.accept_shipment_delivery(player=player)
+        self._shipments.pop(shipment.id)
+
+        player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
+        self.broadcast_event(event=player_updated_event)
 
     def handle_event(self, player: Player, event: Event):
         logging.info(f"handle_event {player.id} {event}")
@@ -472,4 +586,12 @@ class GameSession:
 
         if event.type == EventType.AIRPORT_DEPARTURE_REQUEST:
             self.handle_airport_departure_request_event(player=player, event=event)
+            return
+
+        if event.type == EventType.AIRPORT_SHIPMENT_DISPATCH_REQUEST:
+            self.handle_shipment_dispatch_request_event(player=player, event=event)
+            return
+
+        if event.type == EventType.AIRPORT_SHIPMENT_DELIVERY_REQUEST:
+            self.handle_shipment_delivery_request_event(player=player, event=event)
             return

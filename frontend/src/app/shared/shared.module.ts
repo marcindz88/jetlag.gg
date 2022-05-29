@@ -8,9 +8,11 @@ import { ElevatedTextComponent } from '@shared/components/elevated-text/elevated
 import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { TableComponent } from '@shared/components/table/table.component';
 
+import { RemainingTimePipe } from './pipes/remaining-time.pipe';
+
 @NgModule({
   imports: [CommonModule, HttpClientModule, NgtRepeatModule, NgtSobaText3dModule],
-  declarations: [CardComponent, TableComponent, LoaderComponent, ElevatedTextComponent],
-  exports: [CardComponent, TableComponent, LoaderComponent, ElevatedTextComponent],
+  declarations: [CardComponent, TableComponent, LoaderComponent, ElevatedTextComponent, RemainingTimePipe],
+  exports: [CardComponent, TableComponent, LoaderComponent, ElevatedTextComponent, RemainingTimePipe],
 })
 export class SharedModule {}

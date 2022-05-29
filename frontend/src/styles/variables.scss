@@ -1,6 +1,7 @@
 :root {
-  --primary-color: #0b1a2b;
-  --primary-color-2: #3a6291;
+  --primary-color: #1a2531;
+  --primary-color-2: #131920;
+  --primary-color-3: #060e15;
   --accent-color: #dcd9d9;
   --accent-lighter-color: #ece9e9;
   --accent-darker-color: #848484;
@@ -13,5 +14,4 @@
   --compass-arrow-color: #f61a1a;
 }
 
-$background: linear-gradient(313deg, var(--primary-color) 33%, var(--primary-color-2) 111%);
-
+$background: radial-gradient(circle, var(--primary-color) 0%, var(--primary-color-2) 50%, var(--primary-color-3) 100%);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Shipment } from '@pg/game-base/airports/models/airport.types';
 import { AirportsService } from '@pg/game-base/airports/services/airports.service';
@@ -18,6 +18,12 @@ export class ShipmentDetailsComponent {
   get shipment() {
     return this._shipment;
   }
+
+  @Input() isFocused = false;
+  @Input() isSelected = false;
+  @Input() isSelectable = true;
+
+  @Output() selected = new EventEmitter();
 
   destination!: string;
   private _shipment!: Shipment;
