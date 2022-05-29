@@ -13,7 +13,7 @@ class AirportLandingRequest(BaseModel):
     id: uuid.UUID
 
 
-class AirportDepartureRequest(BaseModel):
+class AirportRequest(BaseModel):
     id: uuid.UUID
 
 
