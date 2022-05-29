@@ -3,11 +3,14 @@ import { NgtGroup } from '@angular-three/core/group';
 import { NgtPrimitive } from '@angular-three/core/primitive';
 import { BeforeRenderedObject } from '@pg/game-base/models/game.types';
 import { Player } from '@pg/game-base/players/models/player';
+import { PlayersService } from '@pg/game-base/players/services/players.service';
+import { ClockService } from '@shared/services/clock.service';
+import { Logger } from '@shared/services/logger.service';
 import { map, Observable } from 'rxjs';
 import { Camera, Euler, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
-import { MAP_SCALE, MOVING_CIRCUMFERENCE } from '../../../constants/game.constants';
+import { CameraModesEnum, MAP_SCALE, MOVING_CIRCUMFERENCE } from '../../../constants/game.constants';
 import { TextureModelsService } from '../../../services/texture-models.service';
 
 @Component({
@@ -29,16 +32,27 @@ export class PlaneComponent implements OnInit {
 
   @Input() camera?: Camera;
   @Input() player!: Player;
-  @Input() cameraFollowing = false;
-  @Input() cameraPositioning = false;
+  @Input() cameraMode: CameraModesEnum = CameraModesEnum.FREE;
+  @Input() set isFocused(isFocused: boolean) {
+    this.player.isFocused = isFocused;
+    this.playersService.changed$.next();
+    if (!isFocused) {
+      this.cameraFocused = false;
+    }
+  }
 
   textures$?: Observable<{ model: Object3D }>;
   initialPosition?: Vector3;
   targetPosition?: Vector3;
+  cameraFocused = false;
 
   readonly materials = this.textureModelsService.materials;
 
-  constructor(private textureModelsService: TextureModelsService) {}
+  constructor(
+    private textureModelsService: TextureModelsService,
+    private clockService: ClockService,
+    private playersService: PlayersService
+  ) {}
 
   ngOnInit() {
     this.textures$ = this.textureModelsService.planeTextures$.pipe(
@@ -54,7 +68,6 @@ export class PlaneComponent implements OnInit {
 
   updatePlane(event: BeforeRenderedObject) {
     this.movePlane(event.object, event.state.delta);
-    this.focusCameraOnPlayer(event.object);
   }
 
   getMaterial(model: Object3D) {
@@ -63,6 +76,12 @@ export class PlaneComponent implements OnInit {
 
   private movePlane(plane: Object3D, delta: number) {
     if (this.player.velocity) {
+      // Suspected inactivity
+      if (delta > 0.1) {
+        this.recoverFromInactivity(plane, delta);
+        return;
+      }
+
       const positionCopy = plane.position.clone();
 
       // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
@@ -76,19 +95,32 @@ export class PlaneComponent implements OnInit {
 
     // Update position up to target gradually
     this.updateByDifference(plane.position, plane.position, this.targetPosition!, 0.1);
+
+    this.focusCameraOnPlayer(plane);
+  }
+
+  private recoverFromInactivity(plane: Object3D, delta: number) {
+    this.cameraFocused = false;
+    this.player.position = {
+      ...this.player.position,
+      timestamp: this.clockService.getCurrentTime() - delta * 1000,
+    };
+    this.updateByDifference(plane.position, plane.position, this.player.cartesianPosition, 1, 0.0000000001);
+    Logger.warn(PlaneComponent, 'Recovered after inactivity');
   }
 
   private focusCameraOnPlayer(plane: Object3D) {
-    if ((this.cameraFollowing || this.cameraPositioning) && this.camera) {
+    if (this.player.isFocused && this.cameraMode !== CameraModesEnum.FREE && this.camera) {
       const position = plane.position.clone().multiplyScalar(1.2);
       const mock = this.camera.clone();
       mock.position.set(position.x, position.y, position.z);
       mock.lookAt(plane.position);
-      if (this.cameraPositioning) {
+      if (this.cameraMode === CameraModesEnum.FOLLOW) {
         mock.rotation.z -= plane.rotation.z;
       }
       this.camera.position.set(position.x, position.y, position.z);
-      this.camera.quaternion.slerp(mock.quaternion, 0.1);
+      this.camera.quaternion.slerp(mock.quaternion, this.cameraFocused ? 0.1 : 1);
+      this.cameraFocused = true;
     }
   }
 
