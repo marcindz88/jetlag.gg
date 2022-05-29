@@ -4,6 +4,7 @@ import { NgtCameraOptions } from '@angular-three/core/lib/types';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Airport } from '@pg/game-base/airports/models/airport';
 import { AirportsService } from '@pg/game-base/airports/services/airports.service';
+import { CAMERA } from '@pg/game-base/constants/game.constants';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { RENDERER_OPTIONS, SHADOW_OPTIONS } from '@shared/constants/renderer-options';
@@ -22,15 +23,17 @@ export class GameMainComponent {
   @ViewChild(NgtCanvas) ngtCanvas: NgtCanvas | null = null;
   readonly RENDERER_OPTIONS = RENDERER_OPTIONS;
   readonly SHADOW_OPTIONS = SHADOW_OPTIONS;
+  readonly CAMERA = CAMERA;
   readonly players = this.playersService.players;
   readonly airports = this.airportsService.airports;
 
   myPlayer?: Player;
   focusedPlayerIndex = 0;
   followingPlayer = false;
+  positioningWithPlayer = false;
   cameraPosition: NgtVector3 = [0, 15, 50];
   cameraOptions: NgtCameraOptions = {
-    zoom: 1 / 3,
+    zoom: CAMERA.defaultZoom,
     position: this.cameraPosition,
   };
 
@@ -74,18 +77,30 @@ export class GameMainComponent {
 
   private setupCameraControls() {
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA_FOCUS, this, this.switchCameraFocus.bind(this));
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA_FOLLOW, this, this.swtchCameraFollowing.bind(this));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA_FOLLOW, this, this.switchCameraFollowing.bind(this));
+    this.keyboardControlsService.setupKeyEvent(
+      KeyEventEnum.CAMERA_POSITION,
+      this,
+      this.switchCameraPositioning.bind(this)
+    );
   }
 
   private switchCameraFocus() {
-    if (this.focusedPlayerIndex + 1 === this.players.size) {
+    if (this.focusedPlayerIndex + 1 >= this.players.size) {
       this.focusedPlayerIndex = 0;
     } else {
       this.focusedPlayerIndex++;
     }
   }
 
-  private swtchCameraFollowing() {
+  private switchCameraFollowing() {
     this.followingPlayer = !this.followingPlayer;
+  }
+
+  private switchCameraPositioning() {
+    this.positioningWithPlayer = !this.positioningWithPlayer;
+    if (this.positioningWithPlayer) {
+      this.followingPlayer = true;
+    }
   }
 }
