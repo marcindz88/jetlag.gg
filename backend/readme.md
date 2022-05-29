@@ -1,4 +1,4 @@
-## Prerequisities
+## Prerequisites
 
 - Windows - https://docs.docker.com/desktop/windows/install/
 - Linux - https://docs.docker.com/desktop/linux/install/ 
@@ -14,7 +14,8 @@ It kills all existing containers, rebuilds images and starts new containers
 
 ## Endpoints
 
-only 1 connection per user at a time is allowed
+### Get game config
+> GET /api/game/config/
 
 ### Get player list
 > GET /api/game/players/
@@ -23,6 +24,7 @@ only 1 connection per user at a time is allowed
 > POST /api/game/players/
 
 ### Establish a websocket connection 
+only 1 connection per user at a time is allowed
 > GET /ws/
 
 (set player token in the protocol)
