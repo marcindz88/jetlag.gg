@@ -6,18 +6,21 @@ import {
   transformCoordinatesIntoPoint,
   transformPointAndDirectionIntoRotation,
 } from '@pg/game-base/utils/geo-utils';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { Euler, Vector3 } from 'three';
 
 export class Airport implements AirportType {
   readonly id: string;
   readonly name: string;
   readonly coordinates: GeoLocationPoint;
+  readonly changed$ = new Subject<void>();
+  readonly isNearbyAndAvailable$ = new BehaviorSubject<boolean>(false);
+
   occupying_player: string;
   shipments: Shipment[];
   cartesianPosition!: Vector3;
   cartesianRotation!: Euler;
-  isNearby$ = new BehaviorSubject<boolean>(false);
+  isClosest = false;
   distance = Infinity;
 
   constructor(airport: AirportType) {
@@ -33,9 +36,8 @@ export class Airport implements AirportType {
   updateAirport(airportUpdate: AirportUpdate) {
     this.occupying_player = airportUpdate.occupying_player;
     this.shipments = airportUpdate.shipments;
-    if (this.occupying_player) {
-      this.isNearby$.next(false);
-    }
+    this.updateIsNearbyAndAvailable();
+    this.changed$.next();
   }
 
   updateDistance(point: GeoLocationPoint): Airport {
@@ -43,8 +45,15 @@ export class Airport implements AirportType {
     return this;
   }
 
-  updateIsNearby(isClosest: boolean): Airport {
-    this.isNearby$.next(isClosest && this.distance < NEARBY_AIRPORT_DISTANCE && !this.occupying_player);
+  updateIsClosest(isClosest: boolean): Airport {
+    this.isClosest = isClosest;
+    this.updateIsNearbyAndAvailable();
     return this;
+  }
+
+  private updateIsNearbyAndAvailable() {
+    this.isNearbyAndAvailable$.next(
+      this.isClosest && this.distance < NEARBY_AIRPORT_DISTANCE && !this.occupying_player
+    );
   }
 }

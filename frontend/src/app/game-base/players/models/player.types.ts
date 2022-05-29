@@ -1,3 +1,4 @@
+import { Shipment } from '@pg/game-base/airports/models/airport.types';
 import { GeoLocationPoint } from '@pg/game-base/models/game.types';
 
 export type BasePlayer = {
@@ -9,6 +10,8 @@ export type OtherPlayer = {
   connected: boolean;
   position: PlanePosition;
   is_grounded: boolean;
+  shipment: Shipment | null;
+  score: number;
 } & BasePlayer;
 
 export type PlayerList = {
