@@ -32,9 +32,9 @@ export enum CameraModesEnum {
 // km/h
 export const VELOCITY = {
   min: 0,
-  max: 10000000,
+  max: 2000000,
   step: 50000,
-  default: 2500000,
+  default: 500000,
 };
 
 // deg

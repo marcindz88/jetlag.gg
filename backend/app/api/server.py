@@ -30,6 +30,11 @@ app.add_middleware(
 )
 
 
+@app.get("/api/game/config/")
+def get_config():
+    return game_session.config.serialized()
+
+
 @app.get("/api/game/players/")
 def list_players():
     return game_session.player_list()
