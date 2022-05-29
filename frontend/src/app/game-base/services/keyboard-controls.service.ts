@@ -17,11 +17,9 @@ export class KeyboardControlsService {
     this.handleKeyEvent(KeyEventEnum.LEFT, ['a', 'A', 'ArrowLeft', 'Left'], 100);
     this.handleKeyEvent(KeyEventEnum.RIGHT, ['d', 'D', 'ArrowRight', 'Right'], 100);
     this.handleKeyEvent(KeyEventEnum.BACKWARD, ['s', 'S', 'ArrowDown', 'Down']);
-    this.handleKeyEvent(KeyEventEnum.CAMERA_FOCUS, ['c', 'C']);
-    this.handleKeyEvent(KeyEventEnum.CAMERA_FOLLOW, ['f', 'F']);
-    this.handleKeyEvent(KeyEventEnum.CAMERA_POSITION, ['p', 'P']);
-    this.handleKeyEvent(KeyEventEnum.LAND, ['l', 'L']);
-    this.handleKeyEvent(KeyEventEnum.TAKE_OFF, ['t', 'T']);
+    this.handleKeyEvent(KeyEventEnum.PLAYER_FOCUS, ['v', 'V']);
+    this.handleKeyEvent(KeyEventEnum.CAMERA, ['c', 'C']);
+    this.handleKeyEvent(KeyEventEnum.LAND_OR_TAKE_OFF, ['f', 'F']);
     this.handleKeyEvent(KeyEventEnum.ENTER, ['Enter']);
     this.handleKeyEvent(KeyEventEnum.FUEL, ['x', 'X']);
     this.handleKeyEvent(KeyEventEnum.HELP, ['h', 'H']);
