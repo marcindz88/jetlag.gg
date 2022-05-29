@@ -22,6 +22,7 @@ export class Player {
 
   score: number;
   connected: boolean;
+  isFocused = false;
   isGrounded = false;
   shipment: null | Shipment = null;
 

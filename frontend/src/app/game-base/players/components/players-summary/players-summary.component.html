@@ -9,6 +9,10 @@
     <td class="status">
       <span class="material-symbols-outlined" [class.material-symbols-outlined--filled]="player.connected">circle</span>
     </td>
+    <td>
+      <span *ngIf="player.isFocused; else notInFocus" class="material-symbols-outlined">center_focus_weak</span>
+      <ng-template #notInFocus><span class="material-symbols-outlined"> crop_free </span></ng-template>
+    </td>
     <td class="nickname">{{ player.nickname }}</td>
     <td class="score">{{ player.score }}$</td>
   </tr>

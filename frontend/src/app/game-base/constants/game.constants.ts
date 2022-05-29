@@ -23,7 +23,7 @@ export const CAMERA = {
   cameraModes: 3,
 };
 
-export enum CAMERA_TYPES {
+export enum CameraModesEnum {
   FREE,
   FOLLOW,
   POSITION,

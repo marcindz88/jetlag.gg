@@ -4,7 +4,7 @@ import { NgtCameraOptions } from '@angular-three/core/lib/types';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Airport } from '@pg/game-base/airports/models/airport';
 import { AirportsService } from '@pg/game-base/airports/services/airports.service';
-import { CAMERA, CAMERA_TYPES } from '@pg/game-base/constants/game.constants';
+import { CAMERA, CameraModesEnum } from '@pg/game-base/constants/game.constants';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { RENDERER_OPTIONS, SHADOW_OPTIONS } from '@shared/constants/renderer-options';
@@ -28,14 +28,14 @@ export class GameMainComponent {
   }
   readonly RENDERER_OPTIONS = RENDERER_OPTIONS;
   readonly SHADOW_OPTIONS = SHADOW_OPTIONS;
-  readonly CAMERA_TYPES = CAMERA_TYPES;
   readonly CAMERA = CAMERA;
+  readonly CameraModesEnum = CameraModesEnum;
   readonly players = this.playersService.players;
   readonly airports = this.airportsService.airports;
 
   myPlayer?: Player;
   focusedPlayerIndex = 0;
-  cameraMode = CAMERA_TYPES.FREE;
+  cameraMode = CameraModesEnum.FREE;
   cameraPosition: NgtVector3 = [0, 15, 50];
   cameraOptions: NgtCameraOptions = {
     zoom: CAMERA.defaultZoom,
@@ -97,7 +97,7 @@ export class GameMainComponent {
 
   private switchCameraMode() {
     if (this.cameraMode + 1 >= CAMERA.cameraModes) {
-      this.cameraMode = CAMERA_TYPES.FREE;
+      this.cameraMode = CameraModesEnum.FREE;
     } else {
       this.cameraMode++;
     }
