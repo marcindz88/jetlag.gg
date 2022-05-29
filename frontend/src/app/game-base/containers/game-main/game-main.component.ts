@@ -8,6 +8,7 @@ import { CAMERA } from '@pg/game-base/constants/game.constants';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { RENDERER_OPTIONS, SHADOW_OPTIONS } from '@shared/constants/renderer-options';
+import { Camera } from 'three';
 
 import { KeyEventEnum } from '../../models/keyboard.types';
 import { KeyboardControlsService } from '../../services/keyboard-controls.service';
@@ -20,7 +21,11 @@ import { KeyboardControlsService } from '../../services/keyboard-controls.servic
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameMainComponent {
-  @ViewChild(NgtCanvas) ngtCanvas: NgtCanvas | null = null;
+  @ViewChild(NgtCanvas) set ngtCanvas(ngtCanvas: NgtCanvas | null) {
+    if (ngtCanvas) {
+      this.camera = ngtCanvas.cameraRef.value;
+    }
+  }
   readonly RENDERER_OPTIONS = RENDERER_OPTIONS;
   readonly SHADOW_OPTIONS = SHADOW_OPTIONS;
   readonly CAMERA = CAMERA;
@@ -36,6 +41,8 @@ export class GameMainComponent {
     zoom: CAMERA.defaultZoom,
     position: this.cameraPosition,
   };
+
+  camera?: Camera;
 
   constructor(
     private keyboardControlsService: KeyboardControlsService,
