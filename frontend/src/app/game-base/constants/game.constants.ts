@@ -6,14 +6,28 @@ export const MAP_SCALE = EARTH_RADIUS / REAL_EARTH_RADIUS;
 
 export const FLIGHT_ALTITUDE = 200 * MAP_SCALE;
 export const AIRPORT_ALTITUDE = 80 * MAP_SCALE; // Upper end of tower
-export const CAMERA_ALTITUDE = FLIGHT_ALTITUDE + 10;
 
 export const MOVING_RADIUS = EARTH_RADIUS + FLIGHT_ALTITUDE;
 export const MOVING_CIRCUMFERENCE = 2 * Math.PI * MOVING_RADIUS;
 
-export const NUMBER_OF_CLOSE_AIRPORTS = 4;
+export const NUMBER_OF_CLOSE_AIRPORTS = 6;
 export const NEARBY_AIRPORT_DISTANCE = 500;
 export const NEARBY_AIRPORT_SCALED_DISTANCE = NEARBY_AIRPORT_DISTANCE * MAP_SCALE;
+
+export const CAMERA = {
+  minHeight: EARTH_RADIUS + 1,
+  maxHeight: EARTH_RADIUS + 20,
+  defaultZoom: 1 / 3,
+  zoomSpeed: 0.3,
+  rotateSpeed: 0.3,
+  cameraModes: 3,
+};
+
+export enum CameraModesEnum {
+  FREE,
+  FOLLOW,
+  POSITION,
+}
 
 // km/h
 export const VELOCITY = {
@@ -27,7 +41,7 @@ export const VELOCITY = {
 export const BEARING = {
   min: 0,
   max: 360,
-  step: 4,
+  step: 2,
   default: 180,
 };
 

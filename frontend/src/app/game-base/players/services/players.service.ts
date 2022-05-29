@@ -28,6 +28,7 @@ export class PlayersService {
           this.addPlayer(playerMessage.data as OtherPlayer);
           break;
         case ServerMessageTypeEnum.PLAYER_CONNECTED:
+        case ServerMessageTypeEnum.PLAYER_UPDATED:
         case ServerMessageTypeEnum.PLAYER_DISCONNECTED:
           this.updatePlayer(playerMessage.data as OtherPlayer);
           break;

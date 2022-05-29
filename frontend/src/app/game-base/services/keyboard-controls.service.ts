@@ -13,14 +13,16 @@ export class KeyboardControlsService {
   private keyUpEvent$ = fromEvent<KeyboardEvent>(document, 'keyup').pipe(untilDestroyed(this));
 
   constructor() {
-    this.handleKeyEvent(KeyEventEnum.FORWARD, 'w', 'W', 'ArrowUp', 'Up');
-    this.handleKeyEvent(KeyEventEnum.LEFT, 'a', 'A', 'ArrowLeft', 'Left');
-    this.handleKeyEvent(KeyEventEnum.RIGHT, 'd', 'D', 'ArrowRight', 'Right');
-    this.handleKeyEvent(KeyEventEnum.BACKWARD, 's', 'S', 'ArrowDown', 'Down');
-    this.handleKeyEvent(KeyEventEnum.CAMERA_FOCUS, 'c', 'C');
-    this.handleKeyEvent(KeyEventEnum.CAMERA_FOLLOW, 'f', 'F');
-    this.handleKeyEvent(KeyEventEnum.LAND, 'l', 'L');
-    this.handleKeyEvent(KeyEventEnum.TAKE_OFF, 't', 'T');
+    this.handleKeyEvent(KeyEventEnum.FORWARD, ['w', 'W', 'ArrowUp', 'Up']);
+    this.handleKeyEvent(KeyEventEnum.LEFT, ['a', 'A', 'ArrowLeft', 'Left'], 100);
+    this.handleKeyEvent(KeyEventEnum.RIGHT, ['d', 'D', 'ArrowRight', 'Right'], 100);
+    this.handleKeyEvent(KeyEventEnum.BACKWARD, ['s', 'S', 'ArrowDown', 'Down']);
+    this.handleKeyEvent(KeyEventEnum.PLAYER_FOCUS, ['v', 'V']);
+    this.handleKeyEvent(KeyEventEnum.CAMERA, ['c', 'C']);
+    this.handleKeyEvent(KeyEventEnum.LAND_OR_TAKE_OFF, ['f', 'F']);
+    this.handleKeyEvent(KeyEventEnum.ENTER, ['Enter']);
+    this.handleKeyEvent(KeyEventEnum.FUEL, ['x', 'X']);
+    this.handleKeyEvent(KeyEventEnum.HELP, ['h', 'H']);
   }
 
   setupKeyEvent<T>(type: KeyEventEnum, destroyBase: T, handleFunction: () => void) {
@@ -32,13 +34,13 @@ export class KeyboardControlsService {
       .subscribe(handleFunction);
   }
 
-  private handleKeyEvent(type: KeyEventEnum, ...keyCodes: string[]) {
+  private handleKeyEvent(type: KeyEventEnum, keyCodes: string[], duration = 200) {
     this.keyDownEvent$
       .pipe(
         filter(event => keyCodes.includes(event.key)),
         take(1),
         switchMap(keyEvent =>
-          timer(0, 200).pipe(takeUntil(this.keyUpEvent$.pipe(filter(event => event.key === keyEvent.key))))
+          timer(0, duration).pipe(takeUntil(this.keyUpEvent$.pipe(filter(event => event.key === keyEvent.key))))
         ),
         repeat()
       )

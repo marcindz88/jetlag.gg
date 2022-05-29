@@ -13,12 +13,16 @@ class EventType(str, enum.Enum):
     PLAYER_REGISTERED = 'player.registered'
     PLAYER_DISCONNECTED = 'player.disconnected'
     PLAYER_REMOVED = 'player.removed'
+    PLAYER_UPDATED = 'player.updated'
     PLAYER_POSITION_UPDATED = 'player_position.updated'
     PLAYER_POSITION_UPDATE_REQUEST = 'player_position.update_request'
     AIRPORT_LANDING_REQUEST = 'airport.landing_request'
     AIRPORT_DEPARTURE_REQUEST = 'airport.departure_request'
+    AIRPORT_SHIPMENT_DISPATCH_REQUEST = 'airport.shipment_dispatch_request'
+    AIRPORT_SHIPMENT_DELIVERY_REQUEST = 'airport.shipment_delivery_request'
     AIRPORT_UPDATED = 'airport.updated'
     AIRPORT_LIST = 'airport.list'
+
 
 EVENTS_EMITTED_BY_SERVER = [
     EventType.PLAYER_LIST,
@@ -26,6 +30,7 @@ EVENTS_EMITTED_BY_SERVER = [
     EventType.PLAYER_REGISTERED,
     EventType.PLAYER_DISCONNECTED,
     EventType.PLAYER_REMOVED,
+    EventType.PLAYER_UPDATED,
     EventType.PLAYER_POSITION_UPDATED,
     EventType.AIRPORT_UPDATED,
     EventType.AIRPORT_LIST,

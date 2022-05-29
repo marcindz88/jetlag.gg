@@ -55,3 +55,6 @@ RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
 
 # copy application code to WORKDIR
 COPY . ${APP_HOME}
+
+
+ENTRYPOINT python run.py

@@ -1,0 +1,60 @@
+name: Build and deploy on server
+on:
+  push:
+    paths: 
+      - 'backend/**'
+    branches:
+      - deploy
+
+jobs:
+  docker:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+    -
+      name: Checkout
+      uses: actions/checkout@v2
+    -
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    -
+      name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+    -
+      name: Build
+      uses: docker/build-push-action@v3
+      with:
+        context: backend/
+        push: false
+        load: true
+        tags: planegame_backend
+        platforms: linux/amd64
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+    -
+      # Temp fix
+      # https://github.com/docker/build-push-action/issues/252
+      # https://github.com/moby/buildkit/issues/1896
+      name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+    -
+      name: Push docker image to the server
+      run: |    
+        echo "$SERVER_SSH_KEY" > private.key
+        chmod 400 private.key
+        docker save planegame_backend | ssh -i private.key -o StrictHostKeyChecking=no -C root@162.55.208.248 docker load
+      env:
+        SERVER_SSH_KEY: ${{secrets.SERVER_SSH_KEY}}
+    -
+      name: Restart image on the server
+      run: |    
+        ssh -i private.key -o StrictHostKeyChecking=no root@162.55.208.248 "docker stop backend; docker run --rm -d --name backend -p 80:9999 planegame_backend"
+      env:
+        SERVER_SSH_KEY: ${{secrets.SERVER_SSH_KEY}}
