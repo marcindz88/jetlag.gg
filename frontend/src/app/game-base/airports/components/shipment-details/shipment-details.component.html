@@ -4,7 +4,7 @@
   <p>To: {{ destination }}</p>
   <p>
     <span *ngIf="shipment.valid_till | remainingTime | async as remaining_seconds; else expired"
-      >Expire in {{ remaining_seconds }} s</span
+      >Deliver in {{ remaining_seconds }}s</span
     >
     <ng-template #expired><span>Expired</span></ng-template>
   </p>
