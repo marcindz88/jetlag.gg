@@ -11,6 +11,7 @@ export type OtherPlayer = {
   position: PlanePosition;
   is_grounded: boolean;
   shipment: Shipment | null;
+  score: number;
 } & BasePlayer;
 
 export type PlayerList = {

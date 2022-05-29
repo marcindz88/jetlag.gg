@@ -26,6 +26,7 @@ export class PlayerCockpitComponent implements OnInit {
   position?: PlanePosition;
   airportList: NearAirportsList = [];
   airportsUpdateTrigger$ = new ReplaySubject<void>();
+  showHelp = false;
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -46,6 +47,7 @@ export class PlayerCockpitComponent implements OnInit {
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.BACKWARD, this, () => this.updateVelocity(-1));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FORWARD, this, () => this.updateVelocity(1));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LAND, this, this.startLandingProcedure.bind(this));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.HELP, this, () => (this.showHelp = !this.showHelp));
   }
 
   private updateBearing(multiplier: number) {

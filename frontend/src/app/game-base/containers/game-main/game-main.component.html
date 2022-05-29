@@ -6,13 +6,17 @@
     [player]="player"
     [position]="player.cartesianPosition"
     [camera]="index === focusedPlayerIndex ? ngtCanvas?.cameraRef?.value : undefined"
-    [cameraFollowing]="followingPlayer"></pg-plane>
+    [cameraFollowing]="followingPlayer"
+    [cameraPositioning]="positioningWithPlayer"></pg-plane>
   <pg-airport *ngFor="let airport of airports.values(); trackBy: trackById" [airport]="airport"></pg-airport>
-  <ngt-soba-orbit-controls [enabled]="!followingPlayer" [rotateSpeed]="0.3" [zoomSpeed]="0.3"></ngt-soba-orbit-controls>
+  <ngt-soba-stars [count]="3000" [factor]="2" [fade]="true" [speed]="2"></ngt-soba-stars>
+  <ngt-soba-orbit-controls
+    [enabled]="!followingPlayer"
+    [rotateSpeed]="CAMERA.rotateSpeed"
+    [zoomSpeed]="CAMERA.zoomSpeed"
+    [minDistance]="CAMERA.minHeight"
+    [maxDistance]="CAMERA.maxHeight"></ngt-soba-orbit-controls>
 </ngt-canvas>
 <pg-players-summary *ngIf="players" class="players-summary"></pg-players-summary>
-<pg-player-cockpit
-  *ngIf="myPlayer"
-  class="player-cockpit"
-  [player]="myPlayer"
-  [airports]="airports"></pg-player-cockpit>
+<pg-player-cockpit *ngIf="myPlayer" class="player-cockpit" [player]="myPlayer" [airports]="airports">
+</pg-player-cockpit>
