@@ -6,6 +6,7 @@ import time
 import uuid
 from typing import Optional, List
 
+from app.game.config import GameConfig
 from app.game.consts import AIRPORTS
 from app.game.coordinates import Coordinates
 from app.game.events import Event, EventType
@@ -25,6 +26,7 @@ from app.game.exceptions import (
     InvalidOperation,
     ShipmentExpired,
     ShipmentDestinationInvalid,
+    InvalidVelocity,
 )
 from app.game.models import (
     PlayerPositionUpdateRequest,
@@ -202,8 +204,6 @@ class Player:
 
 
 class Airport:
-    MINIMUM_DISTANCE_TO_LAND = 500
-
     id: uuid.UUID
     name: str
     coordinates: Coordinates
@@ -235,8 +235,8 @@ class Airport:
             self.coordinates.serialized,
         )
         distance = Coordinates.distance_between(current_player_position.coordinates, self.coordinates)
-        logging.info("distance between: %s, min distance: %s", distance, Airport.MINIMUM_DISTANCE_TO_LAND)
-        if distance > Airport.MINIMUM_DISTANCE_TO_LAND:
+        logging.info("distance between: %s, max distance: %s", distance, GameConfig.AIRPORT_MAXIMUM_DISTANCE_TO_LAND)
+        if distance > GameConfig.AIRPORT_MAXIMUM_DISTANCE_TO_LAND:
             raise TooFarToLand
 
         if self.occupying_player:
@@ -299,9 +299,7 @@ class Airport:
 
 
 class GameSession:
-    MAX_PLAYERS = 16
-    PLAYER_TIME_TO_CONNECT = 5000  # 5 seconds
-    MAX_SHIPMENTS_IN_GAME = 40
+    config = GameConfig()
 
     def __init__(self):
         self._players = {}
@@ -369,7 +367,7 @@ class GameSession:
         for player in list(self._players.values()):
             if player.is_connected:
                 continue
-            if now - player.disconnected_since > self.PLAYER_TIME_TO_CONNECT:
+            if now - player.disconnected_since > self.config.PLAYER_TIME_TO_CONNECT:
                 self.remove_player(player)
 
     def get_player_by_token(self, token: str) -> Player:
@@ -387,7 +385,7 @@ class GameSession:
 
     def add_player(self, nickname: str) -> Player:
         logging.info(f"add_player {nickname}")
-        if len(self._players) >= self.MAX_PLAYERS:
+        if len(self._players) >= self.config.MAX_PLAYERS:
             raise PlayerLimitExceeded
         for player in self._players.values():
             if player.nickname.lower().strip() == nickname.lower().strip():
@@ -470,19 +468,24 @@ class GameSession:
             logging.warning(f"update_player_position position not updated, timestamp %s newer than %s", timestamp, now)
             raise ChangingFuturePosition
 
+        if velocity < self.config.MIN_VELOCITY or velocity > self.config.MAX_VELOCITY:
+            logging.warning(f"update_player_position invalid velocity: %s", velocity)
+            raise InvalidVelocity
+
         new_position = last_position.future_position(timestamp_delta=timestamp-last_position.timestamp)
-        new_position.velocity = velocity  # todo validation
+        new_position.velocity = velocity  # todo more validation (delta)
         new_position.bearing = bearing  # todo validation
 
         player.position = new_position
         event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
             "id": player.id,
+            "is_grounded": player.is_grounded,
             "position": new_position.serialized,
         })
         self.broadcast_event(event=event)
 
     def add_random_airport_shipment(self):
-        if len(self._shipments) >= GameSession.MAX_SHIPMENTS_IN_GAME:
+        if len(self._shipments) >= self.config.MAX_SHIPMENTS_IN_GAME:
             return
         origin_airport_id = random.choice(list(self._airports.keys()))
         destination_airport_id = random.choice(list(set(self._airports.keys()) - {origin_airport_id}))

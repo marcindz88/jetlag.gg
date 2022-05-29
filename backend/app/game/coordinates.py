@@ -1,11 +1,13 @@
 from math import sin, cos, sqrt, atan2, radians, degrees, asin
 
+from app.game.config import GameConfig
+
 
 class Coordinates:
     latitude: float
     longitude: float
-    EARTH_RADIUS: float = 6371.0
-    FLIGHT_ALTITUDE: float = 200.0
+    EARTH_RADIUS: float = GameConfig.EARTH_RADIUS
+    FLIGHT_ALTITUDE: float = GameConfig.FLIGHT_ALTITUDE
 
     def __init__(self, latitude: float, longitude: float):
         self.latitude = latitude

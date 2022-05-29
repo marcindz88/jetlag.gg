@@ -60,3 +60,7 @@ class ShipmentDestinationInvalid(Exception):
 
 class InvalidOperation(Exception):
     pass
+
+
+class InvalidVelocity(Exception):
+    pass
