@@ -20,6 +20,7 @@ export class Player {
   readonly nickname: string;
   readonly color: Color;
 
+  score: number;
   connected: boolean;
   isGrounded = false;
   shipment: null | Shipment = null;
@@ -37,6 +38,7 @@ export class Player {
     this.id = player.id;
     this.nickname = player.nickname;
     this.connected = player.connected;
+    this.score = player.score;
     this.isGrounded = player.is_grounded;
     this.shipment = player.shipment;
     this.color = new Color(getRandomColorFromNickname(this.nickname));
@@ -87,6 +89,9 @@ export class Player {
     }
     if ('shipment' in playerData) {
       this.shipment = playerData.shipment || null;
+    }
+    if ('score' in playerData) {
+      this.score = playerData.score!;
     }
   }
 
