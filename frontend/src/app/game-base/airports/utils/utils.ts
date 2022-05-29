@@ -10,6 +10,6 @@ export const determineAirportsInProximity = (
   return Array.from(airports.values())
     .map(airport => airport.updateDistance(point))
     .sort((a, b) => a.distance - b.distance)
-    .map((airport, index) => airport.updateIsNearby(index === 0))
+    .map((airport, index) => airport.updateIsClosest(index === 0))
     .slice(0, amount);
 };

@@ -7,6 +7,9 @@
 <ng-template #airport_row let-nearAirport="data">
   <tr>
     <td class="name">{{ nearAirport.name }}</td>
+    <td class="packages">
+      <span>{{ nearAirport.shipments.length }} </span><span class="material-symbols-outlined">inventory_2</span>
+    </td>
     <td class="distance">{{ nearAirport.distance | number: '1.1-1' }} km</td>
   </tr>
 </ng-template>
