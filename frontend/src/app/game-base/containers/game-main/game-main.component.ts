@@ -35,7 +35,7 @@ export class GameMainComponent {
 
   myPlayer?: Player;
   focusedPlayerIndex = 0;
-  cameraMode = CameraModesEnum.FREE;
+  cameraMode = CameraModesEnum.FOLLOW;
   cameraPosition: NgtVector3 = [0, 15, 50];
   cameraOptions: NgtCameraOptions = {
     zoom: CAMERA.defaultZoom,
