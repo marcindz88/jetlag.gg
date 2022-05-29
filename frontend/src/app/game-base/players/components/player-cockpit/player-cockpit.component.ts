@@ -46,7 +46,11 @@ export class PlayerCockpitComponent implements OnInit {
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.RIGHT, this, () => this.updateBearing(1));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.BACKWARD, this, () => this.updateVelocity(-1));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FORWARD, this, () => this.updateVelocity(1));
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LAND, this, this.startLandingProcedure.bind(this));
+    this.keyboardControlsService.setupKeyEvent(
+      KeyEventEnum.LAND_OR_TAKE_OFF,
+      this,
+      this.startLandingProcedure.bind(this)
+    );
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.HELP, this, () => (this.showHelp = !this.showHelp));
   }
 
