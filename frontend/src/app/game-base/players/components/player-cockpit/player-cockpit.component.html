@@ -33,8 +33,10 @@
   </ng-container>
   <ng-template #airportMainPanel>
     <pg-airport-main-panel
+      *ngIf="!showHelp"
       class="player-cockpit__airport_panel"
       [airport]="airportList[0]"
       [playerShipment]="player.shipment"></pg-airport-main-panel>
   </ng-template>
 </div>
+<pg-help class="help-container" *ngIf="showHelp"></pg-help>

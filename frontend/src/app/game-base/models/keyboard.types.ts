@@ -5,8 +5,10 @@ export enum KeyEventEnum {
   RIGHT = 'RIGHT',
   CAMERA_FOCUS = 'FOCUS',
   CAMERA_FOLLOW = 'FOLLOW',
+  CAMERA_POSITION = 'CAMERA_POSITION',
   LAND = 'LAND',
   TAKE_OFF = 'TAKE_OFF',
   ENTER = 'ENTER',
   FUEL = 'FUEL',
+  HELP = 'HELP',
 }
