@@ -28,8 +28,7 @@ from app.game.exceptions import (
 )
 from app.game.models import (
     PlayerPositionUpdateRequest,
-    AirportLandingRequest,
-    AirportDepartureRequest,
+    AirportRequest,
     ShipmentRequest,
 )
 from app.tools.encoder import encode
@@ -45,19 +44,30 @@ class Shipment:
     id: uuid.UUID
     name: str
     award: int
-    origin_id: uuid.UUID
-    destination_id: uuid.UUID
+    _origin: "Airport"
+    _destination: "Airport"
+    time_to_deliver: int
     valid_till: int
     player_id: Optional[uuid.UUID] = None  # id of the player that is transporting the shipment
 
-    def __init__(self, origin_id: uuid.UUID, destination_id: uuid.UUID):
+    def __init__(self, origin: "Airport", destination: "Airport"):
         self.id = uuid.uuid4()
         self.name = random.choice(Shipment.shipment_names())
-        self.award = random.choice([100, 200, 300, 400, 500])
-        self.destination_id = destination_id
-        self.origin_id = origin_id
-        self.valid_till = timestamp_now() + 90*1000
+        self._origin = origin
+        self._destination = destination
+        self.time_to_deliver = random.randint(50, 90) * 1000
+        self.award = self._get_random_award()
+        self.valid_till = timestamp_now() + self.time_to_deliver
         self.player_id = None
+
+    def _get_random_award(self):
+        distance_between_endpoints = Coordinates.distance_between(
+            coord1=self._origin.coordinates,
+            coord2=self._destination.coordinates,
+        )
+        random_factor = random.uniform(0.85, 1.15)
+        scaling = 100000
+        return int(distance_between_endpoints / self.time_to_deliver * random_factor * scaling)
 
     @staticmethod
     def shipment_names():
@@ -70,6 +80,14 @@ class Shipment:
             "Drones",
             "HAZMAT",
         ]
+
+    @property
+    def origin_id(self):
+        return self._origin.id
+
+    @property
+    def destination_id(self):
+        return self._destination.id
 
     @property
     def serialized(self) -> dict:
@@ -315,7 +333,7 @@ class GameSession:
         while True:
             self.remove_expired_shipments()
             time.sleep(0.2)
-            if random_with_probability(0.04):
+            if random_with_probability(0.045):
                 self.add_random_airport_shipment()
 
     def send_event(self, event: Event, player: Player):
@@ -469,10 +487,13 @@ class GameSession:
         origin_airport_id = random.choice(list(self._airports.keys()))
         destination_airport_id = random.choice(list(set(self._airports.keys()) - {origin_airport_id}))
 
-        shipment = Shipment(destination_id=destination_airport_id, origin_id=origin_airport_id)
-        self._shipments[shipment.id] = shipment
         origin_airport = self._airports[origin_airport_id]
+        destination_airport = self._airports[destination_airport_id]
+
+        shipment = Shipment(destination=destination_airport, origin=origin_airport)
+        self._shipments[shipment.id] = shipment
         origin_airport.shipments[shipment.id] = shipment
+
         airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=origin_airport.serialized)
         self.broadcast_event(event=airport_updated_event)
 
@@ -506,7 +527,7 @@ class GameSession:
 
     def handle_airport_landing_request_event(self, player: Player, event: Event):
         logging.info(f"handle_airport_landing_request_event {player.id} {event}")
-        data_model = AirportLandingRequest(**event.data)
+        data_model = AirportRequest(**event.data)
 
         airport: Airport = self._airports.get(data_model.id)
         if not airport:
@@ -526,7 +547,7 @@ class GameSession:
 
     def handle_airport_departure_request_event(self, player: Player, event: Event):
         logging.info(f"handle_airport_departure_request_event {player.id} {event}")
-        data_model = AirportDepartureRequest(**event.data)
+        data_model = AirportRequest(**event.data)
 
         airport: Airport = self._airports.get(data_model.id)
         if not airport:
