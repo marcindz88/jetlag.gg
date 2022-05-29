@@ -5,7 +5,7 @@
     *ngFor="let player of players.values(); trackBy: trackById; index as index"
     [player]="player"
     [position]="player.cartesianPosition"
-    [camera]="index === focusedPlayerIndex ? ngtCanvas?.cameraRef?.value : undefined"
+    [camera]="index === focusedPlayerIndex ? camera : undefined"
     [cameraFollowing]="followingPlayer"
     [cameraPositioning]="positioningWithPlayer"></pg-plane>
   <pg-airport *ngFor="let airport of airports.values(); trackBy: trackById" [airport]="airport"></pg-airport>

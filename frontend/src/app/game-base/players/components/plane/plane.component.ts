@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit, ViewChild } from '@angular/core';
-import { NgtCamera } from '@angular-three/core';
 import { NgtGroup } from '@angular-three/core/group';
 import { NgtPrimitive } from '@angular-three/core/primitive';
 import { BeforeRenderedObject } from '@pg/game-base/models/game.types';
 import { Player } from '@pg/game-base/players/models/player';
 import { map, Observable } from 'rxjs';
-import { Euler, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
+import { Camera, Euler, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
 import { MAP_SCALE, MOVING_CIRCUMFERENCE } from '../../../constants/game.constants';
@@ -28,7 +27,7 @@ export class PlaneComponent implements OnInit {
     this.targetPosition = position;
   }
 
-  @Input() camera?: NgtCamera;
+  @Input() camera?: Camera;
   @Input() player!: Player;
   @Input() cameraFollowing = false;
   @Input() cameraPositioning = false;
@@ -101,11 +100,14 @@ export class PlaneComponent implements OnInit {
     accuracy = 0.00001
   ): void {
     if (this.isDifferenceNegligible(start, end, accuracy)) {
+      ['x', 'y', 'z'].forEach(direction => {
+        target[direction as 'x' | 'y' | 'z'] = end[direction as 'x' | 'y' | 'z'];
+      });
       return;
     }
-    this.updateDirectionByDifference('x', target, start, end, multiplier);
-    this.updateDirectionByDifference('y', target, start, end, multiplier);
-    this.updateDirectionByDifference('z', target, start, end, multiplier);
+    ['x', 'y', 'z'].forEach(direction => {
+      this.updateDirectionByDifference(direction as 'x' | 'y' | 'z', target, start, end, multiplier);
+    });
   }
 
   private isDifferenceNegligible<T extends Euler | Vector3>(start: T, end: T, accuracy: number) {
