@@ -1,12 +1,14 @@
 export enum KeyEventEnum {
   FORWARD = 'FORWARD',
   BACKWARD = 'BACKWARD',
-  LEFT = 'LEFT',
-  RIGHT = 'RIGHT',
+  TURN_LEFT = 'TURN_LEFT',
+  TURN_RIGHT = 'TURN_RIGHT',
   PLAYER_FOCUS = 'FOCUS',
   CAMERA = 'CAMERA',
   LAND_OR_TAKE_OFF = 'LAND_OR_TAKE_OFF',
   ENTER = 'ENTER',
   FUEL = 'FUEL',
   HELP = 'HELP',
+  LEFT = 'LEFT',
+  RIGHT = 'RIGHT',
 }

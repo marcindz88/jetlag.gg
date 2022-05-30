@@ -91,7 +91,7 @@ export class AirportMainPanelComponent implements OnInit {
 
   private returnPackage() {
     if (this.playerShipment && this.playerShipment.destination_id === this.airport.id) {
-      this.airportsService.requestShipmentDelivery();
+      this.airportsService.requestShipmentDelivery(this.playerShipment);
     }
   }
 

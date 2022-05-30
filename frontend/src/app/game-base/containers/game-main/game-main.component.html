@@ -7,6 +7,7 @@
     [position]="player.cartesianPosition"
     [camera]="camera"
     [cameraMode]="cameraMode"
+    [isMyPlayer]="player.id === myPlayer?.id"
     [isFocused]="focusedPlayerIndex === index"></pg-plane>
   <pg-airport *ngFor="let airport of airports.values(); trackBy: trackById" [airport]="airport"></pg-airport>
   <ngt-soba-stars [count]="3000" [factor]="2" [fade]="true" [speed]="2"></ngt-soba-stars>
