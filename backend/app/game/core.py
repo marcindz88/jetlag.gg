@@ -206,14 +206,20 @@ class Player:
 class Airport:
     id: uuid.UUID
     name: str
+    full_name: str
+    description: str
     coordinates: Coordinates
+    elevation: float
     shipments: dict = {}
     occupying_player: Optional[Player] = None
 
-    def __init__(self, name: str, coordinates: Coordinates):
+    def __init__(self, name: str, full_name: str, description: str, elevation: float, coordinates: Coordinates):
         self.id = uuid.uuid4()
         self.name = name
+        self.full_name = full_name
+        self.description = description
         self.coordinates = coordinates
+        self.elevation = elevation
         self.shipments = {}
 
     @property
@@ -221,6 +227,9 @@ class Airport:
         return {
             "id": self.id,
             "name": self.name,
+            "full_name": self.full_name,
+            "description": self.description,
+            "elevation": self.elevation,
             "coordinates": self.coordinates.serialized,
             "occupying_player": self.occupying_player.id if self.occupying_player else None,
             "shipments": [shipment.serialized for shipment in self.shipments.values()],
@@ -307,8 +316,14 @@ class GameSession:
         self._airports = {}
         self._shipments = {}
 
-        for airport_name, airport_coordinates in AIRPORTS:
-            airport = Airport(name=airport_name, coordinates=airport_coordinates)
+        for airport_data in AIRPORTS:
+            airport = Airport(
+                name=airport_data['name'],
+                full_name=airport_data['full_name'],
+                description=airport_data['description'],
+                coordinates=airport_data['coordinates'],
+                elevation=airport_data['elevation'],
+            )
             self._airports[airport.id] = airport
 
         self.schedule_background_tasks()
