@@ -609,6 +609,9 @@ class GameSession:
         shipment = airport.accept_shipment_delivery(player=player)
         self._shipments.pop(shipment.id)
 
+        shipment_delivered_event = Event(type=EventType.AIRPORT_SHIPMENT_DELIVERED, data=shipment.serialized)
+        self.send_event(event=shipment_delivered_event, player=player)
+
         player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
         self.broadcast_event(event=player_updated_event)
 
