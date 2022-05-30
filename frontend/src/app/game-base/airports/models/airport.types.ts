@@ -12,6 +12,9 @@ export type Shipment = {
 export interface AirportType {
   id: string;
   name: string;
+  full_name: string;
+  description: string;
+  elevation: number;
   coordinates: GeoLocationPoint;
   occupying_player: string;
   shipments: Shipment[];

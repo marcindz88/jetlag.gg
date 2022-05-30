@@ -1,5 +1,6 @@
 <pg-card class="airport-main-panel">
-  <h2>Welcome to {{ airport.name }}</h2>
+  <h2>Welcome to {{ airport.full_name }} ({{ airport.elevation * 1000 }} m.a.s.l.)</h2>
+  <p class="airport-main-panel__description">{{ airport.description }}</p>
   <div class="airport-main-panel__packages-container packages-container">
     <h3 *ngIf="!airport.shipments.length as length; else shipments">There are no available packages at this airport</h3>
     <ng-template #shipments>
