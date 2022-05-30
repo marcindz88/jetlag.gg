@@ -48,12 +48,15 @@ export class Player {
   }
 
   set position(position: PlanePosition) {
-    if (this.lastChangeTimestamp && this.lastChangeTimestamp > position.timestamp) {
+    if (this.lastChangeTimestamp && this.lastChangeTimestamp > position.timestamp && !this.isGrounded) {
       // Ignore position update if locally was updated before or messages came out of order
       return;
     }
-    this.lastChangeTimestamp = this.clockService.getCurrentTime();
-    const updatedPosition = calculatePositionAfterTimeInterval(position, FLIGHT_ALTITUDE, this.lastChangeTimestamp);
+    const updatedPosition = calculatePositionAfterTimeInterval(
+      position,
+      FLIGHT_ALTITUDE,
+      this.clockService.getCurrentTime()
+    );
 
     this.cartesianPosition = transformCoordinatesIntoPoint(updatedPosition.coordinates, FLIGHT_ALTITUDE);
     this.cartesianRotation = transformPointAndDirectionIntoRotation(
@@ -79,9 +82,6 @@ export class Player {
   }
 
   updatePlayer(playerData: PartialPlayerData) {
-    if (playerData.position) {
-      this.position = playerData.position;
-    }
     if ('connected' in playerData) {
       this.connected = !!playerData.connected;
     }
@@ -93,6 +93,9 @@ export class Player {
     }
     if ('score' in playerData) {
       this.score = playerData.score!;
+    }
+    if (playerData.position) {
+      this.position = playerData.position;
     }
   }
 

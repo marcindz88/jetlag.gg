@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { PlayersService } from '@pg/game-base/players/services/players.service';
+import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { ClockService } from '@shared/services/clock.service';
 import { MainWebsocketService } from '@shared/services/main-websocket.service';
-import { ReplaySubject } from 'rxjs';
+import { ReplaySubject, take } from 'rxjs';
 
 import { Airport } from '../models/airport';
-import { AirportList, AirportUpdate } from '../models/airport.types';
+import { AirportList, AirportUpdate, Shipment } from '../models/airport.types';
 
 @UntilDestroy()
 @Injectable({ providedIn: 'root' })
@@ -15,7 +18,12 @@ export class AirportsService {
   listChanged$ = new ReplaySubject<void>();
   updated$ = new ReplaySubject<void>();
 
-  constructor(private mainWebsocketService: MainWebsocketService, private clockService: ClockService) {}
+  constructor(
+    private mainWebsocketService: MainWebsocketService,
+    private clockService: ClockService,
+    private playersService: PlayersService,
+    private matSnackBar: MatSnackBar
+  ) {}
 
   setAirportsUpdateHandler() {
     this.mainWebsocketService.airportMessages$.pipe(untilDestroyed(this)).subscribe(airportMessage => {
@@ -44,11 +52,19 @@ export class AirportsService {
     this.sendAirportRequest(shipmentId, ClientMessageTypeEnum.AIRPORT_SHIPMENT_DISPATCH_REQUEST);
   }
 
-  requestShipmentDelivery() {
+  requestShipmentDelivery(shipment: Shipment) {
+    const previousScore = this.playersService.myPlayer?.score || 0;
     this.mainWebsocketService.sendWSSMessage({
       type: ClientMessageTypeEnum.AIRPORT_SHIPMENT_DELIVERY_REQUEST,
       created: this.clockService.getCurrentTime(),
       data: {},
+    });
+    this.playersService.changed$.pipe(take(1)).subscribe(() => {
+      if (previousScore <= this.playersService.myPlayer!.score + shipment.award) {
+        this.matSnackBar.openFromComponent(NotificationComponent, {
+          data: { text: `You have successfully delivered ${shipment.name} for ${shipment.award}$`, icon: 'redeem' },
+        });
+      }
     });
   }
 
