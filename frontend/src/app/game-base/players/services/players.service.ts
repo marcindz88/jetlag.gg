@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { ClockService } from '@shared/services/clock.service';
@@ -15,7 +16,11 @@ export class PlayersService {
   myPlayer: Player | null = null;
   changed$ = new ReplaySubject<void>();
 
-  constructor(private mainWebsocketService: MainWebsocketService, private clockService: ClockService) {}
+  constructor(
+    private mainWebsocketService: MainWebsocketService,
+    private clockService: ClockService,
+    private matSnackbar: MatSnackBar
+  ) {}
 
   setPlayersUpdateHandler(userId: string) {
     this.mainWebsocketService.playerMessages$.pipe(untilDestroyed(this)).subscribe(playerMessage => {
@@ -68,7 +73,7 @@ export class PlayersService {
   addPlayer(player: OtherPlayer) {
     // If player has been already setup by wss then don't override
     if (!this.players.get(player.id)) {
-      this.players.set(player.id, new Player(player, this.clockService));
+      this.players.set(player.id, new Player(player, this.clockService, this.matSnackbar));
     }
   }
 }

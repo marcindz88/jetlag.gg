@@ -1,3 +1,4 @@
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Shipment } from '@pg/game-base/airports/models/airport.types';
 import { FLIGHT_ALTITUDE, VELOCITY } from '@pg/game-base/constants/game.constants';
 import { getRandomColorFromNickname } from '@pg/game-base/utils/color-utils';
@@ -8,6 +9,7 @@ import {
   transformPointAndDirectionIntoRotation,
   transformPointIntoCoordinates,
 } from '@pg/game-base/utils/geo-utils';
+import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { ClockService } from '@shared/services/clock.service';
 import { Subject } from 'rxjs';
 import { Color, Euler, Object3D, Vector3 } from 'three';
@@ -25,6 +27,7 @@ export class Player {
   isFocused = false;
   isGrounded = false;
   shipment: null | Shipment = null;
+  shipmentTimeoutHandler?: number;
 
   planeObject?: Object3D;
   cartesianPosition!: Vector3;
@@ -35,7 +38,7 @@ export class Player {
 
   flightParametersChanged$ = new Subject<void>();
 
-  constructor(player: OtherPlayer, private clockService: ClockService) {
+  constructor(player: OtherPlayer, private clockService: ClockService, private matSnackBar: MatSnackBar) {
     this.id = player.id;
     this.nickname = player.nickname;
     this.connected = player.connected;
@@ -90,6 +93,7 @@ export class Player {
     }
     if ('shipment' in playerData) {
       this.shipment = playerData.shipment || null;
+      this.setShipmentExpirationHandler();
     }
     if ('score' in playerData) {
       this.score = playerData.score!;
@@ -112,5 +116,28 @@ export class Player {
       this.lastChangeTimestamp = this.clockService.getCurrentTime();
       this.flightParametersChanged$.next();
     }
+  }
+
+  private setShipmentExpirationHandler() {
+    if (this.shipment) {
+      const remainingTime = this.shipment.valid_till - this.clockService.getCurrentTime();
+      if (remainingTime <= 0) {
+        this.showShipmentExpiredMessage.bind(this);
+        return;
+      }
+      this.shipmentTimeoutHandler = setTimeout(this.showShipmentExpiredMessage.bind(this), remainingTime);
+    } else {
+      if (this.shipmentTimeoutHandler !== undefined) {
+        clearTimeout(this.shipmentTimeoutHandler);
+        this.shipmentTimeoutHandler = undefined;
+      }
+    }
+  }
+
+  private showShipmentExpiredMessage() {
+    this.matSnackBar.openFromComponent(NotificationComponent, {
+      data: { text: `Your shipment containing ${this.shipment!.name} has expired`, icon: 'running_with_errors' },
+    });
+    this.shipment = null;
   }
 }

@@ -1,5 +1,5 @@
 import { AirportType, AirportUpdate, Shipment } from '@pg/game-base/airports/models/airport.types';
-import { AIRPORT_ALTITUDE, NEARBY_AIRPORT_DISTANCE } from '@pg/game-base/constants/game.constants';
+import { AIRPORT_ALTITUDE, MAP_SCALE, NEARBY_AIRPORT_DISTANCE } from '@pg/game-base/constants/game.constants';
 import { GeoLocationPoint } from '@pg/game-base/models/game.types';
 import {
   calculateDistanceBetweenPoints,
@@ -12,6 +12,9 @@ import { Euler, Vector3 } from 'three';
 export class Airport implements AirportType {
   readonly id: string;
   readonly name: string;
+  readonly full_name: string;
+  readonly description: string;
+  readonly elevation: number;
   readonly coordinates: GeoLocationPoint;
   readonly changed$ = new Subject<void>();
   readonly isNearbyAndAvailable$ = new BehaviorSubject<boolean>(false);
@@ -26,8 +29,14 @@ export class Airport implements AirportType {
   constructor(airport: AirportType) {
     this.id = airport.id;
     this.name = airport.name;
+    this.full_name = airport.full_name;
+    this.description = airport.description;
+    this.elevation = airport.elevation;
     this.coordinates = airport.coordinates;
-    this.cartesianPosition = transformCoordinatesIntoPoint(airport.coordinates, AIRPORT_ALTITUDE);
+    this.cartesianPosition = transformCoordinatesIntoPoint(
+      airport.coordinates,
+      AIRPORT_ALTITUDE + this.elevation * MAP_SCALE * 20 // due to increased displacement efect
+    );
     this.cartesianRotation = transformPointAndDirectionIntoRotation(airport.coordinates, 0);
     this.occupying_player = airport.occupying_player;
     this.shipments = airport.shipments || [];
