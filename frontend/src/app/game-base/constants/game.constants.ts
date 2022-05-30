@@ -5,7 +5,7 @@ export const REAL_EARTH_RADIUS = 6371; // km
 export const MAP_SCALE = EARTH_RADIUS / REAL_EARTH_RADIUS;
 
 export const FLIGHT_ALTITUDE = 200 * MAP_SCALE;
-export const AIRPORT_ALTITUDE = 80 * MAP_SCALE; // Upper end of tower
+export const AIRPORT_ALTITUDE = 70 * MAP_SCALE; // Upper end of tower
 
 export const MOVING_RADIUS = EARTH_RADIUS + FLIGHT_ALTITUDE;
 export const MOVING_CIRCUMFERENCE = 2 * Math.PI * MOVING_RADIUS;

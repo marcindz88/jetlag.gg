@@ -1,4 +1,4 @@
-import { AirportList, AirportRequest, AirportUpdate } from '@pg/game-base/airports/models/airport.types';
+import { AirportList, AirportRequest, AirportUpdate, Shipment } from '@pg/game-base/airports/models/airport.types';
 import { PlaneStateUpdateRequest } from '@pg/game-base/models/game.types';
 import { OtherPlayer, PlayerList, PlayerPositionUpdate } from '@pg/game-base/players/models/player.types';
 
@@ -10,6 +10,7 @@ export type MessageDataType =
   | AirportList
   | AirportUpdate
   | AirportRequest
+  | Shipment
   | Record<string, never>;
 
 export type MessageTypeEnum = ServerMessageTypeEnum | ClientMessageTypeEnum;
@@ -41,6 +42,7 @@ export enum ServerMessageTypeEnum {
   PLAYER_POSITION_UPDATED = 'player_position.updated',
   AIRPORT_LIST = 'airport.list',
   AIRPORT_UPDATED = 'airport.updated',
+  AIRPORT_SHIPMENT_DELIVERED = 'airport.shipment_delivered',
 }
 
 export enum ClientMessageTypeEnum {

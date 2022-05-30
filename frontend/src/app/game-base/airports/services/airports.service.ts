@@ -6,7 +6,7 @@ import { NotificationComponent } from '@shared/components/notification/notificat
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { ClockService } from '@shared/services/clock.service';
 import { MainWebsocketService } from '@shared/services/main-websocket.service';
-import { ReplaySubject, take } from 'rxjs';
+import { ReplaySubject } from 'rxjs';
 
 import { Airport } from '../models/airport';
 import { AirportList, AirportUpdate, Shipment } from '../models/airport.types';
@@ -35,6 +35,9 @@ export class AirportsService {
         case ServerMessageTypeEnum.AIRPORT_UPDATED:
           this.updateAirport(airportMessage.data as AirportUpdate);
           break;
+        case ServerMessageTypeEnum.AIRPORT_SHIPMENT_DELIVERED:
+          this.handlePackageDeliveredSnackbar(airportMessage.data as Shipment);
+          break;
       }
       this.updated$.next();
     });
@@ -52,19 +55,11 @@ export class AirportsService {
     this.sendAirportRequest(shipmentId, ClientMessageTypeEnum.AIRPORT_SHIPMENT_DISPATCH_REQUEST);
   }
 
-  requestShipmentDelivery(shipment: Shipment) {
-    const previousScore = this.playersService.myPlayer?.score || 0;
+  requestShipmentDelivery() {
     this.mainWebsocketService.sendWSSMessage({
       type: ClientMessageTypeEnum.AIRPORT_SHIPMENT_DELIVERY_REQUEST,
       created: this.clockService.getCurrentTime(),
       data: {},
-    });
-    this.playersService.changed$.pipe(take(1)).subscribe(() => {
-      if (previousScore <= this.playersService.myPlayer!.score + shipment.award) {
-        this.matSnackBar.openFromComponent(NotificationComponent, {
-          data: { text: `You have successfully delivered ${shipment.name} for ${shipment.award}$`, icon: 'redeem' },
-        });
-      }
     });
   }
 
@@ -88,5 +83,11 @@ export class AirportsService {
 
   private updateAirport(airportUpdate: AirportUpdate) {
     this.airports.get(airportUpdate.id)?.updateAirport(airportUpdate);
+  }
+
+  private handlePackageDeliveredSnackbar(shipment: Shipment) {
+    this.matSnackBar.openFromComponent(NotificationComponent, {
+      data: { text: `You have successfully delivered ${shipment.name} for ${shipment.award}$`, icon: 'redeem' },
+    });
   }
 }
