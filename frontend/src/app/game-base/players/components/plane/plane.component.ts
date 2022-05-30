@@ -33,6 +33,7 @@ export class PlaneComponent implements OnInit {
   @Input() camera?: Camera;
   @Input() player!: Player;
   @Input() cameraMode: CameraModesEnum = CameraModesEnum.FREE;
+  @Input() isMyPlayer = false;
   @Input() set isFocused(isFocused: boolean) {
     this.player.isFocused = isFocused;
     this.playersService.changed$.next();
@@ -68,6 +69,7 @@ export class PlaneComponent implements OnInit {
 
   updatePlane(event: BeforeRenderedObject) {
     this.movePlane(event.object, event.state.delta);
+    this.focusCameraOnPlayer(event.object);
   }
 
   getMaterial(model: Object3D) {
@@ -77,7 +79,7 @@ export class PlaneComponent implements OnInit {
   private movePlane(plane: Object3D, delta: number) {
     if (this.player.velocity) {
       // Suspected inactivity
-      if (delta > 0.1) {
+      if (delta > 0.18) {
         this.recoverFromInactivity(plane, delta);
         return;
       }
@@ -95,18 +97,18 @@ export class PlaneComponent implements OnInit {
 
     // Update position up to target gradually
     this.updateByDifference(plane.position, plane.position, this.targetPosition!, 0.1);
-
-    this.focusCameraOnPlayer(plane);
   }
 
   private recoverFromInactivity(plane: Object3D, delta: number) {
-    this.cameraFocused = false;
+    if (delta > 1) {
+      this.cameraFocused = false;
+    }
     this.player.position = {
       ...this.player.position,
       timestamp: this.clockService.getCurrentTime() - delta * 1000,
     };
     this.updateByDifference(plane.position, plane.position, this.player.cartesianPosition, 1, 0.0000000001);
-    Logger.warn(PlaneComponent, 'Recovered after inactivity');
+    Logger.warn(PlaneComponent, `Recovered after inactivity, delta: ${delta}`);
   }
 
   private focusCameraOnPlayer(plane: Object3D) {
@@ -115,7 +117,7 @@ export class PlaneComponent implements OnInit {
       const mock = this.camera.clone();
       mock.position.set(position.x, position.y, position.z);
       mock.lookAt(plane.position);
-      if (this.cameraMode === CameraModesEnum.FOLLOW) {
+      if (this.cameraMode === CameraModesEnum.POSITION) {
         mock.rotation.z -= plane.rotation.z;
       }
       this.camera.position.set(position.x, position.y, position.z);

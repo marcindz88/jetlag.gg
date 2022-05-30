@@ -1,0 +1,4 @@
+<pg-card class="notification">
+  <span class="notification__icon material-symbols-outlined" *ngIf="data.icon as icon">{{ icon }}</span>
+  <p class="notification__text" *ngIf="data.text as text" [innerHTML]="text"></p>
+</pg-card>
