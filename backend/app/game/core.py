@@ -424,7 +424,10 @@ class GameSession:
                 logging.info("bot landed %s %s", player.id, player.nickname)
 
                 if player.shipment:
-                    self.handle_shipment_delivery(airport=destination_airport, player=player)
+                    try:
+                        self.handle_shipment_delivery(airport=destination_airport, player=player)
+                    except ShipmentExpired:
+                        pass
                 time.sleep(5)
 
                 shipment_ids = list(destination_airport.shipments.keys())
