@@ -404,10 +404,31 @@ class GameSession:
         current_airport = 0
 
         while True:
+            if player_id not in self._bots:
+                player: Player = self._players[player_id]
+                self.remove_player(player)
+                return
+
+            result = self._fly_bot_to_point(
+                player_id=player_id,
+                destination_coordinates=flight_plan[current_airport].coordinates,
+            )
+            if not result:
+                return
+
+            current_airport += 1
+            if current_airport == len(flight_plan):
+                current_airport = 0
+
+    def _fly_bot_to_point(self, player_id, destination_coordinates, minimum_distance = 300):
+        minimum_sleep_duration = 0.05
+        min_velocity = 50000
+        max_velocity = self.config.MAX_VELOCITY
+        while True:
             player: Player = self._players[player_id]
             if player_id not in self._bots:
                 self.remove_player(player)
-                return
+                return False
 
             now = timestamp_now() + 1
             current_player_position = player.position.future_position(
@@ -416,35 +437,29 @@ class GameSession:
             )
             distance_to_destination = Coordinates.distance_between(
                 current_player_position.coordinates,
-                flight_plan[current_airport].coordinates,
+                destination_coordinates,
             )
-            if distance_to_destination < 300:
-                current_airport += 1
-                if current_airport == len(flight_plan):
-                    current_airport = 0
-                continue
+            if distance_to_destination <= minimum_distance:
+                return True
 
             ideal_bearing_to_destination = Coordinates.bearing_between(
                 current_player_position.coordinates,
-                flight_plan[current_airport].coordinates,
+                destination_coordinates,
             )
 
-            bearing_diff = ideal_bearing_to_destination - current_player_position.bearing
-            if bearing_diff > 0:
-                bearing_delta = min(bearing_diff, 2)
-            else:
-                bearing_delta = max(bearing_diff, -2)
-
+            left = (360 - ideal_bearing_to_destination + current_player_position.bearing) % 360
+            right = (360 - current_player_position.bearing + ideal_bearing_to_destination) % 360
+            bearing_diff = min(left, right)
+            bearing_delta = min(2.0, bearing_diff)
+            if left < right:
+                bearing_delta = -bearing_delta
             bearing = current_player_position.bearing + bearing_delta
 
             current_velocity = player.position.velocity
-            min_velocity = 50000
-            max_velocity = self.config.MAX_VELOCITY
             if abs(bearing_diff) > 90:
                 velocity_delta = -10000
             else:
                 velocity_delta = 10000
-
             velocity = current_velocity + velocity_delta
             velocity = max(min_velocity, velocity)
             velocity = min(max_velocity, velocity)
@@ -455,7 +470,16 @@ class GameSession:
                 velocity=velocity,
                 bearing=bearing,
             )
-            time.sleep(0.05)
+
+            sleep_duration = minimum_sleep_duration
+            if abs(bearing_delta) < 0.01 and velocity == max_velocity:
+                distance_to_destination = max(distance_to_destination-minimum_distance*1.1, 0)
+                sleep_duration = distance_to_destination/velocity * 3600
+
+                sleep_duration = max(sleep_duration, minimum_sleep_duration)
+                sleep_duration = min(sleep_duration, 3)  # not more than 3 seconds for synchronisation reasons
+
+            time.sleep(sleep_duration)
 
     def send_event(self, event: Event, player: Player):
         logging.info("send_event %s", event.type)
