@@ -55,6 +55,6 @@ jobs:
     -
       name: Restart image on the server
       run: |    
-        ssh -i private.key -o StrictHostKeyChecking=no root@162.55.208.248 "docker stop backend; docker run --rm -d --name backend -p 80:9999 planegame_backend"
+        ssh -i private.key -o StrictHostKeyChecking=no root@162.55.208.248 "docker rm -f backend; docker run --rm -d --name backend -p 80:9999 planegame_backend"
       env:
         SERVER_SSH_KEY: ${{secrets.SERVER_SSH_KEY}}
