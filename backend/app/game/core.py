@@ -399,28 +399,51 @@ class GameSession:
         self._bots.pop(bot_to_remove.id)
 
     def play_with_bot(self, player_id: uuid.UUID):
-        flight_plan = random.sample(self._airports.keys(), 10)
-        flight_plan = [self._airports[c] for c in flight_plan]
-        current_airport = 0
 
         while True:
+            player: Player = self._players[player_id]
             if player_id not in self._bots:
-                player: Player = self._players[player_id]
                 self.remove_player(player)
                 return
 
+            if player.shipment:
+                destination_airport = self._airports[player.shipment.destination_id]
+            else:
+                destination_airport = random.choice(list(self._airports.values()))
             result = self._fly_bot_to_point(
                 player_id=player_id,
-                destination_coordinates=flight_plan[current_airport].coordinates,
+                destination_coordinates=destination_airport.coordinates,
+                minimum_distance=100,
             )
             if not result:
                 return
 
-            current_airport += 1
-            if current_airport == len(flight_plan):
-                current_airport = 0
+            try:
+                logging.info("bot landing attempt %s %s", player.id, player.nickname)
+                self.handle_airport_landing(player=player, airport=destination_airport)
+                logging.info("bot landed %s %s", player.id, player.nickname)
 
-    def _fly_bot_to_point(self, player_id, destination_coordinates, minimum_distance = 300):
+                if player.shipment:
+                    self.handle_shipment_delivery(airport=destination_airport, player=player)
+                time.sleep(5)
+
+                shipment_ids = list(destination_airport.shipments.keys())
+                if shipment_ids:
+                    self.handle_shipment_dispatch(
+                        airport=destination_airport,
+                        player=player,
+                        shipment_id=random.choice(shipment_ids),
+                    )
+                self.handle_airport_departure(player=player, airport=destination_airport)
+            except AirportFull:
+                logging.info("bot landing failed, airport full %s %s", player.id, player.nickname)
+
+    def _fly_bot_to_point(
+        self,
+        player_id: uuid.UUID,
+        destination_coordinates: Coordinates,
+        minimum_distance: int = 300,
+    ):
         minimum_sleep_duration = 0.05
         min_velocity = 50000
         max_velocity = self.config.MAX_VELOCITY
@@ -478,10 +501,11 @@ class GameSession:
 
                 sleep_duration = max(sleep_duration, minimum_sleep_duration)
                 sleep_duration = min(sleep_duration, 3)  # not more than 3 seconds for synchronisation reasons
-
             time.sleep(sleep_duration)
 
     def send_event(self, event: Event, player: Player):
+        if player.is_bot:
+            return
         logging.info("send_event %s", event.type)
         session, _ = self._sessions.get(player.session_id)
         data = dataclasses.asdict(event)
@@ -683,14 +707,7 @@ class GameSession:
             velocity=data_model.velocity,
         )
 
-    def handle_airport_landing_request_event(self, player: Player, event: Event):
-        logging.info(f"handle_airport_landing_request_event {player.id} {event}")
-        data_model = AirportRequest(**event.data)
-
-        airport: Airport = self._airports.get(data_model.id)
-        if not airport:
-            raise InvalidAirport
-
+    def handle_airport_landing(self, player: Player, airport: Airport):
         airport.land_player(player=player)
 
         airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
@@ -703,14 +720,7 @@ class GameSession:
         })
         self.broadcast_event(event=position_updated_event)
 
-    def handle_airport_departure_request_event(self, player: Player, event: Event):
-        logging.info(f"handle_airport_departure_request_event {player.id} {event}")
-        data_model = AirportRequest(**event.data)
-
-        airport: Airport = self._airports.get(data_model.id)
-        if not airport:
-            raise InvalidAirport
-
+    def handle_airport_departure(self, player: Player, airport: Airport):
         airport.remove_player(player=player)
 
         airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
@@ -723,15 +733,8 @@ class GameSession:
         })
         self.broadcast_event(event=position_updated_event)
 
-    def handle_shipment_dispatch_request_event(self, player: Player, event: Event):
-        logging.info(f"handle_shipment_dispatch_request_event {player.id} {event}")
-        data_model = ShipmentRequest(**event.data)
-
-        if not player.is_grounded:
-            raise ShipmentOperationWhenFlying
-
-        airport: Airport = self._airports.get(player.airport_id)
-        airport.dispatch_shipment(shipment_id=data_model.id, player=player)
+    def handle_shipment_dispatch(self, airport: Airport, player: Player, shipment_id: uuid.UUID):
+        airport.dispatch_shipment(shipment_id=shipment_id, player=player)
 
         player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
         self.broadcast_event(event=player_updated_event)
@@ -739,13 +742,7 @@ class GameSession:
         airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
         self.broadcast_event(event=airport_updated_event)
 
-    def handle_shipment_delivery_request_event(self, player: Player, event: Event):
-        logging.info(f"handle_shipment_delivery_request_event {player.id} {event}")
-
-        if not player.is_grounded:
-            raise ShipmentOperationWhenFlying
-
-        airport: Airport = self._airports.get(player.airport_id)
+    def handle_shipment_delivery(self, airport: Airport, player: Player):
         shipment = airport.accept_shipment_delivery(player=player)
         self._shipments.pop(shipment.id)
 
@@ -754,6 +751,43 @@ class GameSession:
 
         player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
         self.broadcast_event(event=player_updated_event)
+
+    def handle_airport_landing_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_airport_landing_request_event {player.id} {event}")
+        data_model = AirportRequest(**event.data)
+
+        airport: Airport = self._airports.get(data_model.id)
+        if not airport:
+            raise InvalidAirport
+        self.handle_airport_landing(player=player, airport=airport)
+
+    def handle_airport_departure_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_airport_departure_request_event {player.id} {event}")
+        data_model = AirportRequest(**event.data)
+
+        airport: Airport = self._airports.get(data_model.id)
+        if not airport:
+            raise InvalidAirport
+        self.handle_airport_departure(player=player, airport=airport)
+
+    def handle_shipment_dispatch_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_shipment_dispatch_request_event {player.id} {event}")
+        data_model = ShipmentRequest(**event.data)
+
+        if not player.is_grounded:
+            raise ShipmentOperationWhenFlying
+
+        airport: Airport = self._airports.get(player.airport_id)
+        self.handle_shipment_dispatch(player=player, airport=airport, shipment_id=data_model.id)
+
+    def handle_shipment_delivery_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_shipment_delivery_request_event {player.id} {event}")
+
+        if not player.is_grounded:
+            raise ShipmentOperationWhenFlying
+
+        airport: Airport = self._airports.get(player.airport_id)
+        self.handle_shipment_delivery(player=player, airport=airport)
 
     def handle_event(self, player: Player, event: Event):
         logging.info(f"handle_event {player.id} {event}")
