@@ -7,7 +7,7 @@ import uuid
 from typing import Optional, List
 
 from app.game.config import GameConfig
-from app.game.consts import AIRPORTS
+from app.game.consts import AIRPORTS, BOT_NAMES
 from app.game.coordinates import Coordinates
 from app.game.events import Event, EventType
 from app.game.exceptions import (
@@ -121,12 +121,18 @@ class PlayerPosition:
         self.velocity = velocity
         self.timestamp = timestamp
 
-    def future_position(self, timestamp_delta: int) -> "PlayerPosition":
+    def future_position(self, timestamp_delta: int, calculate_bearing: bool = False) -> "PlayerPosition":
         distance_traveled = self.velocity * timestamp_delta / 3600000  # s = v*t, convert timestamp to hours
         future_coordinates = self.coordinates.destination_coordinates(distance=distance_traveled, bearing=self.bearing)
+        if calculate_bearing:
+            bearing_diff = (Coordinates.bearing_between(future_coordinates, self.coordinates) - 180) % 360 - Coordinates.bearing_between(self.coordinates, future_coordinates)
+            future_bearing = self.bearing + bearing_diff
+        else:
+            future_bearing = self.bearing
+
         return PlayerPosition(
             coordinates=future_coordinates,
-            bearing=self.bearing,
+            bearing=future_bearing,
             velocity=self.velocity,
             timestamp=self.timestamp + timestamp_delta,
         )
@@ -155,7 +161,7 @@ class PlayerPosition:
 
 class Player:
 
-    def __init__(self, nickname: str):
+    def __init__(self, nickname: str, bot: bool = False):
         self._id: uuid.UUID = uuid.uuid4()
         self._nickname: str = nickname
         self._token: str = uuid.uuid4().hex
@@ -164,6 +170,7 @@ class Player:
         self.session_id: Optional[uuid.UUID] = None
         self.position: PlayerPosition = PlayerPosition.random()
         self.score: int = 0
+        self.is_bot: bool = bot
         self.shipment: Optional[Shipment] = None
 
     @property
@@ -180,7 +187,7 @@ class Player:
 
     @property
     def is_connected(self) -> bool:
-        return bool(self.session_id)
+        return self.is_bot or bool(self.session_id)
 
     @property
     def is_grounded(self) -> bool:
@@ -197,6 +204,7 @@ class Player:
             "nickname": self.nickname,
             "connected": self.is_connected,
             "is_grounded": self.is_grounded,
+            "is_bot": self.is_bot,
             "score": self.score,
             "position": self.position.serialized,
             "shipment": self.shipment.serialized if self.shipment else None,
@@ -309,12 +317,15 @@ class Airport:
 
 class GameSession:
     config = GameConfig()
+    FILL_GAME_WITH_BOTS_TILL = 10
+    SPAWN_BOTS_WHEN_NO_PLAYERS = True
 
     def __init__(self):
         self._players = {}
         self._sessions = {}
         self._airports = {}
         self._shipments = {}
+        self._bots = {}
 
         for airport_data in AIRPORTS:
             airport = Airport(
@@ -336,6 +347,8 @@ class GameSession:
         t.start()
         t = threading.Thread(target=self.manage_airports)
         t.start()
+        t = threading.Thread(target=self.manage_bots)
+        t.start()
 
     def monitor_players(self):
         while True:
@@ -348,6 +361,101 @@ class GameSession:
             time.sleep(0.2)
             if random_with_probability(0.045):
                 self.add_random_airport_shipment()
+
+    def manage_bots(self):
+        while True:
+            real_players_count = self.real_players_count()
+            bot_players_count = self.bot_players_count()
+
+            if real_players_count == 0 and self.SPAWN_BOTS_WHEN_NO_PLAYERS is False:
+                target_bot_count = 0
+            else:
+                target_bot_count = max(self.FILL_GAME_WITH_BOTS_TILL - real_players_count, 0)
+
+            delta = target_bot_count - bot_players_count
+            for _ in range(abs(delta)):
+                if delta > 0:
+                    self.increase_bot_count()
+                else:
+                    self.decrease_bot_count()
+            time.sleep(1)
+
+    def increase_bot_count(self):
+        nickname_set = set(BOT_NAMES) - set([self._players[p].nickname for p in self._bots.keys()])
+        nickname = random.choice(list(nickname_set))
+        player = Player(nickname=nickname, bot=True)
+        self._players[player.id] = player
+        event = Event(type=EventType.PLAYER_REGISTERED, data=player.serialized)
+        self.broadcast_event(event=event)
+
+        thread = threading.Thread(target=self.play_with_bot, args=(player.id,))
+        self._bots[player.id] = {'thread': thread, 'created': timestamp_now()}
+        thread.start()
+
+    def decrease_bot_count(self):
+        bots = [(self._players[player_id], bot_data['created']) for player_id, bot_data in self._bots.items()]
+        bots = sorted(bots, key=lambda b: b[1])
+        bot_to_remove: Player = bots[0][0]  # select the oldest bot
+        self._bots.pop(bot_to_remove.id)
+
+    def play_with_bot(self, player_id: uuid.UUID):
+        flight_plan = random.sample(self._airports.keys(), 10)
+        flight_plan = [self._airports[c] for c in flight_plan]
+        current_airport = 0
+
+        while True:
+            player: Player = self._players[player_id]
+            if player_id not in self._bots:
+                self.remove_player(player)
+                return
+
+            now = timestamp_now() + 1
+            current_player_position = player.position.future_position(
+                timestamp_delta=now-player.position.timestamp,
+                calculate_bearing=True,
+            )
+            distance_to_destination = Coordinates.distance_between(
+                current_player_position.coordinates,
+                flight_plan[current_airport].coordinates,
+            )
+            if distance_to_destination < 300:
+                current_airport += 1
+                if current_airport == len(flight_plan):
+                    current_airport = 0
+                continue
+
+            ideal_bearing_to_destination = Coordinates.bearing_between(
+                current_player_position.coordinates,
+                flight_plan[current_airport].coordinates,
+            )
+
+            bearing_diff = ideal_bearing_to_destination - current_player_position.bearing
+            if bearing_diff > 0:
+                bearing_delta = min(bearing_diff, 2)
+            else:
+                bearing_delta = max(bearing_diff, -2)
+
+            bearing = current_player_position.bearing + bearing_delta
+
+            current_velocity = player.position.velocity
+            min_velocity = 50000
+            max_velocity = self.config.MAX_VELOCITY
+            if abs(bearing_diff) > 90:
+                velocity_delta = -10000
+            else:
+                velocity_delta = 10000
+
+            velocity = current_velocity + velocity_delta
+            velocity = max(min_velocity, velocity)
+            velocity = min(max_velocity, velocity)
+
+            self.update_player_position(
+                player=player,
+                timestamp=now,
+                velocity=velocity,
+                bearing=bearing,
+            )
+            time.sleep(0.05)
 
     def send_event(self, event: Event, player: Player):
         logging.info("send_event %s", event.type)
@@ -366,6 +474,12 @@ class GameSession:
             data = encode(data)
             session.send(data)
 
+    def real_players_count(self) -> int:
+        return len(self._players) - len(self._bots)
+
+    def bot_players_count(self) -> int:
+        return len(self._bots)
+
     def get_player(self, player_id: uuid.UUID) -> Player:
         player = self._players.get(player_id)
         if not player:
@@ -380,6 +494,8 @@ class GameSession:
         now = timestamp_now()
 
         for player in list(self._players.values()):
+            if player.is_bot:
+                continue
             if player.is_connected:
                 continue
             if now - player.disconnected_since > self.config.PLAYER_TIME_TO_CONNECT:

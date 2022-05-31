@@ -1,4 +1,4 @@
-from math import sin, cos, sqrt, atan2, radians, degrees, asin
+from math import sin, cos, sqrt, atan2, radians, degrees, asin, pi
 
 from app.game.config import GameConfig
 
@@ -45,6 +45,18 @@ class Coordinates:
         c = 2 * atan2(sqrt(a), sqrt(max(1 - a, 0)))
         d = Coordinates._earth_radius() * c
         return d
+
+    @staticmethod
+    def bearing_between(coord1: "Coordinates", coord2: "Coordinates") -> float:
+        lat1 = radians(coord1.latitude)
+        lon1 = radians(coord1.longitude)
+        lat2 = radians(coord2.latitude)
+        lon2 = radians(coord2.longitude)
+
+        y = sin(lon2 - lon1)*cos(lat2)
+        x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(lon2 - lon1)
+
+        return ((atan2(y, x) * 180) / pi + 360) % 360
 
     def destination_coordinates(self, distance: float, bearing: float) -> "Coordinates":
         # https://stackoverflow.com/a/7835325
