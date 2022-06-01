@@ -1,6 +1,5 @@
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Shipment } from '@pg/game-base/airports/models/airport.types';
-import { FLIGHT_ALTITUDE, VELOCITY } from '@pg/game-base/constants/game.constants';
 import { getRandomColorFromNickname } from '@pg/game-base/utils/color-utils';
 import {
   calculateBearingFromDirectionAndRotation,
@@ -11,6 +10,7 @@ import {
 } from '@pg/game-base/utils/geo-utils';
 import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { ClockService } from '@shared/services/clock.service';
+import { CONFIG } from '@shared/services/config.service';
 import { Subject } from 'rxjs';
 import { Color, Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
@@ -26,6 +26,8 @@ export class Player {
   connected: boolean;
   isFocused = false;
   isGrounded = false;
+  isMyPlayer = false;
+  isBot = false;
   shipment: null | Shipment = null;
   shipmentTimeoutHandler?: number;
 
@@ -38,12 +40,19 @@ export class Player {
 
   flightParametersChanged$ = new Subject<void>();
 
-  constructor(player: OtherPlayer, private clockService: ClockService, private matSnackBar: MatSnackBar) {
+  constructor(
+    player: OtherPlayer,
+    isMyPlayer: boolean,
+    private clockService: ClockService,
+    private matSnackBar: MatSnackBar
+  ) {
     this.id = player.id;
     this.nickname = player.nickname;
     this.connected = player.connected;
     this.score = player.score;
     this.isGrounded = player.is_grounded;
+    this.isMyPlayer = isMyPlayer;
+    this.isBot = player.is_bot;
     this.shipment = player.shipment;
     this.color = new Color(getRandomColorFromNickname(this.nickname));
 
@@ -57,11 +66,11 @@ export class Player {
     }
     const updatedPosition = calculatePositionAfterTimeInterval(
       position,
-      FLIGHT_ALTITUDE,
+      CONFIG.FLIGHT_ALTITUDE_SCALED,
       this.clockService.getCurrentTime()
     );
 
-    this.cartesianPosition = transformCoordinatesIntoPoint(updatedPosition.coordinates, FLIGHT_ALTITUDE);
+    this.cartesianPosition = transformCoordinatesIntoPoint(updatedPosition.coordinates, CONFIG.FLIGHT_ALTITUDE_SCALED);
     this.cartesianRotation = transformPointAndDirectionIntoRotation(
       updatedPosition.coordinates,
       updatedPosition.bearing
@@ -111,7 +120,7 @@ export class Player {
 
   updateVelocity(velocityChange: number) {
     const velocity = this.velocity + velocityChange;
-    if (velocity >= VELOCITY.min && velocity <= VELOCITY.max) {
+    if (velocity >= CONFIG.MIN_VELOCITY && velocity <= CONFIG.MAX_VELOCITY) {
       this.velocity = velocity;
       this.lastChangeTimestamp = this.clockService.getCurrentTime();
       this.flightParametersChanged$.next();
@@ -119,6 +128,9 @@ export class Player {
   }
 
   private setShipmentExpirationHandler() {
+    if (!this.isMyPlayer) {
+      return;
+    }
     if (this.shipment) {
       const remainingTime = this.shipment.valid_till - this.clockService.getCurrentTime();
       if (remainingTime <= 0) {

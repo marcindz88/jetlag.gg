@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
 import { NgtMesh } from '@angular-three/core/meshes';
-import { EARTH_RADIUS } from '@pg/game-base/constants/game.constants';
 import { TextureModelsService } from '@pg/game-base/services/texture-models.service';
+import { CONFIG } from '@shared/services/config.service';
 import { LoaderService } from '@shared/services/loader.service';
 
 @Component({
@@ -21,7 +21,7 @@ export class EarthComponent {
     }
   }
 
-  readonly EARTH_RADIUS = EARTH_RADIUS;
+  readonly EARTH_RADIUS = CONFIG.EARTH_RADIUS_SCALED;
 
   textures$ = this.textureModelsService.earthTextures$;
 

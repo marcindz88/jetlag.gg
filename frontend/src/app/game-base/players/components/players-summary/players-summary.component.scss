@@ -1,5 +1,13 @@
 .nickname {
   min-width: 130px;
+
+  & &__bot {
+    margin-left: 5px;
+  }
+}
+
+.score {
+  text-align: right;
 }
 
 .material-symbols-outlined {
