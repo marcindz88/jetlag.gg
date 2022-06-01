@@ -26,8 +26,7 @@ export class PlayersService {
     this.mainWebsocketService.playerMessages$.pipe(untilDestroyed(this)).subscribe(playerMessage => {
       switch (playerMessage.type) {
         case ServerMessageTypeEnum.PLAYER_LIST:
-          this.savePlayersList(playerMessage.data as PlayerList);
-          this.myPlayer = this.players.get(userId)!;
+          this.savePlayersList(playerMessage.data as PlayerList, userId);
           break;
         case ServerMessageTypeEnum.PLAYER_REGISTERED:
           this.addPlayer(playerMessage.data as OtherPlayer);
@@ -50,7 +49,6 @@ export class PlayersService {
           this.updatePlayer(playerPositionMessage.data);
           break;
       }
-      this.changed$.next();
     });
   }
 
@@ -62,18 +60,23 @@ export class PlayersService {
     });
   }
 
-  private savePlayersList(playersList: PlayerList) {
-    playersList.players.forEach(this.addPlayer.bind(this));
+  private savePlayersList(playersList: PlayerList, myUserId: string) {
+    playersList.players.forEach(player => this.addPlayer(player, player.id === myUserId));
   }
 
   updatePlayer(playerData: PartialPlayerWithId | OtherPlayer) {
     this.players.get(playerData.id)?.updatePlayer(playerData);
   }
 
-  addPlayer(player: OtherPlayer) {
-    // If player has been already setup by wss then don't override
+  addPlayer(player: OtherPlayer, isMyPlayer = false) {
+    // If player has been already setup then don't override
     if (!this.players.get(player.id)) {
-      this.players.set(player.id, new Player(player, this.clockService, this.matSnackbar));
+      const newPlayer = new Player(player, isMyPlayer, this.clockService, this.matSnackbar);
+      this.players.set(player.id, newPlayer);
+
+      if (isMyPlayer) {
+        this.myPlayer = newPlayer;
+      }
     }
   }
 }

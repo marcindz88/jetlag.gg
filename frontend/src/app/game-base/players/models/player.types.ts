@@ -10,6 +10,7 @@ export type OtherPlayer = {
   connected: boolean;
   position: PlanePosition;
   is_grounded: boolean;
+  is_bot: boolean;
   shipment: Shipment | null;
   score: number;
 } & BasePlayer;

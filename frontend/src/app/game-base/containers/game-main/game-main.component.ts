@@ -4,10 +4,11 @@ import { NgtCameraOptions } from '@angular-three/core/lib/types';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Airport } from '@pg/game-base/airports/models/airport';
 import { AirportsService } from '@pg/game-base/airports/services/airports.service';
-import { CAMERA, CameraModesEnum } from '@pg/game-base/constants/game.constants';
+import { CameraModesEnum } from '@pg/game-base/models/gane.enums';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { RENDERER_OPTIONS, SHADOW_OPTIONS } from '@shared/constants/renderer-options';
+import { CONFIG } from '@shared/services/config.service';
 import { Camera } from 'three';
 
 import { KeyEventEnum } from '../../models/keyboard.types';
@@ -28,17 +29,17 @@ export class GameMainComponent {
   }
   readonly RENDERER_OPTIONS = RENDERER_OPTIONS;
   readonly SHADOW_OPTIONS = SHADOW_OPTIONS;
-  readonly CAMERA = CAMERA;
   readonly CameraModesEnum = CameraModesEnum;
+  readonly CONFIG = CONFIG;
   readonly players = this.playersService.players;
   readonly airports = this.airportsService.airports;
 
   myPlayer?: Player;
-  focusedPlayerIndex = 0;
+  focusedPlayerId: string | null = null;
   cameraMode = CameraModesEnum.FOLLOW;
   cameraPosition: NgtVector3 = [0, 15, 50];
   cameraOptions: NgtCameraOptions = {
-    zoom: CAMERA.defaultZoom,
+    zoom: CONFIG.CAMERA_DEFAULT_ZOOM,
     position: this.cameraPosition,
   };
 
@@ -67,9 +68,14 @@ export class GameMainComponent {
   private setupPlayersChanges() {
     this.playersService.changed$.pipe(untilDestroyed(this)).subscribe(() => {
       if (this.myPlayer || !this.playersService.myPlayer) {
+        // Focused player is no longer in the game
+        if (this.focusedPlayerId && !this.players.has(this.focusedPlayerId)) {
+          this.focusOnMyPlayer();
+        }
         return;
       }
       this.myPlayer = this.playersService.myPlayer;
+      this.focusOnMyPlayer();
       this.setupPlaneUpdates();
       this.setupCameraControls();
       this.cdr.markForCheck();
@@ -87,16 +93,37 @@ export class GameMainComponent {
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA, this, this.switchCameraMode.bind(this));
   }
 
+  private focusOnMyPlayer() {
+    this.focusedPlayerId = this.myPlayer!.id;
+  }
+
   private switchCameraFocus() {
-    if (this.focusedPlayerIndex + 1 >= this.players.size) {
-      this.focusedPlayerIndex = 0;
-    } else {
-      this.focusedPlayerIndex++;
+    if (!this.focusedPlayerId) {
+      this.focusOnMyPlayer();
+      return;
     }
+
+    const playerIds = Array.from(this.players.keys());
+    const focusedPlayerIndex = playerIds.findIndex(playerId => playerId === this.focusedPlayerId);
+
+    // Player not found (removed - set to my player)
+    if (focusedPlayerIndex === -1) {
+      this.focusOnMyPlayer();
+      return;
+    }
+
+    // Next player available move to next
+    if (focusedPlayerIndex + 1 < playerIds.length) {
+      this.focusedPlayerId = playerIds[focusedPlayerIndex + 1];
+      return;
+    }
+
+    // Last player -> jump to first
+    this.focusedPlayerId = playerIds[0];
   }
 
   private switchCameraMode() {
-    if (this.cameraMode + 1 >= CAMERA.cameraModes) {
+    if (this.cameraMode + 1 >= CONFIG.CAMERA_NUMBER_OF_MODES) {
       this.cameraMode = CameraModesEnum.FREE;
     } else {
       this.cameraMode++;

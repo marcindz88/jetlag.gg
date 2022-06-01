@@ -1,6 +1,7 @@
 <pg-table
   [map]="players"
   [noRecordsText]="'No players in session'"
+  [sortBy]="'score'"
   [rowTemplate]="player_row"
   [updateTrigger$]="playersService.changed$">
 </pg-table>
@@ -13,7 +14,9 @@
       <span *ngIf="player.isFocused; else notInFocus" class="material-symbols-outlined">center_focus_weak</span>
       <ng-template #notInFocus><span class="material-symbols-outlined"> crop_free </span></ng-template>
     </td>
-    <td class="nickname">{{ player.nickname }}</td>
+    <td class="nickname">
+      {{ player.nickname }}<span *ngIf="player.isBot" class="nickname__bot material-symbols-outlined"> smart_toy </span>
+    </td>
     <td class="score">{{ player.score }}$</td>
   </tr>
 </ng-template>

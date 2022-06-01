@@ -2,15 +2,16 @@ import { ChangeDetectionStrategy, Component, Input, OnInit, ViewChild } from '@a
 import { NgtGroup } from '@angular-three/core/group';
 import { NgtPrimitive } from '@angular-three/core/primitive';
 import { BeforeRenderedObject } from '@pg/game-base/models/game.types';
+import { CameraModesEnum } from '@pg/game-base/models/gane.enums';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { ClockService } from '@shared/services/clock.service';
+import { CONFIG } from '@shared/services/config.service';
 import { Logger } from '@shared/services/logger.service';
 import { map, Observable } from 'rxjs';
 import { Camera, Euler, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
-import { CameraModesEnum, MAP_SCALE, MOVING_CIRCUMFERENCE } from '../../../constants/game.constants';
 import { TextureModelsService } from '../../../services/texture-models.service';
 
 @Component({
@@ -33,7 +34,6 @@ export class PlaneComponent implements OnInit {
   @Input() camera?: Camera;
   @Input() player!: Player;
   @Input() cameraMode: CameraModesEnum = CameraModesEnum.FREE;
-  @Input() isMyPlayer = false;
   @Input() set isFocused(isFocused: boolean) {
     this.player.isFocused = isFocused;
     this.playersService.changed$.next();
@@ -87,8 +87,8 @@ export class PlaneComponent implements OnInit {
       const positionCopy = plane.position.clone();
 
       // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
-      const displacement = (this.player.velocity / 3600) * MAP_SCALE * delta; // delta in s convert to h
-      plane.rotateX(degToRad((displacement / MOVING_CIRCUMFERENCE) * 360));
+      const displacement = (this.player.velocity / 3600) * CONFIG.MAP_SCALE * delta; // delta in s convert to h
+      plane.rotateX(degToRad((displacement / CONFIG.FLIGHT_MOVING_CIRCUMFERENCE) * 360));
       plane.translateY(displacement);
 
       // Update targets by current movement

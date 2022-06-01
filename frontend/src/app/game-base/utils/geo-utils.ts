@@ -1,6 +1,6 @@
-import { EARTH_RADIUS, MAP_SCALE, REAL_EARTH_RADIUS } from '@pg/game-base/constants/game.constants';
 import { GeoLocationPoint } from '@pg/game-base/models/game.types';
 import { PlanePosition } from '@pg/game-base/players/models/player.types';
+import { CONFIG } from '@shared/services/config.service';
 import { Euler, Spherical, Vector3 } from 'three';
 import { degToRad, radToDeg } from 'three/src/math/MathUtils';
 
@@ -28,7 +28,7 @@ export const transformPointIntoCoordinates = (vector: Vector3): GeoLocationPoint
 
 export const transformCoordinatesIntoPoint = (point: GeoLocationPoint, altitude: number): Vector3 => {
   const vector = new Vector3().setFromSphericalCoords(
-    EARTH_RADIUS + altitude,
+    CONFIG.EARTH_RADIUS_SCALED + altitude,
     degToRad(point.lat + 90),
     degToRad(point.lon + 90)
   );
@@ -67,9 +67,9 @@ export const calculatePositionAfterTimeInterval = (
     return position;
   }
 
-  const distance = (position.velocity * MAP_SCALE * (currentTimestamp - position.timestamp)) / 3600000;
+  const distance = (position.velocity * CONFIG.MAP_SCALE * (currentTimestamp - position.timestamp)) / 3600000;
 
-  const r = EARTH_RADIUS + altitude;
+  const r = CONFIG.EARTH_RADIUS_SCALED + altitude;
   const bearing = degToRad(position.bearing);
 
   const { lat: lat1, lon: lon1 } = convertLocationPointToRad(position.coordinates);
@@ -112,5 +112,5 @@ export const calculateDistanceBetweenPoints = (point1: GeoLocationPoint, point2:
   );
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return REAL_EARTH_RADIUS * c; // km
+  return CONFIG.EARTH_RADIUS * c; // km
 };

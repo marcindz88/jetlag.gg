@@ -27,8 +27,8 @@ export class KeyboardControlsService {
     this.handleKeyEvent(KeyEventEnum.ENTER, ['Enter']);
     this.handleKeyEvent(KeyEventEnum.FUEL, ['x', 'X']);
     this.handleKeyEvent(KeyEventEnum.HELP, ['h', 'H']);
-    this.handleKeyEvent(KeyEventEnum.LEFT, ['ArrowLeft', 'Left']);
-    this.handleKeyEvent(KeyEventEnum.RIGHT, ['ArrowRight', 'Right']);
+    this.handleKeyEvent(KeyEventEnum.LEFT, ['a', 'A', 'ArrowLeft', 'Left']);
+    this.handleKeyEvent(KeyEventEnum.RIGHT, ['d', 'D', 'ArrowRight', 'Right']);
   }
 
   setupKeyEvent<T>(type: KeyEventEnum, destroyBase: T, handleFunction: () => void) {

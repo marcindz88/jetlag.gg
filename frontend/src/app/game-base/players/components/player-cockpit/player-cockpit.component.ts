@@ -4,12 +4,12 @@ import { Airport } from '@pg/game-base/airports/models/airport';
 import { NearAirportsList } from '@pg/game-base/airports/models/airport.types';
 import { AirportsService } from '@pg/game-base/airports/services/airports.service';
 import { determineAirportsInProximity } from '@pg/game-base/airports/utils/utils';
-import { BEARING, VELOCITY } from '@pg/game-base/constants/game.constants';
 import { KeyEventEnum } from '@pg/game-base/models/keyboard.types';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlanePosition } from '@pg/game-base/players/models/player.types';
 import { KeyboardControlsService } from '@pg/game-base/services/keyboard-controls.service';
 import { arePointsEqual } from '@pg/game-base/utils/geo-utils';
+import { CONFIG } from '@shared/services/config.service';
 import { ReplaySubject, timer } from 'rxjs';
 
 @UntilDestroy()
@@ -56,13 +56,13 @@ export class PlayerCockpitComponent implements OnInit {
 
   private updateBearing(multiplier: number) {
     if (!this.player.isGrounded) {
-      this.player.updateBearing(multiplier * BEARING.step);
+      this.player.updateBearing(multiplier * CONFIG.STEP_BEARING);
     }
   }
 
   private updateVelocity(multiplier: number) {
     if (!this.player.isGrounded) {
-      this.player.updateVelocity(multiplier * VELOCITY.step);
+      this.player.updateVelocity(multiplier * CONFIG.STEP_VELOCITY);
     }
   }
 
