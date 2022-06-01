@@ -1,11 +1,11 @@
 import { AirportType, AirportUpdate, Shipment } from '@pg/game-base/airports/models/airport.types';
-import { AIRPORT_ALTITUDE, MAP_SCALE, NEARBY_AIRPORT_DISTANCE } from '@pg/game-base/constants/game.constants';
 import { GeoLocationPoint } from '@pg/game-base/models/game.types';
 import {
   calculateDistanceBetweenPoints,
   transformCoordinatesIntoPoint,
   transformPointAndDirectionIntoRotation,
 } from '@pg/game-base/utils/geo-utils';
+import { CONFIG } from '@shared/services/config.service';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Euler, Vector3 } from 'three';
 
@@ -35,7 +35,7 @@ export class Airport implements AirportType {
     this.coordinates = airport.coordinates;
     this.cartesianPosition = transformCoordinatesIntoPoint(
       airport.coordinates,
-      AIRPORT_ALTITUDE + this.elevation * MAP_SCALE * 20 // due to increased displacement efect
+      0.5 + this.elevation * CONFIG.MAP_SCALE * 20 // due to increased displacement effect and not starting at 0
     );
     this.cartesianRotation = transformPointAndDirectionIntoRotation(airport.coordinates, 0);
     this.occupying_player = airport.occupying_player;
@@ -62,7 +62,7 @@ export class Airport implements AirportType {
 
   private updateIsNearbyAndAvailable() {
     this.isNearbyAndAvailable$.next(
-      this.isClosest && this.distance < NEARBY_AIRPORT_DISTANCE && !this.occupying_player
+      this.isClosest && this.distance < CONFIG.AIRPORT_MAXIMUM_DISTANCE_TO_LAND && !this.occupying_player
     );
   }
 }
