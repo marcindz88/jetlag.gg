@@ -359,7 +359,7 @@ class GameSession:
         while True:
             self.remove_expired_shipments()
             time.sleep(0.2)
-            if random_with_probability(0.045):
+            if random_with_probability(0.085):
                 self.add_random_airport_shipment()
 
     def manage_bots(self):
@@ -420,7 +420,11 @@ class GameSession:
 
             try:
                 logging.info("bot landing attempt %s %s", player.id, player.nickname)
-                self.handle_airport_landing(player=player, airport=destination_airport)
+                try:
+                    self.handle_airport_landing(player=player, airport=destination_airport)
+                except AirportFull as e:
+                    if destination_airport.occupying_player != player:
+                        raise e
                 logging.info("bot landed %s %s", player.id, player.nickname)
 
                 if player.shipment:
