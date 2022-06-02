@@ -5,7 +5,7 @@
     padding: 0 10px;
   }
 
-  & ::ng-deep table {
+  ::ng-deep table {
     border-spacing: 0;
 
     tr {
@@ -15,6 +15,7 @@
 
       td:last-of-type {
         padding-right: 6px;
+        text-align: right;
       }
     }
 
@@ -22,6 +23,4 @@
       background-color: rgb(0 0 0 / 40%);
     }
   }
-
 }
-

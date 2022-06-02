@@ -8,14 +8,16 @@
 <ng-template #player_row let-player="data">
   <tr>
     <td class="status">
-      <span class="material-symbols-outlined" [class.material-symbols-outlined--filled]="player.connected">circle</span>
+      <span class="icon icon--strong" [class.icon--filled]="player.connected">circle</span>
     </td>
     <td>
-      <span *ngIf="player.isFocused; else notInFocus" class="material-symbols-outlined">center_focus_weak</span>
-      <ng-template #notInFocus><span class="material-symbols-outlined"> crop_free </span></ng-template>
+      <span *ngIf="player.isFocused; else notInFocus" class="icon">center_focus_weak</span>
+      <ng-template #notInFocus><span class="icon"> crop_free </span></ng-template>
     </td>
     <td class="nickname">
-      {{ player.nickname }}<span *ngIf="player.isBot" class="nickname__bot material-symbols-outlined"> smart_toy </span>
+      <span> {{ player.nickname }}</span>
+      <span *ngIf="player.isBot" class="icon icon--ml"> smart_toy </span>
+      <span *ngIf="player.shipment" class="icon icon--ml"> inventory_2 </span>
     </td>
     <td class="score">{{ player.score }}$</td>
   </tr>
