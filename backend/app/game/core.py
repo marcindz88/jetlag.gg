@@ -692,15 +692,15 @@ class GameSession:
             if shipment.valid_till + 3*1000 < timestamp_now():
                 shipments_to_remove.append(shipment)
         for shipment in shipments_to_remove:
-            self._shipments.pop(shipment.id)
+            self._shipments.pop(shipment.id, None)
             player: Player = self._players.get(shipment.player_id)
             if player:
                 player.shipment = None
                 player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
                 self.broadcast_event(event=player_updated_event)
-            else:
-                airport: Airport = self._airports.get(shipment.origin_id)
-                airport.shipments.pop(shipment.id)
+
+            airport: Airport = self._airports.get(shipment.origin_id)
+            if airport.shipments.pop(shipment.id, None):
                 airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
                 self.broadcast_event(event=airport_updated_event)
 
