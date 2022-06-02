@@ -9,6 +9,12 @@
       {
         "ignore": ["pseudo-classes"]
       }
+    ],
+    "selector-max-compound-selectors": [
+      5,
+      {
+        "ignore": ["pseudo-classes"]
+      }
     ]
   }
 }
