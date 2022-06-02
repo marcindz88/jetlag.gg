@@ -11,7 +11,6 @@ import { TextureModelsService } from './game-base/services/texture-models.servic
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  title = 'plane-game';
   loading$ = this.loaderService.loading$;
 
   constructor(
