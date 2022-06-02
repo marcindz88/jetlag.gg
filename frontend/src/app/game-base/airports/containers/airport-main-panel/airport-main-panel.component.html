@@ -5,7 +5,7 @@
     <h3 *ngIf="!airport.shipments.length as length; else shipments">There are no available packages at this airport</h3>
     <ng-template #shipments>
       <div class="packages-container__title">
-        <button *ngIf="airport.shipments.length > 3" class="material-symbols-outlined" (click)="goToPreviousPackage()">
+        <button *ngIf="airport.shipments.length > 3" class="icon icon--big" (click)="goToPreviousPackage()">
           chevron_left
         </button>
         <h3>
@@ -13,7 +13,7 @@
             >(You can't pick a package, as you already have {{ playerShipment.name }} on board)</span
           >
         </h3>
-        <button *ngIf="airport.shipments.length > 3" class="material-symbols-outlined" (click)="goToNextPackage()">
+        <button *ngIf="airport.shipments.length > 3" class="icon icon--big" (click)="goToNextPackage()">
           chevron_right
         </button>
       </div>
