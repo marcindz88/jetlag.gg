@@ -8,6 +8,7 @@ export type BasePlayer = {
 
 export type OtherPlayer = {
   connected: boolean;
+  color: string;
   position: PlanePosition;
   is_grounded: boolean;
   is_bot: boolean;
