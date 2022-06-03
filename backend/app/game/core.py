@@ -7,7 +7,7 @@ import uuid
 from typing import Optional, List
 
 from app.game.config import GameConfig
-from app.game.consts import AIRPORTS, BOT_NAMES
+from app.game.consts import AIRPORTS, BOT_NAMES, COLORS
 from app.game.coordinates import Coordinates
 from app.game.events import Event, EventType
 from app.game.exceptions import (
@@ -161,7 +161,7 @@ class PlayerPosition:
 
 class Player:
 
-    def __init__(self, nickname: str, bot: bool = False):
+    def __init__(self, nickname: str, color: str, bot: bool = False):
         self._id: uuid.UUID = uuid.uuid4()
         self._nickname: str = nickname
         self._token: str = uuid.uuid4().hex
@@ -172,6 +172,7 @@ class Player:
         self.score: int = 0
         self.is_bot: bool = bot
         self.shipment: Optional[Shipment] = None
+        self.color: str = color
 
     @property
     def id(self) -> uuid.UUID:
@@ -202,6 +203,7 @@ class Player:
         return {
             "id": self.id,
             "nickname": self.nickname,
+            "color": self.color,
             "connected": self.is_connected,
             "is_grounded": self.is_grounded,
             "is_bot": self.is_bot,
@@ -383,7 +385,7 @@ class GameSession:
     def increase_bot_count(self):
         nickname_set = set(BOT_NAMES) - set([self._players[p].nickname for p in self._bots.keys()])
         nickname = random.choice(list(nickname_set))
-        player = Player(nickname=nickname, bot=True)
+        player = Player(nickname=nickname, color=self._generate_player_color(), bot=True)
         self._players[player.id] = player
         event = Event(type=EventType.PLAYER_REGISTERED, data=player.serialized)
         self.broadcast_event(event=event)
@@ -569,6 +571,10 @@ class GameSession:
             raise PlayerNotFound
         return ws_session
 
+    def _generate_player_color(self):
+        available_colors = list(set(COLORS) - set([p.color for p in self._players.values()]))
+        return random.choice(available_colors)
+
     def add_player(self, nickname: str) -> Player:
         logging.info(f"add_player {nickname}")
         if len(self._players) >= self.config.MAX_PLAYERS:
@@ -576,7 +582,8 @@ class GameSession:
         for player in self._players.values():
             if player.nickname.lower().strip() == nickname.lower().strip():
                 raise PlayerInvalidNickname
-        player = Player(nickname=nickname)
+
+        player = Player(nickname=nickname, color=self._generate_player_color())
         self._players[player.id] = player
         event = Event(type=EventType.PLAYER_REGISTERED, data=player.serialized)
         self.broadcast_event(event=event, everyone_except=[player])

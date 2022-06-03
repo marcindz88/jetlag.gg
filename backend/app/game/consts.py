@@ -160,3 +160,23 @@ BOT_NAMES = [
     'Ernie',
     'Niles',
 ]
+
+COLORS = [
+    "#DCED31",
+    "#A8F9FF",
+    "#F2BB05",
+    "#FFFFFF",
+    "#FF3864",
+    "#F1D302",
+    "#C1292E",
+    "#FF101F",
+    "#94ECBE",
+    "#AEECEF",
+    "#01FDF6",
+    "#03FCBA",
+    "#FB5012",
+    "#3B60E4",
+    "#080708",
+    "#DCED31",
+    "#2c2b2b",
+]
