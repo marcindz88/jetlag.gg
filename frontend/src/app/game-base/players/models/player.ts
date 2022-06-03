@@ -1,6 +1,5 @@
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Shipment } from '@pg/game-base/airports/models/airport.types';
-import { getRandomColorFromNickname } from '@pg/game-base/utils/color-utils';
 import {
   calculateBearingFromDirectionAndRotation,
   calculatePositionAfterTimeInterval,
@@ -54,7 +53,7 @@ export class Player {
     this.isMyPlayer = isMyPlayer;
     this.isBot = player.is_bot;
     this.shipment = player.shipment;
-    this.color = new Color(getRandomColorFromNickname(this.nickname));
+    this.color = new Color(player.color);
 
     this.position = player.position;
   }
