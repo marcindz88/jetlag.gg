@@ -12,6 +12,7 @@ import { NgtSobaOrbitControlsModule } from '@angular-three/soba/controls';
 import { NgtSobaStarsModule } from '@angular-three/soba/staging';
 import { AirportsModule } from '@pg/game-base/airports/airports.module';
 import { EarthComponent } from '@pg/game-base/components/earth/earth.component';
+import { GameSceneComponent } from '@pg/game-base/containers/game-scene/game-scene.component';
 import { SharedModule } from '@shared/shared.module';
 
 import { GameMainComponent } from './containers/game-main/game-main.component';
@@ -20,7 +21,7 @@ import { PlayersModule } from './players/players.module';
 import { KeyboardControlsService } from './services/keyboard-controls.service';
 
 @NgModule({
-  declarations: [GameMainComponent, EarthComponent],
+  declarations: [GameMainComponent, GameSceneComponent, EarthComponent],
   imports: [
     CommonModule,
     GameBaseRoutingModule,
