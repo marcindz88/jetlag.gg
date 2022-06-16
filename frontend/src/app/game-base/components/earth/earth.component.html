@@ -2,10 +2,10 @@
   <ngt-sphere-geometry [args]="[EARTH_RADIUS, 64, 32]"> </ngt-sphere-geometry>
   <ngt-mesh-physical-material
     [map]="textures.map"
-    [roughnessMap]="textures.spec"
     [bumpMap]="textures.bump"
     [displacementMap]="textures.bump"
     [displacementScale]="0.8"
-    [clearcoat]="1">
+    [metalness]="0.6"
+    [reflectivity]="0">
   </ngt-mesh-physical-material>
 </ngt-mesh>

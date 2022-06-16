@@ -8,7 +8,7 @@ import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { CONFIG } from '@shared/services/config.service';
 import { take } from 'rxjs';
-import { PerspectiveCamera, RectAreaLight } from 'three';
+import { DirectionalLight, PerspectiveCamera } from 'three';
 
 import { KeyEventEnum } from '../../models/keyboard.types';
 import { KeyboardControlsService } from '../../services/keyboard-controls.service';
@@ -120,10 +120,10 @@ export class GameSceneComponent {
   private setupCameraLight() {
     this.ngtStore.camera$.pipe(take(1), untilDestroyed(this)).subscribe(camera => {
       this.camera = camera as PerspectiveCamera;
-      const light = new RectAreaLight('#d5c3a8', 200, 3, 3);
-      light.position.z = 25;
-      camera.add(light);
-      this.ngtStore.get(s => s.scene).add(camera);
+      const light = new DirectionalLight('#f0f4ff', 3);
+      light.position.z = 20;
+      this.camera.add(light);
+      this.ngtStore.get(s => s.scene).add(this.camera);
     });
   }
 }
