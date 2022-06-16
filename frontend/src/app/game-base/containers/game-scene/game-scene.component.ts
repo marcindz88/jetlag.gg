@@ -23,6 +23,7 @@ export class GameSceneComponent {
   readonly CameraModesEnum = CameraModesEnum;
   readonly CONFIG = CONFIG;
   readonly players = this.playersService.players;
+  readonly playersSorted$ = this.playersService.playersSorted$;
   readonly airports = this.airportsService.airports;
 
   camera?: PerspectiveCamera;
@@ -90,7 +91,7 @@ export class GameSceneComponent {
       return;
     }
 
-    const playerIds = Array.from(this.players.keys());
+    const playerIds = this.playersSorted$.value.map(player => player.id);
     const focusedPlayerIndex = playerIds.findIndex(playerId => playerId === this.focusedPlayerId);
 
     // Player not found (removed - set to my player)

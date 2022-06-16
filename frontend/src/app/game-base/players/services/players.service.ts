@@ -4,7 +4,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { ClockService } from '@shared/services/clock.service';
 import { MainWebsocketService } from '@shared/services/main-websocket.service';
-import { ReplaySubject } from 'rxjs';
+import { BehaviorSubject, ReplaySubject } from 'rxjs';
 
 import { Player } from '../models/player';
 import { OtherPlayer, PartialPlayerWithId, PlayerList } from '../models/player.types';
@@ -13,6 +13,7 @@ import { OtherPlayer, PartialPlayerWithId, PlayerList } from '../models/player.t
 @Injectable({ providedIn: 'root' })
 export class PlayersService {
   players = new Map<string, Player>();
+  playersSorted$ = new BehaviorSubject<Player[]>([]);
   myPlayer: Player | null = null;
   changed$ = new ReplaySubject<void>();
 
@@ -62,10 +63,15 @@ export class PlayersService {
 
   private savePlayersList(playersList: PlayerList, myUserId: string) {
     playersList.players.forEach(player => this.addPlayer(player, player.id === myUserId));
+    this.updateSortedPlayers();
   }
 
   updatePlayer(playerData: PartialPlayerWithId | OtherPlayer) {
     this.players.get(playerData.id)?.updatePlayer(playerData);
+
+    if (playerData.score) {
+      this.updateSortedPlayers();
+    }
   }
 
   addPlayer(player: OtherPlayer, isMyPlayer = false) {
@@ -77,6 +83,12 @@ export class PlayersService {
       if (isMyPlayer) {
         this.myPlayer = newPlayer;
       }
+
+      this.updateSortedPlayers();
     }
+  }
+
+  private updateSortedPlayers() {
+    this.playersSorted$.next(Array.from(this.players.values()).sort((a, b) => b.score - a.score));
   }
 }
