@@ -1,7 +1,7 @@
 <pg-table
-  [map]="players"
+  *ngIf="playersSorted$ | async as players"
+  [array]="players"
   [noRecordsText]="'No players in session'"
-  [sortBy]="'score'"
   [rowTemplate]="player_row"
   [updateTrigger$]="playersService.changed$">
 </pg-table>
