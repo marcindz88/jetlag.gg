@@ -11,7 +11,7 @@ import { PlayersService } from '../../services/players.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayersSummaryComponent {
-  players = this.playersService.players;
+  playersSorted$ = this.playersService.playersSorted$;
 
   constructor(public playersService: PlayersService) {}
 }
