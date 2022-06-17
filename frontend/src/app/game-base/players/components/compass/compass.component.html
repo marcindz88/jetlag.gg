@@ -1,9 +1,7 @@
 <div class="compass" *ngIf="_bearing">
   <div class="compass-moving" [style]="'transform: rotate(' + -_bearing + 'deg);'">
+    <img class="compass-moving__separators" src="assets/compass/compass_separators.svg" alt="" />
     <div class="compass-moving__arrow"></div>
-    <div class="compass-moving__separators">
-      <div *ngFor="let i; repeat: 180"></div>
-    </div>
     <div class="compass-moving__directions directions">
       <div
         *ngFor="let direction of directions"
