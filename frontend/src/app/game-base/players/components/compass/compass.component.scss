@@ -6,10 +6,12 @@
 
 :host {
   align-items: center;
+  backface-visibility: hidden;
   border-radius: 50%;
   display: flex;
   height: 280px;
   justify-content: center;
+  transform-style: preserve-3d;
   width: 280px;
 }
 
@@ -30,32 +32,12 @@
   }
 
   &__separators {
-    div {
-      &::after {
-        background: var(--accent-color);
-        border-radius: 5%;
-        content: ' ';
-        display: block;
-        height: 0.4px;
-        left: 80px;
-        position: absolute;
-        top: 0;
-        width: 16px;
-      }
-
-      &:nth-of-type(15n + 1)::after {
-        border: var(--accent-color) solid 0.22px;
-        border-left: 0;
-        border-right: 0;
-        right: -0.8px;
-      }
-
-      @for $i from 1 through 180 {
-        &:nth-of-type(#{$i}) {
-          transform: rotate(($i * 2deg) - 2deg);
-        }
-      }
-    }
+    height: 192px;
+    left: -96px;
+    position: absolute;
+    top: -96px;
+    transform: translate3d(0, 0, 0);
+    width: 192px;
   }
 }
 

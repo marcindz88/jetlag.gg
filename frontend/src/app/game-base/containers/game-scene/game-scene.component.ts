@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { NgtStore } from '@angular-three/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Airport } from '@pg/game-base/airports/models/airport';
@@ -6,6 +7,7 @@ import { AirportsService } from '@pg/game-base/airports/services/airports.servic
 import { CameraModesEnum } from '@pg/game-base/models/gane.enums';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
+import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { CONFIG } from '@shared/services/config.service';
 import { take } from 'rxjs';
 import { DirectionalLight, PerspectiveCamera } from 'three';
@@ -36,11 +38,13 @@ export class GameSceneComponent {
     private playersService: PlayersService,
     private airportsService: AirportsService,
     private cdr: ChangeDetectorRef,
-    private ngtStore: NgtStore
+    private ngtStore: NgtStore,
+    private matSnackbar: MatSnackBar
   ) {
     this.setupAirportsChanges();
     this.setupPlayersChanges();
     this.setupCameraLight();
+    this.showHelpInfo();
   }
 
   trackById(index: number, object: Player | Airport) {
@@ -77,7 +81,9 @@ export class GameSceneComponent {
   }
 
   private setupCameraControls() {
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.PLAYER_FOCUS, this, this.switchCameraFocus.bind(this));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.PLAYER_FOCUS_NEXT, this, () => this.switchCameraFocus(1));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.PLAYER_FOCUS_PREV, this, () => this.switchCameraFocus(-1));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.PLAYER_SELF_FOCUS, this, this.focusOnMyPlayer.bind(this));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.CAMERA, this, this.switchCameraMode.bind(this));
   }
 
@@ -85,7 +91,7 @@ export class GameSceneComponent {
     this.focusedPlayerId = this.myPlayer!.id;
   }
 
-  private switchCameraFocus() {
+  private switchCameraFocus(change: number) {
     if (!this.focusedPlayerId) {
       this.focusOnMyPlayer();
       return;
@@ -100,14 +106,22 @@ export class GameSceneComponent {
       return;
     }
 
-    // Next player available move to next
-    if (focusedPlayerIndex + 1 < playerIds.length) {
-      this.focusedPlayerId = playerIds[focusedPlayerIndex + 1];
+    const newIndex = focusedPlayerIndex + change;
+
+    if (newIndex >= playerIds.length) {
+      // Last player -> jump to first
+      this.focusedPlayerId = playerIds[0];
       return;
     }
 
-    // Last player -> jump to first
-    this.focusedPlayerId = playerIds[0];
+    if (newIndex < 0) {
+      // First player and go back (negative index)
+      this.focusedPlayerId = playerIds.pop()!;
+      return;
+    }
+
+    // Correct new index
+    this.focusedPlayerId = playerIds[newIndex];
   }
 
   private switchCameraMode() {
@@ -123,8 +137,16 @@ export class GameSceneComponent {
       this.camera = camera as PerspectiveCamera;
       const light = new DirectionalLight('#f0f4ff', 3);
       light.position.z = 20;
+      light.position.y = 10;
       this.camera.add(light);
       this.ngtStore.get(s => s.scene).add(this.camera);
+    });
+  }
+
+  private showHelpInfo() {
+    this.matSnackbar.openFromComponent(NotificationComponent, {
+      data: { text: 'You can access help and steering info by pressing [H]', icon: 'info' },
+      duration: 3000,
     });
   }
 }

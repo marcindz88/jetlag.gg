@@ -21,7 +21,9 @@ export class KeyboardControlsService {
     this.handleKeyEvent(KeyEventEnum.TURN_RIGHT, ['d', 'D', 'ArrowRight', 'Right'], 100);
 
     // Ordinary slow events
-    this.handleKeyEvent(KeyEventEnum.PLAYER_FOCUS, ['v', 'V']);
+    this.handleKeyEvent(KeyEventEnum.PLAYER_FOCUS_PREV, ['<', ',']);
+    this.handleKeyEvent(KeyEventEnum.PLAYER_FOCUS_NEXT, ['>', '.']);
+    this.handleKeyEvent(KeyEventEnum.PLAYER_SELF_FOCUS, ['m', 'M']);
     this.handleKeyEvent(KeyEventEnum.CAMERA, ['c', 'C']);
     this.handleKeyEvent(KeyEventEnum.LAND_OR_TAKE_OFF, ['f', 'F']);
     this.handleKeyEvent(KeyEventEnum.ENTER, ['Enter']);
