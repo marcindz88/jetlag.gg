@@ -4,23 +4,20 @@
       class="player-cockpit__airports"
       [airportList]="airportList"
       [updateTrigger$]="airportsUpdateTrigger$"></pg-nearby-airports>
+    <p class="player-cockpit__velocity">{{ position.velocity | number: '7.0-0' }} km/h</p>
     <pg-card class="player-cockpit__stats">
       <table>
-        <tr>
-          <td>Velocity:</td>
-          <td>{{ player.velocity }} km/h</td>
-        </tr>
         <tr>
           <td>Bearing:</td>
           <td>{{ position.bearing | number: '2.2-2' }} deg</td>
         </tr>
         <tr>
           <td>Latitude:</td>
-          <td>{{ position.coordinates.lat | number: '2.5-5' }} deg</td>
+          <td>{{ position.coordinates.lat | number: '2.3-3' }} deg</td>
         </tr>
         <tr>
           <td>Longitude:</td>
-          <td>{{ position.coordinates.lon | number: '2.5-5' }} deg</td>
+          <td>{{ position.coordinates.lon | number: '2.3-3' }} deg</td>
         </tr>
       </table>
     </pg-card>
