@@ -1,0 +1,16 @@
+<button class="button" (click)="startElapsing()" [disabled]="isElapsing || disabled">
+  <div class="button__content content">
+    <ng-container *ngIf="!isElapsing; else elapsing">
+      <ng-content></ng-content>
+    </ng-container>
+    <ng-template #elapsing
+      ><span>{{ config.elapsingText }}</span>
+      <span *ngIf="config.showPercentage" class="content__percentage"
+        >{{ currentProgress | number: '1.0-0' }}%</span
+      ></ng-template
+    >
+  </div>
+  <div
+    class="button__background-loader"
+    [style]="'width: ' + currentProgress + '%; transition: width ' + step + 'ms linear;'"></div>
+</button>

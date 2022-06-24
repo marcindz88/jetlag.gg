@@ -1,12 +1,14 @@
 button {
   background-color: var(--accent-color);
   border: 0;
+  color: var(--button-text-color);
   cursor: pointer;
   padding: 10px;
   width: 100%;
 
   &:disabled {
     background-color: var(--accent-darker-color);
+    color: var(--button-text-color);
     cursor: not-allowed;
   }
 

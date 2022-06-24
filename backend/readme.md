@@ -83,6 +83,16 @@ sample:
 player has to carry a shipment and be grounded on the destination airport of the shipment.
 
 
+* 'airport.refueling_start_request'<br>
+sample:
+> ws.send(JSON.stringify({type: 'airport.refueling_start_request', created: new Date().getTime(), data: {}}))
+
+
+* 'airport.refueling_end_request'<br>
+sample:
+> ws.send(JSON.stringify({type: 'airport.refueling_end_request', created: new Date().getTime(), data: {}}))
+
+
 ### Clock synchronisation
 > GET /clock/ (websocket)
 

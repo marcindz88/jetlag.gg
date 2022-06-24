@@ -146,7 +146,7 @@ export class GameSceneComponent {
   private showHelpInfo() {
     this.matSnackbar.openFromComponent(NotificationComponent, {
       data: { text: 'You can access help and steering info by pressing [H]', icon: 'info' },
-      duration: 3000,
+      duration: 5000,
     });
   }
 }
