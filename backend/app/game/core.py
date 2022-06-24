@@ -106,7 +106,7 @@ class Shipment:
 class PlayerPosition:
     coordinates: Coordinates
     bearing: float
-    velocity: int
+    velocity: int  # km/h
     timestamp: int
 
     def __init__(
@@ -115,14 +115,16 @@ class PlayerPosition:
         bearing: float,
         velocity: int,
         timestamp: int,
+        tank_level: float = GameConfig.FUEL_TANK_SIZE,
     ):
         self.coordinates = coordinates
         self.bearing = bearing
         self.velocity = velocity
         self.timestamp = timestamp
+        self.tank_level = tank_level
 
     def future_position(self, timestamp_delta: int, calculate_bearing: bool = False) -> "PlayerPosition":
-        distance_traveled = self.velocity * timestamp_delta / 3600000  # s = v*t, convert timestamp to hours
+        distance_traveled = self.velocity * timestamp_delta / 3_600_000  # s = v*t, convert timestamp to hours
         future_coordinates = self.coordinates.destination_coordinates(distance=distance_traveled, bearing=self.bearing)
         if calculate_bearing:
             bearing_diff = (Coordinates.bearing_between(future_coordinates, self.coordinates) - 180) % 360 - Coordinates.bearing_between(self.coordinates, future_coordinates)
@@ -130,11 +132,14 @@ class PlayerPosition:
         else:
             future_bearing = self.bearing
 
+        new_tank_level = self.tank_level - timestamp_delta * self.fuel_consumption / 3_600_000
+        new_tank_level = max(new_tank_level, 0)
         return PlayerPosition(
             coordinates=future_coordinates,
             bearing=future_bearing,
             velocity=self.velocity,
             timestamp=self.timestamp + timestamp_delta,
+            tank_level=new_tank_level,
         )
 
     @staticmethod
@@ -150,10 +155,34 @@ class PlayerPosition:
         )
 
     @property
+    def fuel_consumption(self) -> int:
+        # todo cleanup & simplify
+        # in liters per hour
+        max_velocity = GameConfig.MAX_VELOCITY
+        upper_limit = 15
+        lower_limit = 2
+
+        if self.velocity == 0:
+            return 0
+
+        scaled_down_velocity = (self.velocity / (max_velocity / (upper_limit - lower_limit))) + lower_limit
+
+        coefficient = 0.27
+        consumption = 2 ** (coefficient * scaled_down_velocity)
+
+        consumption = consumption * 100
+
+        # scaling to liters per hour
+        consumption = consumption * 60 * 60
+        return int(consumption)
+
+    @property
     def serialized(self) -> dict:
         return {
             "coordinates": self.coordinates.serialized,
             "velocity": self.velocity,
+            "fuel_consumption": self.fuel_consumption,
+            "tank_level": self.tank_level,
             "bearing": self.bearing,
             "timestamp": self.timestamp,
         }
