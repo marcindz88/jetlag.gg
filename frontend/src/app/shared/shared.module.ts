@@ -7,6 +7,7 @@ import { NgtSobaText3dModule } from '@angular-three/soba/abstractions';
 import { CardComponent } from '@shared/components/card/card.component';
 import { ElevatedTextComponent } from '@shared/components/elevated-text/elevated-text.component';
 import { LoaderComponent } from '@shared/components/loader/loader.component';
+import { LoadingButtonComponent } from '@shared/components/loading-button/loading-button.component';
 import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { notificationSnackbarConfigProvider } from '@shared/components/notification/notification-snackbar.config';
 import { TableComponent } from '@shared/components/table/table.component';
@@ -17,6 +18,7 @@ const EXPORTED_DECLARATIONS = [
   CardComponent,
   TableComponent,
   LoaderComponent,
+  LoadingButtonComponent,
   ElevatedTextComponent,
   RemainingTimePipe,
   NotificationComponent,

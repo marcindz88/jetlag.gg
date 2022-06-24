@@ -34,7 +34,15 @@
     </ng-template>
   </div>
   <div class="airport-main-panel__actions">
-    <button (click)="startFuelingProcedure()">Refuel [X]</button>
+    <pg-loading-button
+      (click)="startFuelingProcedure()"
+      [config]="{
+        elapsedTime: 2000,
+        totalTime: 30000,
+        elapsingText: 'Refuelling in progress...'
+      }"
+      >Refuel [X]</pg-loading-button
+    >
     <button (click)="startDepartureProcedure()">Take off [F]</button>
   </div>
 </pg-card>
