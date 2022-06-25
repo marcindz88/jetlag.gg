@@ -5,6 +5,7 @@ import { BeforeRenderedObject } from '@pg/game-base/models/game.types';
 import { CameraModesEnum } from '@pg/game-base/models/gane.enums';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
+import { calculateAltitudeFromPosition } from '@pg/game-base/utils/geo-utils';
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
 import { Logger } from '@shared/services/logger.service';
@@ -77,6 +78,26 @@ export class PlaneComponent implements OnInit {
   }
 
   private movePlane(plane: Object3D, delta: number) {
+    if (this.player.isCrashed) {
+      return;
+    }
+
+    if (this.player.isCrashing) {
+      plane.rotateY(degToRad(3));
+      plane.rotateX(degToRad(0.5));
+      plane.rotateZ(degToRad(0.2));
+      plane.translateY(0.01);
+
+      const newPosition = plane.position.multiplyScalar(0.9999).clone();
+      plane.position.set(newPosition.x, newPosition.y, newPosition.z);
+
+      if (calculateAltitudeFromPosition(newPosition) <= 0) {
+        this.player.endCrashingPlane();
+      }
+
+      return;
+    }
+
     if (this.player.velocity) {
       // Suspected inactivity
       if (delta > 0.18) {

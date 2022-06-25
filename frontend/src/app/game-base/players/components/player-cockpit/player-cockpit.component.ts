@@ -82,7 +82,7 @@ export class PlayerCockpitComponent implements OnInit {
     timer(0, 250)
       .pipe(
         untilDestroyed(this),
-        skipWhile(() => this.player.isGrounded),
+        skipWhile(() => this.player.isGrounded || this.player.isCrashed),
         map(() => this.player.position)
       )
       .subscribe(position => {

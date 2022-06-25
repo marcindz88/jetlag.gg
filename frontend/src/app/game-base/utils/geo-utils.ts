@@ -117,3 +117,9 @@ export const calculateDistanceBetweenPoints = (point1: GeoLocationPoint, point2:
 
   return CONFIG.EARTH_RADIUS * c; // km
 };
+
+export const calculateAltitudeFromPosition = (position: Vector3): number => {
+  return (
+    Math.sqrt(Math.pow(position.x, 2) + Math.pow(position.y, 2) + Math.pow(position.z, 2)) - CONFIG.EARTH_RADIUS_SCALED
+  );
+};

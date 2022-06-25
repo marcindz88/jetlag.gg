@@ -29,8 +29,11 @@ export class Player {
   isGrounded = false;
   isMyPlayer = false;
   isBot = false;
+  isCrashing = false;
+  isCrashed = false;
   shipment: null | Shipment = null;
   shipmentTimeoutHandler?: number;
+  lastPosition!: PlanePosition;
 
   planeObject?: Object3D;
   cartesianPosition!: Vector3;
@@ -70,32 +73,35 @@ export class Player {
       // Ignore position update if locally was updated before or messages came out of order
       return;
     }
-    const updatedPosition = calculatePositionAfterTimeInterval(
+    this.lastPosition = calculatePositionAfterTimeInterval(
       position,
       CONFIG.FLIGHT_ALTITUDE_SCALED,
       this.clockService.getCurrentTime()
     );
-    this.lastChangeTimestamp = updatedPosition.timestamp;
+    this.lastChangeTimestamp = this.lastPosition.timestamp;
 
-    this.cartesianPosition = transformCoordinatesIntoPoint(updatedPosition.coordinates, CONFIG.FLIGHT_ALTITUDE_SCALED);
-    this.cartesianRotation = transformPointAndDirectionIntoRotation(
-      updatedPosition.coordinates,
-      updatedPosition.bearing
+    this.cartesianPosition = transformCoordinatesIntoPoint(
+      this.lastPosition.coordinates,
+      CONFIG.FLIGHT_ALTITUDE_SCALED
     );
-    this.velocity = updatedPosition.velocity;
-    this.fuelConsumption = updatedPosition.fuel_consumption;
-    this.tankLevel = updatedPosition.tank_level;
+    this.cartesianRotation = transformPointAndDirectionIntoRotation(
+      this.lastPosition.coordinates,
+      this.lastPosition.bearing
+    );
+    this.velocity = this.lastPosition.velocity;
+    this.fuelConsumption = this.lastPosition.fuel_consumption;
+    this.tankLevel = this.lastPosition.tank_level;
   }
 
   get position(): PlanePosition {
     if (!this.planeObject) {
-      throw Error('Plane is not yet rendered cannot obtain position');
+      return this.lastPosition;
     }
     const timestamp = this.clockService.getCurrentTime();
     const position = this.planeObject.position.clone();
     const rotation = this.planeObject.rotation.clone();
 
-    return {
+    this.lastPosition = {
       timestamp,
       coordinates: transformPointIntoCoordinates(position),
       bearing: calculateBearingFromDirectionAndRotation(rotation),
@@ -103,6 +109,7 @@ export class Player {
       fuel_consumption: this.fuelConsumption,
       tank_level: this.updateTankLevel(timestamp),
     };
+    return this.lastPosition;
   }
 
   set tankLevel(tankLevel: number) {
@@ -145,6 +152,16 @@ export class Player {
     }
   }
 
+  startCrashingPlane() {
+    this.isCrashing = true;
+  }
+
+  endCrashingPlane() {
+    this.isCrashed = true;
+    this.isCrashing = false;
+    // TODO end of game screen and handling
+  }
+
   private updateTankLevel(currentTimestamp: number): number {
     this.tankLevel = updateTankLevel(
       currentTimestamp,
@@ -162,8 +179,8 @@ export class Player {
     }
 
     const tankLevelPercentage = (this.lastTankLevel / CONFIG.FUEL_TANK_SIZE) * 100;
-    // Show notification if tank level below 10% and not on the airport
-    if (!this.isGrounded && tankLevelPercentage > 0 && tankLevelPercentage < 10 && !this.fuelSnackBarRef) {
+    // Show notification if tank level below 20% and not on the airport
+    if (!this.isGrounded && tankLevelPercentage > 0 && tankLevelPercentage < 20 && !this.fuelSnackBarRef) {
       this.fuelSnackBarRef = this.notificationService.openNotification(
         {
           text: 'You are running out of fuel, get to the nearest airport to refuel!!!',
@@ -182,6 +199,11 @@ export class Player {
     // Hide snackbar if tank is already empty or plane is grounded
     if ((!tankLevelPercentage || this.isGrounded) && this.fuelSnackBarRef) {
       this.fuelSnackBarRef.dismiss();
+
+      // TODO temporary until backend is prepared
+      if (!tankLevelPercentage) {
+        this.startCrashingPlane();
+      }
     }
   }
 
