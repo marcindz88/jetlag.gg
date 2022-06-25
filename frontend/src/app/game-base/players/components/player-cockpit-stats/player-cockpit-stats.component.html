@@ -14,7 +14,7 @@
     </tr>
     <tr>
       <td>Fuel consumption:</td>
-      <td>{{ position.fuel_consumption }} l/h</td>
+      <td>{{ position.fuel_consumption / 3600000 | number: '1.3-3' }} l/s</td>
     </tr>
     <tr>
       <td>Tank level:</td>
