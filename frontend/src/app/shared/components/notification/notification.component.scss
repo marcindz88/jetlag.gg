@@ -9,4 +9,12 @@
   & &__text {
     margin: 0;
   }
+
+  &--warn {
+    background-color: var(--warn-background-color);
+  }
+
+  &--error {
+    background-color: var(--error-background-color);
+  }
 }

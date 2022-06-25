@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
   defaultLoadingButtonConfig,
@@ -14,6 +14,9 @@ import { finalize, takeWhile, timer } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoadingButtonComponent {
+  @Output() started = new EventEmitter<void>();
+  @Output() finished = new EventEmitter<void>();
+
   @Input() disabled = false;
 
   @Input() set config(config: Partial<LoadingButtonConfig>) {
@@ -40,6 +43,7 @@ export class LoadingButtonComponent {
 
   startElapsing() {
     if (!this.disabled && this.elapsedTime < this.config.totalTime) {
+      this.started.emit();
       this.isElapsing = true;
 
       timer(0, this.step)
@@ -58,6 +62,7 @@ export class LoadingButtonComponent {
           if (this.elapsedTime > this.config.totalTime) {
             this.elapsedTime = this.config.totalTime;
             this.currentProgress = 100;
+            this.finished.emit();
           }
 
           this.cdr.markForCheck();

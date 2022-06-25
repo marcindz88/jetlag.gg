@@ -1,5 +1,6 @@
 import { GeoLocationPoint } from '@pg/game-base/models/game.types';
 import { PlanePosition } from '@pg/game-base/players/models/player.types';
+import { updateTankLevel } from '@pg/game-base/utils/fuel-utils';
 import { CONFIG } from '@shared/services/config.service';
 import { Euler, Spherical, Vector3 } from 'three';
 import { degToRad, radToDeg } from 'three/src/math/MathUtils';
@@ -66,8 +67,9 @@ export const calculatePositionAfterTimeInterval = (
   if (currentTimestamp === position.timestamp) {
     return position;
   }
+  const timeDifferenceS = (currentTimestamp - position.timestamp) / 1000;
 
-  const distance = (position.velocity * CONFIG.MAP_SCALE * (currentTimestamp - position.timestamp)) / 3600000;
+  const distance = (position.velocity * CONFIG.MAP_SCALE * timeDifferenceS) / 3600;
 
   const r = CONFIG.EARTH_RADIUS_SCALED + altitude;
   const bearing = degToRad(position.bearing);
@@ -92,10 +94,11 @@ export const calculatePositionAfterTimeInterval = (
   );
 
   return {
+    ...position,
     coordinates: newPosition,
     bearing: newBearing,
-    velocity: position.velocity,
     timestamp: currentTimestamp,
+    tank_level: updateTankLevel(currentTimestamp, position.timestamp, position.tank_level, position.fuel_consumption),
   };
 };
 

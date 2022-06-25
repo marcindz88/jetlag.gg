@@ -35,14 +35,15 @@
   </div>
   <div class="airport-main-panel__actions">
     <pg-loading-button
-      (click)="startFuelingProcedure()"
+      (started)="startFuelingProcedure()"
+      (finished)="finishFuelingProcedure()"
       [config]="{
-        elapsedTime: 2000,
-        totalTime: 30000,
+        currentProgress: playerTankLevel / CONFIG.FUEL_TANK_SIZE,
+        totalTime: CONFIG.REFUELLING_FULL_TIME,
         elapsingText: 'Refuelling in progress...'
       }"
       >Refuel [X]</pg-loading-button
     >
-    <button (click)="startDepartureProcedure()">Take off [F]</button>
+    <button [disabled]="isRefuelling" (click)="startDepartureProcedure()">Take off [F]</button>
   </div>
 </pg-card>

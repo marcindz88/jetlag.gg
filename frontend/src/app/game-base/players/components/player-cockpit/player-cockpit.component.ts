@@ -9,7 +9,7 @@ import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { KeyboardControlsService } from '@pg/game-base/services/keyboard-controls.service';
 import { arePointsEqual } from '@pg/game-base/utils/geo-utils';
 import { CONFIG } from '@shared/services/config.service';
-import { ReplaySubject, timer } from 'rxjs';
+import { ReplaySubject, skipWhile, timer } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -80,7 +80,10 @@ export class PlayerCockpitComponent implements OnInit {
 
   private setUpdatePositionAndAirportsHandler() {
     timer(0, 250)
-      .pipe(untilDestroyed(this))
+      .pipe(
+        untilDestroyed(this),
+        skipWhile(() => this.player.isGrounded)
+      )
       .subscribe(() => {
         const newPosition = this.player.position;
         if (!this.position || !arePointsEqual(this.position?.coordinates, newPosition.coordinates)) {

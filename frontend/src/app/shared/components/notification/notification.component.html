@@ -1,4 +1,7 @@
-<pg-card class="notification">
+<pg-card
+  class="notification"
+  [class.notification--warn]="data.style === 'warn'"
+  [class.notification--error]="data.style === 'error'">
   <span class="icon icon--medium icon--mr" *ngIf="data.icon as icon">{{ icon }}</span>
   <p class="notification__text" *ngIf="data.text as text" [innerHTML]="text"></p>
 </pg-card>

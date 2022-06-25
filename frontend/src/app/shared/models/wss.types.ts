@@ -51,4 +51,6 @@ export enum ClientMessageTypeEnum {
   AIRPORT_DEPARTURE_REQUEST = 'airport.departure_request',
   AIRPORT_SHIPMENT_DISPATCH_REQUEST = 'airport.shipment_dispatch_request',
   AIRPORT_SHIPMENT_DELIVERY_REQUEST = 'airport.shipment_delivery_request',
+  AIRPORT_REFUELLING_START_REQUEST = 'airport.refueling_start_request',
+  AIRPORT_REFUELLING_END_REQUEST = 'airport.refueling_end_request',
 }

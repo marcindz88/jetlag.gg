@@ -1,28 +1,4 @@
 .player-cockpit {
-  & &__stats {
-    bottom: 0;
-    height: min-content;
-    left: 0;
-    padding: 10px;
-    position: absolute;
-    width: max-content;
-
-    p {
-      margin-top: 0;
-    }
-
-    td {
-      padding-right: 10px;
-      text-align: left;
-
-      &:last-of-type {
-        padding-right: 0;
-        text-align: right;
-        width: 80px;
-      }
-    }
-  }
-
   & &__velocity {
     color: var(--card-text-color);
     font-family: Orbitron, sans-serif;
@@ -38,6 +14,12 @@
     top: 20px;
     user-select: none;
     width: 200px;
+  }
+
+  & &__stats {
+    bottom: 0;
+    left: 0;
+    position: absolute;
   }
 
   & &__compass {

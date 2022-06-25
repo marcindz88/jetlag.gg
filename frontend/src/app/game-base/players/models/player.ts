@@ -1,5 +1,6 @@
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { Shipment } from '@pg/game-base/airports/models/airport.types';
+import { updateTankLevel } from '@pg/game-base/utils/fuel-utils';
 import {
   calculateBearingFromDirectionAndRotation,
   calculatePositionAfterTimeInterval,
@@ -10,7 +11,7 @@ import {
 import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
-import { Subject } from 'rxjs';
+import { Subject, take } from 'rxjs';
 import { Color, Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
@@ -34,10 +35,15 @@ export class Player {
   cartesianPosition!: Vector3;
   cartesianRotation!: Euler;
 
-  velocity!: number;
-  lastChangeTimestamp: number | null = null;
-
   flightParametersChanged$ = new Subject<void>();
+
+  velocity!: number;
+  lastTankLevel!: number;
+
+  private fuelConsumption!: number;
+  private lastTankUpdateTimestamp: number = this.clockService.getCurrentTime();
+  private lastChangeTimestamp: number | null = null;
+  private fuelSnackBarRef?: MatSnackBarRef<NotificationComponent>;
 
   constructor(
     player: OtherPlayer,
@@ -68,6 +74,7 @@ export class Player {
       CONFIG.FLIGHT_ALTITUDE_SCALED,
       this.clockService.getCurrentTime()
     );
+    this.lastChangeTimestamp = updatedPosition.timestamp;
 
     this.cartesianPosition = transformCoordinatesIntoPoint(updatedPosition.coordinates, CONFIG.FLIGHT_ALTITUDE_SCALED);
     this.cartesianRotation = transformPointAndDirectionIntoRotation(
@@ -75,6 +82,8 @@ export class Player {
       updatedPosition.bearing
     );
     this.velocity = updatedPosition.velocity;
+    this.fuelConsumption = updatedPosition.fuel_consumption;
+    this.tankLevel = updatedPosition.tank_level;
   }
 
   get position(): PlanePosition {
@@ -85,11 +94,20 @@ export class Player {
     const position = this.planeObject.position.clone();
     const rotation = this.planeObject.rotation.clone();
 
-    const coordinates = transformPointIntoCoordinates(position);
-    const velocity = this.velocity;
-    const bearing = calculateBearingFromDirectionAndRotation(rotation);
+    return {
+      timestamp,
+      coordinates: transformPointIntoCoordinates(position),
+      bearing: calculateBearingFromDirectionAndRotation(rotation),
+      velocity: this.velocity,
+      fuel_consumption: this.fuelConsumption,
+      tank_level: this.updateTankLevel(timestamp),
+    };
+  }
 
-    return { coordinates, bearing, velocity, timestamp };
+  set tankLevel(tankLevel: number) {
+    this.lastTankLevel = tankLevel;
+    this.lastTankUpdateTimestamp = this.clockService.getCurrentTime();
+    this.handleTankLevelNotification();
   }
 
   updatePlayer(playerData: PartialPlayerData) {
@@ -126,6 +144,41 @@ export class Player {
     }
   }
 
+  private updateTankLevel(currentTimestamp: number): number {
+    this.tankLevel = updateTankLevel(
+      currentTimestamp,
+      this.lastTankUpdateTimestamp,
+      this.lastTankLevel,
+      this.fuelConsumption
+    );
+    return this.lastTankLevel;
+  }
+
+  private handleTankLevelNotification() {
+    const tankLevelPercentage = (this.lastTankLevel / CONFIG.FUEL_TANK_SIZE) * 100;
+    // Show notification if tank level below 10% and not on the airport
+    if (tankLevelPercentage > 0 && tankLevelPercentage < 10 && !this.fuelSnackBarRef && !this.isGrounded) {
+      this.fuelSnackBarRef = this.matSnackBar.openFromComponent(NotificationComponent, {
+        data: {
+          text: 'You are running out of fuel, get to the nearest airport to refuel!!!',
+          icon: 'warning',
+          style: 'warn',
+        },
+        duration: 0,
+      });
+      this.fuelSnackBarRef
+        .afterDismissed()
+        .pipe(take(1))
+        .subscribe(() => (this.fuelSnackBarRef = undefined));
+      return;
+    }
+
+    // Hide snackbar if tank is already empty
+    if (!tankLevelPercentage && this.fuelSnackBarRef) {
+      this.fuelSnackBarRef.dismiss();
+    }
+  }
+
   private setShipmentExpirationHandler() {
     if (!this.isMyPlayer) {
       return;
@@ -147,7 +200,11 @@ export class Player {
 
   private showShipmentExpiredMessage() {
     this.matSnackBar.openFromComponent(NotificationComponent, {
-      data: { text: `Your shipment containing ${this.shipment!.name} has expired`, icon: 'running_with_errors' },
+      data: {
+        text: `Your shipment containing ${this.shipment!.name} has expired`,
+        icon: 'running_with_errors',
+        style: 'error',
+      },
     });
     this.shipment = null;
   }

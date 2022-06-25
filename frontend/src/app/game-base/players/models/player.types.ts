@@ -29,6 +29,8 @@ export type PlanePosition = {
   bearing: number;
   velocity: number;
   timestamp: number;
+  tank_level: number;
+  fuel_consumption: number;
 };
 
 export type PlayerPositionUpdate = {

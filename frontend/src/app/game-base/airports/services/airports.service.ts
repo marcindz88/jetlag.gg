@@ -44,26 +44,31 @@ export class AirportsService {
   }
 
   requestLandingPermission(airportId: string) {
-    this.sendAirportRequest(airportId, ClientMessageTypeEnum.AIRPORT_LANDING_REQUEST);
+    this.sendAirportRequestWithId(airportId, ClientMessageTypeEnum.AIRPORT_LANDING_REQUEST);
   }
 
   requestDeparturePermission(airportId: string) {
-    this.sendAirportRequest(airportId, ClientMessageTypeEnum.AIRPORT_DEPARTURE_REQUEST);
+    this.sendAirportRequestWithId(airportId, ClientMessageTypeEnum.AIRPORT_DEPARTURE_REQUEST);
   }
 
   requestShipmentDispatch(shipmentId: string) {
-    this.sendAirportRequest(shipmentId, ClientMessageTypeEnum.AIRPORT_SHIPMENT_DISPATCH_REQUEST);
+    this.sendAirportRequestWithId(shipmentId, ClientMessageTypeEnum.AIRPORT_SHIPMENT_DISPATCH_REQUEST);
   }
 
-  requestShipmentDelivery() {
+  sendAirportRequest(
+    type:
+      | ClientMessageTypeEnum.AIRPORT_SHIPMENT_DELIVERY_REQUEST
+      | ClientMessageTypeEnum.AIRPORT_REFUELLING_START_REQUEST
+      | ClientMessageTypeEnum.AIRPORT_REFUELLING_END_REQUEST
+  ) {
     this.mainWebsocketService.sendWSSMessage({
-      type: ClientMessageTypeEnum.AIRPORT_SHIPMENT_DELIVERY_REQUEST,
+      type,
       created: this.clockService.getCurrentTime(),
       data: {},
     });
   }
 
-  private sendAirportRequest(
+  private sendAirportRequestWithId(
     id: string,
     type:
       | ClientMessageTypeEnum.AIRPORT_DEPARTURE_REQUEST
