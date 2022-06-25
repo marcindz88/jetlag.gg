@@ -1,4 +1,4 @@
-import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
+import { MatSnackBarRef } from '@angular/material/snack-bar';
 import { Shipment } from '@pg/game-base/airports/models/airport.types';
 import { updateTankLevel } from '@pg/game-base/utils/fuel-utils';
 import {
@@ -11,6 +11,7 @@ import {
 import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
+import { NotificationService } from '@shared/services/notification.service';
 import { Subject, take } from 'rxjs';
 import { Color, Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
@@ -49,7 +50,7 @@ export class Player {
     player: OtherPlayer,
     isMyPlayer: boolean,
     private clockService: ClockService,
-    private matSnackBar: MatSnackBar
+    private notificationService: NotificationService
   ) {
     this.id = player.id;
     this.nickname = player.nickname;
@@ -155,17 +156,22 @@ export class Player {
   }
 
   private handleTankLevelNotification() {
+    // Not my player -> no notification
+    if (!this.isMyPlayer) {
+      return;
+    }
+
     const tankLevelPercentage = (this.lastTankLevel / CONFIG.FUEL_TANK_SIZE) * 100;
     // Show notification if tank level below 10% and not on the airport
-    if (tankLevelPercentage > 0 && tankLevelPercentage < 10 && !this.fuelSnackBarRef && !this.isGrounded) {
-      this.fuelSnackBarRef = this.matSnackBar.openFromComponent(NotificationComponent, {
-        data: {
+    if (!this.isGrounded && tankLevelPercentage > 0 && tankLevelPercentage < 10 && !this.fuelSnackBarRef) {
+      this.fuelSnackBarRef = this.notificationService.openNotification(
+        {
           text: 'You are running out of fuel, get to the nearest airport to refuel!!!',
           icon: 'warning',
           style: 'warn',
         },
-        duration: 0,
-      });
+        { duration: 0 }
+      );
       this.fuelSnackBarRef
         .afterDismissed()
         .pipe(take(1))
@@ -173,8 +179,8 @@ export class Player {
       return;
     }
 
-    // Hide snackbar if tank is already empty
-    if (!tankLevelPercentage && this.fuelSnackBarRef) {
+    // Hide snackbar if tank is already empty or plane is grounded
+    if ((!tankLevelPercentage || this.isGrounded) && this.fuelSnackBarRef) {
       this.fuelSnackBarRef.dismiss();
     }
   }
@@ -199,12 +205,10 @@ export class Player {
   }
 
   private showShipmentExpiredMessage() {
-    this.matSnackBar.openFromComponent(NotificationComponent, {
-      data: {
-        text: `Your shipment containing ${this.shipment!.name} has expired`,
-        icon: 'running_with_errors',
-        style: 'error',
-      },
+    this.notificationService.openNotification({
+      text: `Your shipment containing ${this.shipment!.name} has expired`,
+      icon: 'running_with_errors',
+      style: 'error',
     });
     this.shipment = null;
   }

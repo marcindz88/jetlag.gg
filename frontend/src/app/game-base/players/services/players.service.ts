@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { ClockService } from '@shared/services/clock.service';
 import { MainWebsocketService } from '@shared/services/main-websocket.service';
+import { NotificationService } from '@shared/services/notification.service';
 import { BehaviorSubject, ReplaySubject } from 'rxjs';
 
 import { Player } from '../models/player';
@@ -20,7 +20,7 @@ export class PlayersService {
   constructor(
     private mainWebsocketService: MainWebsocketService,
     private clockService: ClockService,
-    private matSnackbar: MatSnackBar
+    private notificationService: NotificationService
   ) {}
 
   setPlayersUpdateHandler(userId: string) {
@@ -38,7 +38,7 @@ export class PlayersService {
           this.updatePlayer(playerMessage.data as OtherPlayer);
           break;
         case ServerMessageTypeEnum.PLAYER_REMOVED:
-          this.players.delete((playerMessage.data as OtherPlayer).id);
+          this.removePlayer(playerMessage.data as OtherPlayer);
           break;
       }
       this.changed$.next();
@@ -62,11 +62,11 @@ export class PlayersService {
   }
 
   private savePlayersList(playersList: PlayerList, myUserId: string) {
-    playersList.players.forEach(player => this.addPlayer(player, player.id === myUserId));
+    playersList.players.forEach(player => this.addPlayer(player, player.id === myUserId, true));
     this.updateSortedPlayers();
   }
 
-  updatePlayer(playerData: PartialPlayerWithId | OtherPlayer) {
+  private updatePlayer(playerData: PartialPlayerWithId | OtherPlayer) {
     this.players.get(playerData.id)?.updatePlayer(playerData);
 
     if (playerData.score) {
@@ -74,18 +74,39 @@ export class PlayersService {
     }
   }
 
-  addPlayer(player: OtherPlayer, isMyPlayer = false) {
+  private addPlayer(player: OtherPlayer, isMyPlayer = false, isInitial = false) {
     // If player has been already setup then don't override
     if (!this.players.get(player.id)) {
-      const newPlayer = new Player(player, isMyPlayer, this.clockService, this.matSnackbar);
+      const newPlayer = new Player(player, isMyPlayer, this.clockService, this.notificationService);
       this.players.set(player.id, newPlayer);
 
       if (isMyPlayer) {
         this.myPlayer = newPlayer;
+      } else if (!isInitial) {
+        this.notificationService.openNotification(
+          {
+            text: `${newPlayer.isBot ? 'Bot' : 'Player'} ${newPlayer.nickname} has just joined the game`,
+            icon: 'person_add',
+          },
+          { duration: 3000 }
+        );
       }
 
       this.updateSortedPlayers();
     }
+  }
+
+  private removePlayer(player: OtherPlayer) {
+    this.players.delete(player.id);
+    this.playersSorted$.next(this.playersSorted$.value.filter(p => p.id !== player.id));
+
+    this.notificationService.openNotification(
+      {
+        text: `${player.is_bot ? 'Bot' : 'Player'} ${player.nickname} has left the game`,
+        icon: 'person_off',
+      },
+      { duration: 3000 }
+    );
   }
 
   private updateSortedPlayers() {

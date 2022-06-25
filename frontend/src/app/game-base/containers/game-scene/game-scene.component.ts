@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { NgtStore } from '@angular-three/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Airport } from '@pg/game-base/airports/models/airport';
@@ -7,8 +6,8 @@ import { AirportsService } from '@pg/game-base/airports/services/airports.servic
 import { CameraModesEnum } from '@pg/game-base/models/gane.enums';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
-import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { CONFIG } from '@shared/services/config.service';
+import { NotificationService } from '@shared/services/notification.service';
 import { take } from 'rxjs';
 import { DirectionalLight, PerspectiveCamera } from 'three';
 
@@ -39,7 +38,7 @@ export class GameSceneComponent {
     private airportsService: AirportsService,
     private cdr: ChangeDetectorRef,
     private ngtStore: NgtStore,
-    private matSnackbar: MatSnackBar
+    private notificationService: NotificationService
   ) {
     this.setupAirportsChanges();
     this.setupPlayersChanges();
@@ -144,9 +143,9 @@ export class GameSceneComponent {
   }
 
   private showHelpInfo() {
-    this.matSnackbar.openFromComponent(NotificationComponent, {
-      data: { text: 'You can access help and steering info by pressing [H]', icon: 'info' },
-      duration: 5000,
+    this.notificationService.openNotification({
+      text: 'You can access help and steering info by pressing [H]',
+      icon: 'info',
     });
   }
 }

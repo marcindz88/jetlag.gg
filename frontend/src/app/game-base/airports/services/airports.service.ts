@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
-import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { ClockService } from '@shared/services/clock.service';
 import { MainWebsocketService } from '@shared/services/main-websocket.service';
+import { NotificationService } from '@shared/services/notification.service';
 import { ReplaySubject } from 'rxjs';
 
 import { Airport } from '../models/airport';
@@ -22,7 +21,7 @@ export class AirportsService {
     private mainWebsocketService: MainWebsocketService,
     private clockService: ClockService,
     private playersService: PlayersService,
-    private matSnackBar: MatSnackBar
+    private notificationService: NotificationService
   ) {}
 
   setAirportsUpdateHandler() {
@@ -91,8 +90,9 @@ export class AirportsService {
   }
 
   private handlePackageDeliveredSnackbar(shipment: Shipment) {
-    this.matSnackBar.openFromComponent(NotificationComponent, {
-      data: { text: `You have successfully delivered ${shipment.name} for ${shipment.award}$`, icon: 'redeem' },
+    this.notificationService.openNotification({
+      text: `You have successfully delivered ${shipment.name} for ${shipment.award}$`,
+      icon: 'redeem',
     });
   }
 }
