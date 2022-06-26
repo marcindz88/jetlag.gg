@@ -30,3 +30,8 @@ export const determineNewVelocity = (velocity: number, accelerate: boolean) => {
 export const isLowVelocity = (velocity: number) => {
   return velocity <= CONFIG.LOW_VELOCITY_THRESHOLD;
 };
+
+// timeDelta in s
+export const determineDisplacement = (velocity: number, timeDelta: number) => {
+  return (velocity / 3600) * CONFIG.MAP_SCALE * timeDelta;
+};

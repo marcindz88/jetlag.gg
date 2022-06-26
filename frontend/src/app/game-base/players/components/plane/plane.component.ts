@@ -6,6 +6,7 @@ import { CameraModesEnum } from '@pg/game-base/models/gane.enums';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { calculateAltitudeFromPosition } from '@pg/game-base/utils/geo-utils';
+import { determineDisplacement } from '@pg/game-base/utils/velocity-utils';
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
 import { Logger } from '@shared/services/logger.service';
@@ -83,13 +84,18 @@ export class PlaneComponent implements OnInit {
     }
 
     if (this.player.isCrashing) {
-      plane.rotateY(degToRad(3));
-      plane.rotateX(degToRad(0.5));
-      plane.rotateZ(degToRad(0.2));
-      plane.translateY(0.01);
+      const deltaMultiplier = delta / (1 / 60);
+      // Rotate
+      plane.rotateY(degToRad(3 * deltaMultiplier));
+      plane.rotateX(degToRad(0.5 * deltaMultiplier));
 
-      const newPosition = plane.position.multiplyScalar(0.9999).clone();
+      // Move closer to origin
+      const newPosition = plane.position.multiplyScalar(1 - 0.00015 * deltaMultiplier).clone();
       plane.position.set(newPosition.x, newPosition.y, newPosition.z);
+
+      // decrease velocity and move forward
+      this.player.velocity *= 1 - 0.01 * deltaMultiplier;
+      plane.translateY(determineDisplacement(this.player.velocity, delta));
 
       if (calculateAltitudeFromPosition(newPosition) <= 0) {
         this.player.endCrashingPlane();
@@ -108,7 +114,7 @@ export class PlaneComponent implements OnInit {
       const positionCopy = plane.position.clone();
 
       // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
-      const displacement = (this.player.velocity / 3600) * CONFIG.MAP_SCALE * delta; // delta in s convert to h
+      const displacement = determineDisplacement(this.player.velocity, delta); // delta in s convert to h
       plane.rotateX(degToRad((displacement / CONFIG.FLIGHT_MOVING_CIRCUMFERENCE) * 360));
       plane.translateY(displacement);
 
