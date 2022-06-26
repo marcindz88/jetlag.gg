@@ -10,6 +10,7 @@ import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { LoadingButtonComponent } from '@shared/components/loading-button/loading-button.component';
 import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { TableComponent } from '@shared/components/table/table.component';
+import { materialConfigProviders } from '@shared/constants/material-config';
 
 import { RemainingTimePipe } from './pipes/remaining-time.pipe';
 
@@ -27,5 +28,6 @@ const EXPORTED_DECLARATIONS = [
   imports: [CommonModule, HttpClientModule, NgtRepeatModule, NgtSobaText3dModule, MatSnackBarModule],
   declarations: [EXPORTED_DECLARATIONS],
   exports: [EXPORTED_DECLARATIONS, MatSnackBarModule],
+  providers: [materialConfigProviders],
 })
 export class SharedModule {}

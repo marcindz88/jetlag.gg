@@ -20,7 +20,6 @@ import { map, ReplaySubject, skipWhile, timer } from 'rxjs';
 })
 export class PlayerCockpitComponent implements OnInit {
   readonly player = this.playersService.myPlayer!;
-  readonly playersLeaderboard$ = this.playersService.playersLeaderboard$;
   readonly airports = this.airportsService.airports;
 
   position?: PlanePosition;

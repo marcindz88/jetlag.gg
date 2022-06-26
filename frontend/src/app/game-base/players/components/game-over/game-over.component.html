@@ -1,28 +1,24 @@
-<pg-card class="game-over" *ngIf="player?.crashData as crashData">
+<pg-card class="game-over" *ngIf="player?.deathCause as deathCause">
   <h1>Game Over</h1>
-  <h2 [ngSwitch]="crashData.cause">
-    <ng-template *ngSwitchCase="CrashCauseEnum.LACK_OF_FUEL"
-      >Your plane have crashed because of empty fuel tank</ng-template
-    >
-    <ng-template *ngSwitchCase="CrashCauseEnum.LOW_VELOCITY"
-      >Your plane have crashed because of too low velocity</ng-template
-    >
+  <h2 [ngSwitch]="deathCause">
+    <span *ngSwitchCase="DeathCauseEnum.RUN_OUT_OF_FUEL">Your plane have crashed because of empty fuel tank</span>
+    <span *ngSwitchCase="DeathCauseEnum.SPEED_TOO_LOW">Your plane have crashed because of too low velocity</span>
   </h2>
-  <h3>You scored {{ player!.score }}$ by delivering {{ crashData.packagesDelivered }} packages</h3>
-  <h4>Your place on the all time high leaderboard is {{ crashData.leaderboardPlace }}</h4>
+  <h3>You scored {{ player!.score }}$</h3>
+  <!--  <h4>Your place on the all time high leaderboard is {{ crashData.leaderboardPlace }}</h4>-->
   <div class="game-over__leaderboard">
-    <pg-table
-      *ngIf="playersLeaderboard"
-      [array]="playersLeaderboard"
-      [noRecordsText]="'No players have been added to the leaderboard yet.'"
-      [rowTemplate]="player_row">
-      <ng-template #player_row let-player="data">
-        <tr>
-          <td class="nickname">{{ player.nickname }}</td>
-          <td class="score">{{ player.score }}$</td>
-        </tr>
-      </ng-template>
-    </pg-table>
+    <!--    <pg-table-->
+    <!--      *ngIf="playersLeaderboard"-->
+    <!--      [array]="playersLeaderboard"-->
+    <!--      [noRecordsText]="'No players have been added to the leaderboard yet.'"-->
+    <!--      [rowTemplate]="player_row">-->
+    <!--      <ng-template #player_row let-player="data">-->
+    <!--        <tr>-->
+    <!--          <td class="nickname">{{ player.nickname }}</td>-->
+    <!--          <td class="score">{{ player.score }}$</td>-->
+    <!--        </tr>-->
+    <!--      </ng-template>-->
+    <!--    </pg-table>-->
   </div>
   <div class="game-over__actions">
     <button>Share your result</button>

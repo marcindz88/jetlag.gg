@@ -7,6 +7,7 @@ import { KeyEventEnum } from '@pg/game-base/models/keyboard.types';
 import { KeyboardControlsService } from '@pg/game-base/services/keyboard-controls.service';
 import { ClientMessageTypeEnum } from '@shared/models/wss.types';
 import { CONFIG } from '@shared/services/config.service';
+import { Subject } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -19,6 +20,7 @@ export class AirportMainPanelComponent implements OnInit {
   @Input() airport!: Airport;
   @Input() playerShipment: Shipment | null = null;
   @Input() playerTankLevel = 0;
+  @Input() playerScore = 0;
 
   selectedId: string | null = null;
   focusedId: string | null = null;
@@ -26,6 +28,8 @@ export class AirportMainPanelComponent implements OnInit {
   isRefuelling = false;
 
   readonly CONFIG = CONFIG;
+  readonly stopRefueling$ = this.airportsService.refuellingStopped$;
+  readonly toggleRefuelling$ = new Subject<void>();
 
   constructor(
     private keyboardControlsService: KeyboardControlsService,
@@ -123,6 +127,7 @@ export class AirportMainPanelComponent implements OnInit {
   private setKeyboardControls() {
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.RIGHT, this, this.goToNextPackage.bind(this));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LEFT, this, this.goToPreviousPackage.bind(this));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FUEL, this, () => this.toggleRefuelling$.next());
     this.keyboardControlsService.setupKeyEvent(
       KeyEventEnum.LAND_OR_TAKE_OFF,
       this,

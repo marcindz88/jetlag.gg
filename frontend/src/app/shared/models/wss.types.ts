@@ -43,6 +43,7 @@ export enum ServerMessageTypeEnum {
   AIRPORT_LIST = 'airport.list',
   AIRPORT_UPDATED = 'airport.updated',
   AIRPORT_SHIPMENT_DELIVERED = 'airport.shipment_delivered',
+  AIRPORT_REFUELLING_STOPPED = 'airport.refueling_stopped',
 }
 
 export enum ClientMessageTypeEnum {

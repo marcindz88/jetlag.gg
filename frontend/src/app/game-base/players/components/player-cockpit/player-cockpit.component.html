@@ -20,7 +20,8 @@
         class="player-cockpit__airport_panel"
         [airport]="airportList[0]"
         [playerShipment]="player.shipment"
-        [playerTankLevel]="player.lastTankLevel"></pg-airport-main-panel>
+        [playerTankLevel]="player.lastTankLevel"
+        [playerScore]="player.score"></pg-airport-main-panel>
     </ng-template>
   </div>
   <pg-help class="help-container" *ngIf="showHelp"></pg-help>
@@ -29,6 +30,5 @@
 <ng-template #gameOverScreen>
   <pg-game-over
     class="game-over-container"
-    [player]="player"
-    [playersLeaderboard]="playersLeaderboard$ | async"></pg-game-over>
+    [player]="player"></pg-game-over>
 </ng-template>

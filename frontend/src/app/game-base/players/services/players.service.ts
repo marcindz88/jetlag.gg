@@ -1,22 +1,20 @@
 import { Injectable } from '@angular/core';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { ClockService } from '@shared/services/clock.service';
 import { MainWebsocketService } from '@shared/services/main-websocket.service';
 import { NotificationService } from '@shared/services/notification.service';
-import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
+import { BehaviorSubject, ReplaySubject, Subject, takeUntil } from 'rxjs';
 
 import { Player } from '../models/player';
 import { OtherPlayer, PartialPlayerWithId, PlayerList } from '../models/player.types';
 
-@UntilDestroy()
 @Injectable({ providedIn: 'root' })
 export class PlayersService {
   players = new Map<string, Player>();
   playersSorted$ = new BehaviorSubject<Player[]>([]);
-  playersLeaderboard$ = new Observable<OtherPlayer[]>(); // TODO
   myPlayer: Player | null = null;
   changed$ = new ReplaySubject<void>();
+  reset$ = new Subject<void>();
 
   constructor(
     private mainWebsocketService: MainWebsocketService,
@@ -24,14 +22,22 @@ export class PlayersService {
     private notificationService: NotificationService
   ) {}
 
+  resetAll() {
+    this.players = new Map<string, Player>();
+    this.playersSorted$ = new BehaviorSubject<Player[]>([]);
+    this.myPlayer = null;
+    this.changed$ = new ReplaySubject<void>();
+    this.reset$.next();
+  }
+
   setPlayersUpdateHandler(userId: string) {
-    this.mainWebsocketService.playerMessages$.pipe(untilDestroyed(this)).subscribe(playerMessage => {
+    this.mainWebsocketService.playerMessages$.pipe(takeUntil(this.reset$)).subscribe(playerMessage => {
       switch (playerMessage.type) {
         case ServerMessageTypeEnum.PLAYER_LIST:
           this.savePlayersList(playerMessage.data as PlayerList, userId);
           break;
         case ServerMessageTypeEnum.PLAYER_REGISTERED:
-          this.addPlayer(playerMessage.data as OtherPlayer);
+          this.addPlayer(playerMessage.data as OtherPlayer, userId);
           break;
         case ServerMessageTypeEnum.PLAYER_CONNECTED:
         case ServerMessageTypeEnum.PLAYER_UPDATED:
@@ -45,7 +51,7 @@ export class PlayersService {
       this.changed$.next();
     });
 
-    this.mainWebsocketService.playerPositionMessages$.pipe(untilDestroyed(this)).subscribe(playerPositionMessage => {
+    this.mainWebsocketService.playerPositionMessages$.pipe(takeUntil(this.reset$)).subscribe(playerPositionMessage => {
       switch (playerPositionMessage.type) {
         case ServerMessageTypeEnum.PLAYER_POSITION_UPDATED:
           this.updatePlayer(playerPositionMessage.data);
@@ -63,7 +69,7 @@ export class PlayersService {
   }
 
   private savePlayersList(playersList: PlayerList, myUserId: string) {
-    playersList.players.forEach(player => this.addPlayer(player, player.id === myUserId, true));
+    playersList.players.forEach(player => this.addPlayer(player, myUserId, true));
     this.updateSortedPlayers();
   }
 
@@ -75,14 +81,17 @@ export class PlayersService {
     }
   }
 
-  private addPlayer(player: OtherPlayer, isMyPlayer = false, isInitial = false) {
+  private addPlayer(player: OtherPlayer, myUserId: string, isInitial = false) {
     // If player has been already setup then don't override
+    console.log(player, myUserId, isInitial);
     if (!this.players.get(player.id)) {
+      const isMyPlayer = myUserId === player.id;
       const newPlayer = new Player(player, isMyPlayer, this.clockService, this.notificationService);
       this.players.set(player.id, newPlayer);
 
       if (isMyPlayer) {
         this.myPlayer = newPlayer;
+        console.log('Added my player', this.myPlayer);
       } else if (!isInitial) {
         this.notificationService.openNotification(
           {

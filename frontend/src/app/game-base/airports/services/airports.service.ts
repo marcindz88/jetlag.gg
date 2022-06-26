@@ -1,21 +1,21 @@
 import { Injectable } from '@angular/core';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { ClockService } from '@shared/services/clock.service';
 import { MainWebsocketService } from '@shared/services/main-websocket.service';
 import { NotificationService } from '@shared/services/notification.service';
-import { ReplaySubject } from 'rxjs';
+import { ReplaySubject, Subject, takeUntil } from 'rxjs';
 
 import { Airport } from '../models/airport';
 import { AirportList, AirportUpdate, Shipment } from '../models/airport.types';
 
-@UntilDestroy()
 @Injectable({ providedIn: 'root' })
 export class AirportsService {
   airports = new Map<string, Airport>();
   listChanged$ = new ReplaySubject<void>();
   updated$ = new ReplaySubject<void>();
+  refuellingStopped$ = new Subject<void>();
+  reset$ = new Subject<void>();
 
   constructor(
     private mainWebsocketService: MainWebsocketService,
@@ -24,8 +24,16 @@ export class AirportsService {
     private notificationService: NotificationService
   ) {}
 
+  resetAll() {
+    this.airports = new Map<string, Airport>();
+    this.listChanged$ = new ReplaySubject<void>();
+    this.updated$ = new ReplaySubject<void>();
+    this.refuellingStopped$ = new Subject<void>();
+    this.reset$.next();
+  }
+
   setAirportsUpdateHandler() {
-    this.mainWebsocketService.airportMessages$.pipe(untilDestroyed(this)).subscribe(airportMessage => {
+    this.mainWebsocketService.airportMessages$.pipe(takeUntil(this.reset$)).subscribe(airportMessage => {
       switch (airportMessage.type) {
         case ServerMessageTypeEnum.AIRPORT_LIST:
           this.saveAirportList(airportMessage.data as AirportList);
@@ -36,6 +44,9 @@ export class AirportsService {
           break;
         case ServerMessageTypeEnum.AIRPORT_SHIPMENT_DELIVERED:
           this.handlePackageDeliveredSnackbar(airportMessage.data as Shipment);
+          break;
+        case ServerMessageTypeEnum.AIRPORT_REFUELLING_STOPPED:
+          this.refuellingStopped$.next();
           break;
       }
       this.updated$.next();

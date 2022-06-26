@@ -36,9 +36,11 @@ export class UserService {
     );
   }
 
-  resetUser() {
+  resetUser(): void {
     this.user$.next(null);
-    localStorage.removeItem(this.playerKey);
+    this.mainWebsocketService.closeGameWebsocket();
+    this.airportService.resetAll();
+    this.playersService.resetAll();
   }
 
   setUser(user: User) {

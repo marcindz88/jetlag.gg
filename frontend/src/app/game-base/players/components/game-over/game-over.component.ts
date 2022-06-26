@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { Router } from '@angular/router';
+import { UserService } from '@auth/services/user.service';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { Player } from '@pg/game-base/players/models/player';
-import { CrashCauseEnum, OtherPlayer } from '@pg/game-base/players/models/player.types';
-import { Logger } from '@shared/services/logger.service';
+import { DeathCauseEnum } from '@pg/game-base/players/models/player.types';
+import { ROUTES } from '@shared/constants/routes';
 
 @UntilDestroy()
 @Component({
@@ -13,12 +15,13 @@ import { Logger } from '@shared/services/logger.service';
 })
 export class GameOverComponent {
   @Input() player?: Player;
-  @Input() playersLeaderboard?: OtherPlayer[] | null;
 
-  readonly CrashCauseEnum = CrashCauseEnum;
+  readonly DeathCauseEnum = DeathCauseEnum;
 
-  restart() {
-    // TODO
-    Logger.error(GameOverComponent, 'TODO restarting the game');
+  constructor(private router: Router, private userService: UserService) {}
+
+  async restart() {
+    this.userService.resetUser();
+    await this.router.navigate(['/', ROUTES.login]);
   }
 }

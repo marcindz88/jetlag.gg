@@ -16,7 +16,7 @@ import { Subject, take } from 'rxjs';
 import { Color, Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
-import { CrashCauseEnum, CrashData, OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
+import { DeathCauseEnum, OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
 
 export class Player {
   readonly id: string;
@@ -31,7 +31,7 @@ export class Player {
   isBot = false;
   isCrashing = false;
   isCrashed = false;
-  crashData?: CrashData;
+  deathCause?: DeathCauseEnum;
 
   shipment: null | Shipment = null;
   shipmentTimeoutHandler?: number;
@@ -137,8 +137,9 @@ export class Player {
     if (playerData.position) {
       this.position = playerData.position;
     }
-    if (playerData.crash_data) {
-      this.crashData = playerData.crash_data;
+    if (playerData.death_cause) {
+      this.deathCause = playerData.death_cause;
+      this.startCrashingPlane();
     }
   }
 
@@ -171,12 +172,6 @@ export class Player {
   endCrashingPlane() {
     this.isCrashed = true;
     this.isCrashing = false;
-    // TODO temporary until backend is ready
-    this.crashData = {
-      cause: CrashCauseEnum.LACK_OF_FUEL,
-      leaderboardPlace: 2,
-      packagesDelivered: 5,
-    };
   }
 
   private updateTankLevel(currentTimestamp: number): number {
@@ -216,11 +211,6 @@ export class Player {
     // Hide snackbar if tank is already empty or plane is grounded
     if ((!tankLevelPercentage || this.isGrounded) && this.fuelSnackBarRef) {
       this.fuelSnackBarRef.dismiss();
-
-      // TODO temporary until backend is prepared
-      if (!tankLevelPercentage) {
-        this.startCrashingPlane();
-      }
     }
   }
 

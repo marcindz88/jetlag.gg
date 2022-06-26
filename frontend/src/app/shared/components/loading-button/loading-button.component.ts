@@ -1,10 +1,18 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
   defaultLoadingButtonConfig,
   LoadingButtonConfig,
 } from '@shared/components/loading-button/loading-button.types';
-import { finalize, takeWhile, timer } from 'rxjs';
+import { finalize, Subject, takeUntil, takeWhile, timer } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -13,11 +21,13 @@ import { finalize, takeWhile, timer } from 'rxjs';
   styleUrls: ['./loading-button.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoadingButtonComponent {
+export class LoadingButtonComponent implements OnInit {
   @Output() started = new EventEmitter<void>();
   @Output() finished = new EventEmitter<void>();
 
   @Input() disabled = false;
+  @Input() externalToggle$ = new Subject<void>();
+  @Input() stop$ = new Subject<void>();
 
   @Input() set config(config: Partial<LoadingButtonConfig>) {
     this.#config = { ...this.#config, ...config };
@@ -41,7 +51,11 @@ export class LoadingButtonComponent {
 
   constructor(private cdr: ChangeDetectorRef) {}
 
-  handleClicked() {
+  ngOnInit(): void {
+    this.externalToggle$.pipe(untilDestroyed(this)).subscribe(this.toggleLoading.bind(this));
+  }
+
+  toggleLoading() {
     if (this.isElapsing) {
       this.finished.emit();
       this.isElapsing = false;
@@ -56,6 +70,7 @@ export class LoadingButtonComponent {
           takeWhile(() => this.elapsedTime < this.config.totalTime),
           untilDestroyed(this),
           takeWhile(() => this.isElapsing),
+          takeUntil(this.stop$),
           finalize(() => {
             this.isElapsing = false;
             this.cdr.markForCheck();

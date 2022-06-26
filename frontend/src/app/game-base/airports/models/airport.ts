@@ -16,6 +16,7 @@ export class Airport implements AirportType {
   readonly description: string;
   readonly elevation: number;
   readonly coordinates: GeoLocationPoint;
+  readonly fuel_price: number;
   readonly changed$ = new Subject<void>();
   readonly isNearbyAndAvailable$ = new BehaviorSubject<boolean>(false);
 
@@ -33,6 +34,7 @@ export class Airport implements AirportType {
     this.description = airport.description;
     this.elevation = airport.elevation;
     this.coordinates = airport.coordinates;
+    this.fuel_price = airport.fuel_price;
     this.cartesianPosition = transformCoordinatesIntoPoint(
       airport.coordinates,
       0.5 + this.elevation * CONFIG.MAP_SCALE * 20 // due to increased displacement effect and not starting at 0
