@@ -57,7 +57,6 @@ export class LoadingButtonComponent implements OnInit {
 
   toggleLoading() {
     if (this.isElapsing) {
-      this.finished.emit();
       this.isElapsing = false;
       return;
     }
@@ -72,7 +71,7 @@ export class LoadingButtonComponent implements OnInit {
           takeWhile(() => this.isElapsing),
           takeUntil(this.stop$),
           finalize(() => {
-            this.isElapsing = false;
+            this.finished.emit();
             this.cdr.markForCheck();
           })
         )
@@ -83,7 +82,7 @@ export class LoadingButtonComponent implements OnInit {
           if (this.elapsedTime > this.config.totalTime) {
             this.elapsedTime = this.config.totalTime;
             this.currentProgress = 100;
-            this.finished.emit();
+            this.isElapsing = false;
           }
 
           this.cdr.markForCheck();
