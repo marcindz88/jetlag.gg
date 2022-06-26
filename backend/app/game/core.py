@@ -75,7 +75,7 @@ class Shipment:
             coord2=self._destination.coordinates,
         )
         random_factor = random.uniform(0.85, 1.15)
-        scaling = 100000
+        scaling = 150000
         return int(distance_between_endpoints / self.time_to_deliver * random_factor * scaling)
 
     @staticmethod
@@ -179,10 +179,10 @@ class PlayerPosition:
 
         scaled_down_velocity = (self.velocity / (max_velocity / (upper_limit - lower_limit))) + lower_limit
 
-        coefficient = 0.27
+        coefficient = 0.28
         consumption = 2 ** (coefficient * scaled_down_velocity)
 
-        consumption = consumption * 26
+        consumption = consumption * 43
 
         # scaling to liters per hour
         consumption = consumption * 60 * 60

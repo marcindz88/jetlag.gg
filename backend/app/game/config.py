@@ -12,7 +12,7 @@ class GameConfig:
     EARTH_RADIUS: float = 6371.0
     FLIGHT_ALTITUDE: float = 200.0
     FUEL_TANK_SIZE: int = 100_000  # 100k liters
-    REFUELING_RATE: float = 2500  # liters per second
+    REFUELING_RATE: float = 3500  # liters per second
 
     @staticmethod
     def serialized():
