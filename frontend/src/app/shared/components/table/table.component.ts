@@ -11,7 +11,7 @@ import { ReplaySubject } from 'rxjs';
 })
 export class TableComponent<T> implements OnInit {
   @Input() array?: T[];
-  @Input() updateTrigger$!: ReplaySubject<void>;
+  @Input() updateTrigger$?: ReplaySubject<void>;
   @Input() noRecordsText = '';
   @Input() rowTemplate: TemplateRef<{ data: T }> | null = null;
   @Input() headerTemplate: TemplateRef<Record<string, never>> | null = null;
@@ -19,7 +19,7 @@ export class TableComponent<T> implements OnInit {
   constructor(private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    this.updateTrigger$.pipe(untilDestroyed(this)).subscribe(() => {
+    this.updateTrigger$?.pipe(untilDestroyed(this)).subscribe(() => {
       this.cdr.markForCheck();
     });
   }

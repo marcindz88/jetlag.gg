@@ -16,7 +16,7 @@ import { Subject, take } from 'rxjs';
 import { Color, Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
-import { OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
+import { CrashCauseEnum, CrashData, OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
 
 export class Player {
   readonly id: string;
@@ -31,9 +31,10 @@ export class Player {
   isBot = false;
   isCrashing = false;
   isCrashed = false;
+  crashData?: CrashData;
+
   shipment: null | Shipment = null;
   shipmentTimeoutHandler?: number;
-  lastPosition!: PlanePosition;
 
   planeObject?: Object3D;
   cartesianPosition!: Vector3;
@@ -44,6 +45,7 @@ export class Player {
   velocity!: number;
   lastTankLevel!: number;
 
+  private lastPosition!: PlanePosition;
   private fuelConsumption!: number;
   private lastTankUpdateTimestamp: number = this.clockService.getCurrentTime();
   private lastChangeTimestamp: number | null = null;
@@ -135,15 +137,26 @@ export class Player {
     if (playerData.position) {
       this.position = playerData.position;
     }
+    if (playerData.crash_data) {
+      this.crashData = playerData.crash_data;
+    }
   }
 
   updateBearing(bearingChange: number) {
+    if (this.isBlocked()) {
+      return;
+    }
     this.planeObject!.rotation.z += degToRad(bearingChange);
     this.lastChangeTimestamp = this.clockService.getCurrentTime();
     this.flightParametersChanged$.next();
+    this.startCrashingPlane();
   }
 
   updateVelocity(velocityChange: number) {
+    if (this.isBlocked()) {
+      return;
+    }
+
     const velocity = this.velocity + velocityChange;
     if (velocity >= CONFIG.MIN_VELOCITY && velocity <= CONFIG.MAX_VELOCITY) {
       this.velocity = velocity;
@@ -159,7 +172,12 @@ export class Player {
   endCrashingPlane() {
     this.isCrashed = true;
     this.isCrashing = false;
-    // TODO end of game screen and handling
+    // TODO temporary until backend is ready
+    this.crashData = {
+      cause: CrashCauseEnum.LACK_OF_FUEL,
+      leaderboardPlace: 2,
+      packagesDelivered: 5,
+    };
   }
 
   private updateTankLevel(currentTimestamp: number): number {
@@ -233,5 +251,9 @@ export class Player {
       style: 'error',
     });
     this.shipment = null;
+  }
+
+  private isBlocked() {
+    return this.isCrashed || this.isCrashing || this.isGrounded;
   }
 }

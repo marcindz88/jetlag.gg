@@ -14,6 +14,7 @@ export type OtherPlayer = {
   is_bot: boolean;
   shipment: Shipment | null;
   score: number;
+  crash_data?: CrashData;
 } & BasePlayer;
 
 export type PlayerList = {
@@ -38,3 +39,14 @@ export type PlayerPositionUpdate = {
   position: PlanePosition;
   is_grounded?: boolean;
 };
+
+export type CrashData = {
+  cause: CrashCauseEnum;
+  packagesDelivered: number;
+  leaderboardPlace: number;
+};
+
+export enum CrashCauseEnum {
+  LACK_OF_FUEL = 'LACK_OF_FUEL',
+  LOW_VELOCITY = 'LOW_VELOCITY',
+}

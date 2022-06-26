@@ -4,7 +4,7 @@ import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss
 import { ClockService } from '@shared/services/clock.service';
 import { MainWebsocketService } from '@shared/services/main-websocket.service';
 import { NotificationService } from '@shared/services/notification.service';
-import { BehaviorSubject, ReplaySubject } from 'rxjs';
+import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
 
 import { Player } from '../models/player';
 import { OtherPlayer, PartialPlayerWithId, PlayerList } from '../models/player.types';
@@ -14,6 +14,7 @@ import { OtherPlayer, PartialPlayerWithId, PlayerList } from '../models/player.t
 export class PlayersService {
   players = new Map<string, Player>();
   playersSorted$ = new BehaviorSubject<Player[]>([]);
+  playersLeaderboard$ = new Observable<OtherPlayer[]>(); // TODO
   myPlayer: Player | null = null;
   changed$ = new ReplaySubject<void>();
 

@@ -7,6 +7,7 @@ import { NgtDirectionalLightModule } from '@angular-three/core/lights';
 import { NgtPrimitiveModule } from '@angular-three/core/primitive';
 import { AirportsModule } from '@pg/game-base/airports/airports.module';
 import { CompassComponent } from '@pg/game-base/players/components/compass/compass.component';
+import { GameOverComponent } from '@pg/game-base/players/components/game-over/game-over.component';
 import { HelpComponent } from '@pg/game-base/players/components/help/help.component';
 import { PlaneComponent } from '@pg/game-base/players/components/plane/plane.component';
 import { PlayerCockpitComponent } from '@pg/game-base/players/components/player-cockpit/player-cockpit.component';
@@ -23,6 +24,7 @@ import { PlayersSummaryComponent } from './components/players-summary/players-su
     PlayerCockpitStatsComponent,
     CompassComponent,
     HelpComponent,
+    GameOverComponent,
   ],
   imports: [
     CommonModule,

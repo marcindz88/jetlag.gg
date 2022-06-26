@@ -41,7 +41,12 @@ export class LoadingButtonComponent {
 
   constructor(private cdr: ChangeDetectorRef) {}
 
-  startElapsing() {
+  handleClicked() {
+    if (this.isElapsing) {
+      this.finished.emit();
+      this.isElapsing = false;
+      return;
+    }
     if (!this.disabled && this.elapsedTime < this.config.totalTime) {
       this.started.emit();
       this.isElapsing = true;
@@ -50,6 +55,7 @@ export class LoadingButtonComponent {
         .pipe(
           takeWhile(() => this.elapsedTime < this.config.totalTime),
           untilDestroyed(this),
+          takeWhile(() => this.isElapsing),
           finalize(() => {
             this.isElapsing = false;
             this.cdr.markForCheck();

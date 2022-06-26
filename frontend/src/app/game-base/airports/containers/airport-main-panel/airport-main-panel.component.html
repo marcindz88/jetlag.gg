@@ -9,8 +9,9 @@
           chevron_left
         </button>
         <h3>
-          Available packages<span *ngIf="playerShipment"
-            >(You can't pick a package, as you already have {{ playerShipment.name }} on board)</span
+          Available packages
+          <span *ngIf="playerShipment">
+            (You can't pick a package, as you already have {{ playerShipment.name }} on board)</span
           >
         </h3>
         <button *ngIf="airport.shipments.length > 3" class="icon icon--big" (click)="goToNextPackage()">
