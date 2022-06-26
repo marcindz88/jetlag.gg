@@ -1,7 +1,10 @@
 import { CONFIG } from '@shared/services/config.service';
 
-const determineVelocityChange = (velocity: number) => {
-  if (velocity <= 150000) {
+const determineVelocityChange = (velocity: number, accelerate: boolean) => {
+  if (
+    (accelerate && velocity < CONFIG.LOW_VELOCITY_THRESHOLD) ||
+    (!accelerate && velocity <= CONFIG.LOW_VELOCITY_THRESHOLD)
+  ) {
     return 10000;
   }
 
@@ -16,7 +19,7 @@ export const determineNewVelocity = (velocity: number, accelerate: boolean) => {
     return velocity;
   }
 
-  const velocityChange = determineVelocityChange(velocity) * (accelerate ? 1 : -1);
+  const velocityChange = determineVelocityChange(velocity, accelerate) * (accelerate ? 1 : -1);
 
   let newVelocity = Math.min(velocity + velocityChange, CONFIG.MAX_VELOCITY);
   newVelocity = Math.max(newVelocity, CONFIG.MIN_VELOCITY);
