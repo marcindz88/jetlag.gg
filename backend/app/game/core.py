@@ -1,4 +1,5 @@
 import dataclasses
+import enum
 import logging
 import random
 import threading
@@ -41,6 +42,11 @@ from app.tools.websocket_server import WebSocketSession
 
 
 logging.getLogger().setLevel(logging.INFO)
+
+
+class DeathCause(str, enum.Enum):
+    RUN_OUT_OF_FUEL = 'run_out_of_fuel'
+    SPEED_TOO_LOW = 'speed_too_low'
 
 
 class Shipment:
@@ -124,7 +130,14 @@ class PlayerPosition:
         self.timestamp = timestamp
         self.tank_level = tank_level
 
-    def future_position(self, timestamp_delta: int, calculate_bearing: bool = False) -> "PlayerPosition":
+    def future_tank_level(self, timestamp: int) -> float:
+        timestamp_delta = timestamp - self.timestamp
+        new_tank_level = self.tank_level - timestamp_delta * self.fuel_consumption / 3_600_000
+        new_tank_level = max(new_tank_level, 0)
+        return new_tank_level
+
+    def future_position(self, timestamp: int, calculate_bearing: bool = False) -> "PlayerPosition":
+        timestamp_delta = timestamp - self.timestamp
         distance_traveled = self.velocity * timestamp_delta / 3_600_000  # s = v*t, convert timestamp to hours
         future_coordinates = self.coordinates.destination_coordinates(distance=distance_traveled, bearing=self.bearing)
         if calculate_bearing:
@@ -133,14 +146,12 @@ class PlayerPosition:
         else:
             future_bearing = self.bearing
 
-        new_tank_level = self.tank_level - timestamp_delta * self.fuel_consumption / 3_600_000
-        new_tank_level = max(new_tank_level, 0)
         return PlayerPosition(
             coordinates=future_coordinates,
             bearing=future_bearing,
             velocity=self.velocity,
-            timestamp=self.timestamp + timestamp_delta,
-            tank_level=new_tank_level,
+            timestamp=timestamp,
+            tank_level=self.future_tank_level(timestamp=timestamp),
         )
 
     @staticmethod
@@ -204,6 +215,7 @@ class Player:
         self.shipment: Optional[Shipment] = None
         self.color: str = color
         self.is_refueling: bool = False
+        self.death_cause: Optional[DeathCause] = None
 
     @property
     def id(self) -> uuid.UUID:
@@ -226,6 +238,10 @@ class Player:
         return bool(self._airport_id)
 
     @property
+    def is_dead(self) -> bool:
+        return bool(self.death_cause)
+
+    @property
     def airport_id(self) -> uuid.UUID:
         return self._airport_id
 
@@ -239,6 +255,7 @@ class Player:
             "is_grounded": self.is_grounded,
             "is_bot": self.is_bot,
             "score": self.score,
+            "death_cause": self.death_cause,
             "position": self.position.serialized,
             "shipment": self.shipment.serialized if self.shipment else None,
         }
@@ -288,7 +305,7 @@ class Airport:
 
     def land_player(self, player: Player):
         now = timestamp_now()
-        current_player_position = player.position.future_position(timestamp_delta=now-player.position.timestamp)
+        current_player_position = player.position.future_position(timestamp=now)
         logging.info(
             "land_player player coords %s, airport coords %s",
             current_player_position.coordinates.serialized,
@@ -398,6 +415,7 @@ class GameSession:
     def monitor_players(self):
         while True:
             self.remove_idle_players()
+            self.check_fuel_levels()
             time.sleep(0.2)
 
     def manage_airports(self):
@@ -507,7 +525,7 @@ class GameSession:
 
             now = timestamp_now() + 1
             current_player_position = player.position.future_position(
-                timestamp_delta=now-player.position.timestamp,
+                timestamp=now,
                 calculate_bearing=True,
             )
             distance_to_destination = Coordinates.distance_between(
@@ -601,6 +619,20 @@ class GameSession:
             if now - player.disconnected_since > self.config.PLAYER_TIME_TO_CONNECT:
                 self.remove_player(player)
 
+    def check_fuel_levels(self):
+        logging.debug(f"check_fuel_levels")
+        now = timestamp_now()
+
+        for player in list(self._players.values()):
+            if player.is_dead:
+                # death has already been detected but player has not been removed yet, no need to do anything
+                continue
+
+            current_tank_level = player.position.future_tank_level(timestamp=now)
+            if current_tank_level > 0:
+                continue
+            self.pronounce_player_dead(player=player, cause=DeathCause.RUN_OUT_OF_FUEL)
+
     def get_player_by_token(self, token: str) -> Player:
         for player in self._players.values():
             if player.token == token:
@@ -683,6 +715,14 @@ class GameSession:
         except KeyError:
             pass
 
+    def pronounce_player_dead(self, player: Player, cause: DeathCause):
+        # XD
+        player.death_cause = cause
+        player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
+        self.broadcast_event(event=player_updated_event)
+
+        self.remove_player(player=player)
+
     def update_player_position(self, player: Player, timestamp: int, velocity: int, bearing: float):
         logging.info(f"update_player_position {player.id} timestamp: {timestamp} V={velocity} bearing={bearing}")
         last_position = player.position
@@ -708,7 +748,7 @@ class GameSession:
             logging.warning(f"update_player_position invalid velocity: %s", velocity)
             raise InvalidVelocity
 
-        new_position = last_position.future_position(timestamp_delta=timestamp-last_position.timestamp)
+        new_position = last_position.future_position(timestamp=timestamp)
         new_position.velocity = velocity  # todo more validation (delta)
         new_position.bearing = bearing  # todo validation
 
@@ -854,6 +894,10 @@ class GameSession:
 
         airport: Airport = self._airports.get(player.airport_id)
 
+        now = timestamp_now()
+        player.position.tank_level = player.position.future_tank_level(timestamp=now)
+        player.position.timestamp = now
+
         player.is_refueling = True
         refueling_refresh_time = 0.2  # how much each iteration takes [s]
         while True:
@@ -872,6 +916,7 @@ class GameSession:
 
             new_level = player.position.tank_level + added_fuel
             player.position.tank_level = min(new_level, GameConfig.FUEL_TANK_SIZE)
+            player.position.timestamp = timestamp_now()
 
             player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
             self.broadcast_event(event=player_updated_event)

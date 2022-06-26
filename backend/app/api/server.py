@@ -9,6 +9,7 @@ from fastapi.websockets import WebSocketDisconnect
 from app.game import exceptions
 from app.game.core import GameSession
 from app.game.events import dict_to_event
+from app.game.exceptions import PlayerNotFound
 from app.tools.timestamp import timestamp_now
 from app.tools.websocket_server import StarletteWebsocketServer, WebSocketSession
 
@@ -78,7 +79,10 @@ def on_connect(ws_session: WebSocketSession):
 
 def on_disconnect(ws_session: WebSocketSession):
     print("On disconnect", ws_session)
-    game_session.remove_session(ws_session=ws_session)
+    try:
+        game_session.remove_session(ws_session=ws_session)
+    except PlayerNotFound:
+        pass
 
 
 def on_message(ws_session: WebSocketSession, body: str):
