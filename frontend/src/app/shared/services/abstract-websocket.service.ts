@@ -64,7 +64,7 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
       },
       complete: () => {
         Logger.warn(this.class, 'WSS CONNECTION CLOSED');
-        this.tryToReconnect(token);
+        this.closeWSSConnection();
       },
     });
   }
