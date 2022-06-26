@@ -721,6 +721,9 @@ class GameSession:
         player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
         self.broadcast_event(event=player_updated_event)
 
+        if player.is_bot:
+            self._bots.pop(player.id)
+            return
         self.remove_player(player=player)
 
     def update_player_position(self, player: Player, timestamp: int, velocity: int, bearing: float):
