@@ -149,7 +149,6 @@ export class Player {
     this.planeObject!.rotation.z += degToRad(bearingChange);
     this.lastChangeTimestamp = this.clockService.getCurrentTime();
     this.flightParametersChanged$.next();
-    this.startCrashingPlane();
   }
 
   updateVelocity(velocityChange: number) {
