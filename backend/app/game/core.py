@@ -797,6 +797,47 @@ class GameSession:
                 airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
                 self.broadcast_event(event=airport_updated_event)
 
+    def refuel_player(self, player: Player, airport: Airport):
+        now = timestamp_now()
+        player.position.tank_level = player.position.future_tank_level(timestamp=now)
+        player.position.timestamp = now
+
+        player.is_refueling = True
+        refueling_refresh_time = 0.2  # how much each iteration takes [s]
+        while True:
+            time.sleep(refueling_refresh_time)
+            if not player.is_refueling:
+                break
+            if player.position.tank_level == GameConfig.FUEL_TANK_SIZE:
+                break
+            added_fuel = refueling_refresh_time * GameConfig.REFUELING_RATE
+            price = airport.fuel_price * added_fuel
+
+            if player.score < price:
+                logging.info(f"Player {player} doesn't have money to refuel anymore - {player.score} < {price}")
+                break
+            player.score -= price
+
+            new_level = player.position.tank_level + added_fuel
+            player.position.tank_level = min(new_level, GameConfig.FUEL_TANK_SIZE)
+            player.position.timestamp = timestamp_now()
+
+            player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
+            self.broadcast_event(event=player_updated_event)
+
+        player.is_refueling = False
+        refueling_stopped_event = Event(type=EventType.AIRPORT_REFUELING_STOPPED, data={
+            "id": airport.id,
+            "player_id": player.id,
+        })
+        self.send_event(event=refueling_stopped_event, player=player)
+        position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
+            "id": player.id,
+            "is_grounded": player.is_grounded,
+            "position": player.position.serialized,
+        })
+        self.send_event(event=position_updated_event, player=player)
+
     def handle_player_position_update_request_event(self, player: Player, event: Event):
         logging.info(f"handle_player_position_update_request_event {player.id} {event}")
         data_model = PlayerPositionUpdateRequest(**event.data)
@@ -897,45 +938,8 @@ class GameSession:
 
         airport: Airport = self._airports.get(player.airport_id)
 
-        now = timestamp_now()
-        player.position.tank_level = player.position.future_tank_level(timestamp=now)
-        player.position.timestamp = now
-
-        player.is_refueling = True
-        refueling_refresh_time = 0.2  # how much each iteration takes [s]
-        while True:
-            time.sleep(refueling_refresh_time)
-            if not player.is_refueling:
-                break
-            if player.position.tank_level == GameConfig.FUEL_TANK_SIZE:
-                break
-            added_fuel = refueling_refresh_time * GameConfig.REFUELING_RATE
-            price = airport.fuel_price * added_fuel
-
-            if player.score < price:
-                logging.info(f"Player {player} doesn't have money to refuel anymore - {player.score} < {price}")
-                break
-            player.score -= price
-
-            new_level = player.position.tank_level + added_fuel
-            player.position.tank_level = min(new_level, GameConfig.FUEL_TANK_SIZE)
-            player.position.timestamp = timestamp_now()
-
-            player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
-            self.broadcast_event(event=player_updated_event)
-
-        player.is_refueling = False
-        refueling_stopped_event = Event(type=EventType.AIRPORT_REFUELING_STOPPED, data={
-            "id": airport.id,
-            "player_id": player.id,
-        })
-        self.send_event(event=refueling_stopped_event, player=player)
-        position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
-            "id": player.id,
-            "is_grounded": player.is_grounded,
-            "position": player.position.serialized,
-        })
-        self.send_event(event=position_updated_event, player=player)
+        t = threading.Thread(target=self.refuel_player, args=(player, airport))
+        t.start()
 
     def handle_refueling_end_request_event(self, player: Player, event: Event):
         logging.info(f"handle_refueling_end_request_event {player.id} {event}")
