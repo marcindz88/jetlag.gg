@@ -490,13 +490,16 @@ class GameSession:
                     if destination_airport.occupying_player != player:
                         raise e
                 logging.info("bot landed %s %s", player.id, player.nickname)
+                arrival_time = timestamp_now()
 
                 if player.shipment:
                     try:
                         self.handle_shipment_delivery(airport=destination_airport, player=player)
                     except ShipmentExpired:
                         pass
-                time.sleep(5)
+                self.refuel_player(player=player, airport=destination_airport)
+                idle_time_left = max(5000 - (timestamp_now() - arrival_time), 0)
+                time.sleep(idle_time_left/1000)
 
                 shipment_ids = list(destination_airport.shipments.keys())
                 if shipment_ids:
