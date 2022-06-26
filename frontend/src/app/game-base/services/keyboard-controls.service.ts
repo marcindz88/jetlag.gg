@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { filter, fromEvent, merge, repeat, Subject, switchMap, take, takeUntil, tap, timer } from 'rxjs';
+import { filter, fromEvent, merge, repeat, Subject, switchMap, take, takeUntil, timer } from 'rxjs';
 
 import { KeyEventEnum } from '../models/keyboard.types';
 
@@ -9,7 +9,7 @@ import { KeyEventEnum } from '../models/keyboard.types';
 export class KeyboardControlsService {
   keyEvent$ = new Subject<KeyEventEnum>();
 
-  private windowBlurEvent$ = fromEvent(window, 'blur').pipe(untilDestroyed(this)).pipe(tap(console.log));
+  private windowBlurEvent$ = fromEvent(window, 'blur').pipe(untilDestroyed(this));
   private keyDownEvent$ = fromEvent<KeyboardEvent>(document, 'keydown').pipe(untilDestroyed(this));
   private keyUpEvent$ = fromEvent<KeyboardEvent>(document, 'keyup').pipe(untilDestroyed(this));
 

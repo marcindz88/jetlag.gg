@@ -19,6 +19,6 @@
       <span *ngIf="player.isBot" class="icon icon--ml"> smart_toy </span>
       <span *ngIf="player.shipment" class="icon icon--ml"> inventory_2 </span>
     </td>
-    <td class="score">{{ player.score }}$</td>
+    <td class="score">{{ player.score | number: '1.2-2' }}$</td>
   </tr>
 </ng-template>

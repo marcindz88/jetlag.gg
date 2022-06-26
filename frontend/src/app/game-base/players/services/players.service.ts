@@ -83,7 +83,6 @@ export class PlayersService {
 
   private addPlayer(player: OtherPlayer, myUserId: string, isInitial = false) {
     // If player has been already setup then don't override
-    console.log(player, myUserId, isInitial);
     if (!this.players.get(player.id)) {
       const isMyPlayer = myUserId === player.id;
       const newPlayer = new Player(player, isMyPlayer, this.clockService, this.notificationService);
@@ -91,7 +90,6 @@ export class PlayersService {
 
       if (isMyPlayer) {
         this.myPlayer = newPlayer;
-        console.log('Added my player', this.myPlayer);
       } else if (!isInitial) {
         this.notificationService.openNotification(
           {

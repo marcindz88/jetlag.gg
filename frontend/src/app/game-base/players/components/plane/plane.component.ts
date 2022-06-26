@@ -9,7 +9,6 @@ import { calculateAltitudeFromPosition } from '@pg/game-base/utils/geo-utils';
 import { determineDisplacement } from '@pg/game-base/utils/velocity-utils';
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
-import { Logger } from '@shared/services/logger.service';
 import { map, Observable } from 'rxjs';
 import { Camera, Euler, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
@@ -94,8 +93,8 @@ export class PlaneComponent implements OnInit {
       plane.position.set(newPosition.x, newPosition.y, newPosition.z);
 
       // decrease velocity and move forward
-      this.player.velocity *= 1 - 0.01 * deltaMultiplier;
-      plane.translateY(determineDisplacement(this.player.velocity, delta));
+      this.player.lastPosition.velocity *= 1 - 0.01 * deltaMultiplier;
+      plane.translateY(determineDisplacement(this.player.lastPosition.velocity, delta));
 
       if (calculateAltitudeFromPosition(newPosition) <= 0) {
         this.player.endCrashingPlane();
@@ -104,17 +103,11 @@ export class PlaneComponent implements OnInit {
       return;
     }
 
-    if (this.player.velocity) {
-      // Suspected inactivity
-      if (delta > 0.18) {
-        this.recoverFromInactivity(plane, delta);
-        return;
-      }
-
+    if (this.player.lastPosition.velocity) {
       const positionCopy = plane.position.clone();
 
       // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
-      const displacement = determineDisplacement(this.player.velocity, delta); // delta in s convert to h
+      const displacement = determineDisplacement(this.player.lastPosition.velocity, delta); // delta in s convert to h
       plane.rotateX(degToRad((displacement / CONFIG.FLIGHT_MOVING_CIRCUMFERENCE) * 360));
       plane.translateY(displacement);
 
@@ -124,18 +117,6 @@ export class PlaneComponent implements OnInit {
 
     // Update position up to target gradually
     this.updateByDifference(plane.position, plane.position, this.targetPosition!, 0.1);
-  }
-
-  private recoverFromInactivity(plane: Object3D, delta: number) {
-    if (delta > 1) {
-      this.cameraFocused = false;
-    }
-    this.player.position = {
-      ...this.player.position,
-      timestamp: this.clockService.getCurrentTime() - delta * 1000,
-    };
-    this.updateByDifference(plane.position, plane.position, this.player.cartesianPosition, 1, 0.0000000001);
-    Logger.warn(PlaneComponent, `Recovered after inactivity, delta: ${delta}`);
   }
 
   private focusCameraOnPlayer(plane: Object3D) {

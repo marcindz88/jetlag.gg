@@ -12,7 +12,8 @@ import {
   defaultLoadingButtonConfig,
   LoadingButtonConfig,
 } from '@shared/components/loading-button/loading-button.types';
-import { finalize, Subject, takeUntil, takeWhile, timer } from 'rxjs';
+import { ClockService } from '@shared/services/clock.service';
+import { finalize, fromEvent, Subject, takeUntil, takeWhile, timer } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -31,10 +32,8 @@ export class LoadingButtonComponent implements OnInit {
 
   @Input() set config(config: Partial<LoadingButtonConfig>) {
     this.#config = { ...this.#config, ...config };
-    this.elapsedTime = config.currentProgress
-      ? config.currentProgress * this.config.totalTime
-      : this.config.elapsedTime;
-    this.currentProgress = (this.elapsedTime / this.config.totalTime) * 100;
+    this.elapsedTime = this.calculateInitialElapsedTime();
+    this.currentProgress = this.calculateCurrentProgress();
     this.step = this.config.totalTime / 100;
   }
 
@@ -43,26 +42,31 @@ export class LoadingButtonComponent implements OnInit {
   }
 
   elapsedTime = 0;
+  startTime?: number;
   currentProgress = 0;
   step = 1;
   isElapsing = false;
+  windowFocus$ = fromEvent(window, 'focus');
 
   #config: LoadingButtonConfig = defaultLoadingButtonConfig;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private cdr: ChangeDetectorRef, private clockService: ClockService) {}
 
   ngOnInit(): void {
     this.externalToggle$.pipe(untilDestroyed(this)).subscribe(this.toggleLoading.bind(this));
+    this.handleRefocus();
   }
 
   toggleLoading() {
     if (this.isElapsing) {
       this.isElapsing = false;
+      this.cdr.markForCheck();
       return;
     }
     if (!this.disabled && this.elapsedTime < this.config.totalTime) {
       this.started.emit();
       this.isElapsing = true;
+      this.startTime = this.clockService.getCurrentTime();
 
       timer(0, this.step)
         .pipe(
@@ -71,6 +75,7 @@ export class LoadingButtonComponent implements OnInit {
           takeWhile(() => this.isElapsing),
           takeUntil(this.stop$),
           finalize(() => {
+            this.isElapsing = false;
             this.finished.emit();
             this.cdr.markForCheck();
           })
@@ -79,7 +84,7 @@ export class LoadingButtonComponent implements OnInit {
           this.elapsedTime += this.step;
           this.currentProgress++;
 
-          if (this.elapsedTime > this.config.totalTime) {
+          if (this.elapsedTime >= this.config.totalTime) {
             this.elapsedTime = this.config.totalTime;
             this.currentProgress = 100;
             this.isElapsing = false;
@@ -88,5 +93,25 @@ export class LoadingButtonComponent implements OnInit {
           this.cdr.markForCheck();
         });
     }
+  }
+
+  private handleRefocus() {
+    this.windowFocus$.pipe(untilDestroyed(this)).subscribe(() => {
+      if (this.startTime) {
+        this.elapsedTime =
+          this.calculateInitialElapsedTime() + (this.clockService.getCurrentTime() - this.startTime) / 1000;
+        this.currentProgress = this.calculateCurrentProgress();
+      }
+    });
+  }
+
+  private calculateCurrentProgress(): number {
+    return (this.elapsedTime / this.config.totalTime) * 100;
+  }
+
+  private calculateInitialElapsedTime(): number {
+    return this.config.initialProgress
+      ? this.config.initialProgress * this.config.totalTime
+      : this.config.initialElapsedTime;
   }
 }

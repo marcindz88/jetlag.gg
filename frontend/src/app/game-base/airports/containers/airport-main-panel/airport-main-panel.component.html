@@ -46,7 +46,7 @@
         [stop$]="stopRefueling$"
         [disabled]="!playerScore"
         [config]="{
-          currentProgress: playerTankLevel / CONFIG.FUEL_TANK_SIZE,
+          initialProgress: playerTankLevel / CONFIG.FUEL_TANK_SIZE,
           totalTime: CONFIG.REFUELLING_FULL_TIME,
           elapsingText: 'Refuelling in progress... [X]'
         }"
