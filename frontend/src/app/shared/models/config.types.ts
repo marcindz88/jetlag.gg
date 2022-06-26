@@ -12,7 +12,8 @@ const defaultServerConfig = {
 };
 
 const defaultClientConfig = {
-  STEP_VELOCITY: 50000,
+  MIN_STEP_VELOCITY: 500,
+  MAX_STEP_VELOCITY: 50000,
   STEP_BEARING: 2,
   EARTH_RADIUS_SCALED: 40,
   NUMBER_OF_CLOSE_AIRPORTS: 6,
@@ -23,6 +24,8 @@ const defaultClientConfig = {
   CAMERA_NUMBER_OF_MODES: 3,
   CAMERA_MIN_ALTITUDE: 320,
   CAMERA_MAX_ALTITUDE: 3200,
+  LOW_FUEL_THRESHOLD: 20, // %
+  LOW_VELOCITY_THRESHOLD: 150000,
 };
 
 export const getDependentClientConfig = (CONFIG: BaseConfigType) => {

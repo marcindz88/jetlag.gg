@@ -37,9 +37,15 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
     this.isConnected$.next(true);
   }
 
-  protected closeHandler() {
-    Logger.log(this.class, 'WSS CLOSED');
-    this.isConnected$.next(false);
+  protected closeHandler(event: CloseEvent, token?: string) {
+    if (event.wasClean) {
+      Logger.log(this.class, 'WSS CLOSED CORRECTLY');
+      this.isConnected$.next(false);
+      this.isClosed = true;
+    } else if (!this.isClosed) {
+      Logger.warn(this.class, 'WSS CLOSED INCORRECTLY');
+      this.tryToReconnect(token);
+    }
   }
 
   protected createWSSConnection(token?: string): void {
@@ -52,7 +58,7 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
         next: this.openHandler.bind(this),
       },
       closeObserver: {
-        next: this.closeHandler.bind(this),
+        next: event => this.closeHandler(event, token),
       },
     });
     this.isConnected$.next(true);
@@ -61,10 +67,6 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
       error: err => {
         Logger.error(this.class, `WSS ERROR ${err as string}`);
         this.tryToReconnect(token);
-      },
-      complete: () => {
-        Logger.warn(this.class, 'WSS CONNECTION CLOSED');
-        this.closeWSSConnection();
       },
     });
   }

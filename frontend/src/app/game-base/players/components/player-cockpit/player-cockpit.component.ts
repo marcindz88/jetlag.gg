@@ -42,28 +42,21 @@ export class PlayerCockpitComponent implements OnInit {
   }
 
   private setupCockpitControls() {
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.TURN_LEFT, this, () => this.updateBearing(-1));
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.TURN_RIGHT, this, () => this.updateBearing(1));
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.BACKWARD, this, () => this.updateVelocity(-1));
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FORWARD, this, () => this.updateVelocity(1));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.TURN_LEFT, this, () =>
+      this.player.updateBearing(-CONFIG.STEP_BEARING)
+    );
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.TURN_RIGHT, this, () =>
+      this.player.updateBearing(CONFIG.STEP_BEARING)
+    );
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.BACKWARD, this, () => this.player.decelerate());
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FORWARD, this, () => this.player.accelerate());
+
     this.keyboardControlsService.setupKeyEvent(
       KeyEventEnum.LAND_OR_TAKE_OFF,
       this,
       this.startLandingProcedure.bind(this)
     );
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.HELP, this, () => (this.showHelp = !this.showHelp));
-  }
-
-  private updateBearing(multiplier: number) {
-    if (!this.player.isGrounded) {
-      this.player.updateBearing(multiplier * CONFIG.STEP_BEARING);
-    }
-  }
-
-  private updateVelocity(multiplier: number) {
-    if (!this.player.isGrounded) {
-      this.player.updateVelocity(multiplier * CONFIG.STEP_VELOCITY);
-    }
   }
 
   private startLandingProcedure() {

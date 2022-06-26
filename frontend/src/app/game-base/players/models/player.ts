@@ -1,6 +1,6 @@
 import { MatSnackBarRef } from '@angular/material/snack-bar';
 import { Shipment } from '@pg/game-base/airports/models/airport.types';
-import { updateTankLevel } from '@pg/game-base/utils/fuel-utils';
+import { isTankLevelLow, updateTankLevel } from '@pg/game-base/utils/fuel-utils';
 import {
   calculateBearingFromDirectionAndRotation,
   calculatePositionAfterTimeInterval,
@@ -8,6 +8,7 @@ import {
   transformPointAndDirectionIntoRotation,
   transformPointIntoCoordinates,
 } from '@pg/game-base/utils/geo-utils';
+import { determineNewVelocity, isLowVelocity } from '@pg/game-base/utils/velocity-utils';
 import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
@@ -50,6 +51,7 @@ export class Player {
   private lastTankUpdateTimestamp: number = this.clockService.getCurrentTime();
   private lastChangeTimestamp: number | null = null;
   private fuelSnackBarRef?: MatSnackBarRef<NotificationComponent>;
+  private velocitySnackBarRef?: MatSnackBarRef<NotificationComponent>;
 
   constructor(
     player: OtherPlayer,
@@ -117,7 +119,7 @@ export class Player {
   set tankLevel(tankLevel: number) {
     this.lastTankLevel = tankLevel;
     this.lastTankUpdateTimestamp = this.clockService.getCurrentTime();
-    this.handleTankLevelNotification();
+    this.handleLowTankLevelNotification();
   }
 
   updatePlayer(playerData: PartialPlayerData) {
@@ -143,6 +145,25 @@ export class Player {
     }
   }
 
+  startCrashingPlane() {
+    this.velocitySnackBarRef?.dismiss();
+    this.fuelSnackBarRef?.dismiss();
+    this.isCrashing = true;
+  }
+
+  endCrashingPlane() {
+    this.isCrashed = true;
+    this.isCrashing = false;
+  }
+
+  accelerate() {
+    this.updateVelocity(true);
+  }
+
+  decelerate() {
+    this.updateVelocity(false);
+  }
+
   updateBearing(bearingChange: number) {
     if (this.isBlocked()) {
       return;
@@ -152,26 +173,18 @@ export class Player {
     this.flightParametersChanged$.next();
   }
 
-  updateVelocity(velocityChange: number) {
+  private updateVelocity(isAccelerate: boolean) {
     if (this.isBlocked()) {
       return;
     }
 
-    const velocity = this.velocity + velocityChange;
-    if (velocity >= CONFIG.MIN_VELOCITY && velocity <= CONFIG.MAX_VELOCITY) {
+    const velocity = determineNewVelocity(this.velocity, isAccelerate);
+    if (velocity !== this.velocity) {
       this.velocity = velocity;
       this.lastChangeTimestamp = this.clockService.getCurrentTime();
       this.flightParametersChanged$.next();
+      this.handleLowVelocityNotification();
     }
-  }
-
-  startCrashingPlane() {
-    this.isCrashing = true;
-  }
-
-  endCrashingPlane() {
-    this.isCrashed = true;
-    this.isCrashing = false;
   }
 
   private updateTankLevel(currentTimestamp: number): number {
@@ -184,15 +197,43 @@ export class Player {
     return this.lastTankLevel;
   }
 
-  private handleTankLevelNotification() {
+  private handleLowVelocityNotification() {
     // Not my player -> no notification
     if (!this.isMyPlayer) {
       return;
     }
 
-    const tankLevelPercentage = (this.lastTankLevel / CONFIG.FUEL_TANK_SIZE) * 100;
+    // Show notification if low velocity
+    if (!this.isGrounded && isLowVelocity(this.velocity) && !this.velocitySnackBarRef) {
+      this.velocitySnackBarRef = this.notificationService.openNotification(
+        {
+          text: 'You are travelling at extremely low velocity, accelerate to avoid crashing',
+          icon: 'warning',
+          style: 'warn',
+        },
+        { duration: 0 }
+      );
+      this.velocitySnackBarRef
+        .afterDismissed()
+        .pipe(take(1))
+        .subscribe(() => (this.velocitySnackBarRef = undefined));
+      return;
+    }
+
+    // Hide snackbar if velocity is no longer low
+    if ((!isLowVelocity(this.velocity) || this.isGrounded) && this.velocitySnackBarRef) {
+      this.velocitySnackBarRef.dismiss();
+    }
+  }
+
+  private handleLowTankLevelNotification() {
+    // Not my player -> no notification
+    if (!this.isMyPlayer) {
+      return;
+    }
+
     // Show notification if tank level below 20% and not on the airport
-    if (!this.isGrounded && tankLevelPercentage > 0 && tankLevelPercentage < 20 && !this.fuelSnackBarRef) {
+    if (!this.isGrounded && isTankLevelLow(this.lastTankLevel) && !this.fuelSnackBarRef) {
       this.fuelSnackBarRef = this.notificationService.openNotification(
         {
           text: 'You are running out of fuel, get to the nearest airport to refuel!!!',
@@ -209,7 +250,7 @@ export class Player {
     }
 
     // Hide snackbar if tank is already empty or plane is grounded
-    if ((!tankLevelPercentage || this.isGrounded) && this.fuelSnackBarRef) {
+    if ((!this.lastTankLevel || this.isGrounded) && this.fuelSnackBarRef) {
       this.fuelSnackBarRef.dismiss();
     }
   }
