@@ -322,6 +322,7 @@ class Airport:
         self.occupying_player = player
         player._airport_id = self.id
 
+        player.position = current_player_position
         player.position.coordinates.latitude = self.coordinates.latitude
         player.position.coordinates.longitude = self.coordinates.longitude
         player.position.velocity = 0
