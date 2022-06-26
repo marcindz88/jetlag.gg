@@ -810,12 +810,16 @@ class GameSession:
                 break
             if player.position.tank_level == GameConfig.FUEL_TANK_SIZE:
                 break
-            added_fuel = refueling_refresh_time * GameConfig.REFUELING_RATE
-            price = airport.fuel_price * added_fuel
-
-            if player.score < price:
-                logging.info(f"Player {player} doesn't have money to refuel anymore - {player.score} < {price}")
+            if player.score == 0:
+                logging.info(f"Player {player} has no money to refuel!")
                 break
+
+            added_fuel = refueling_refresh_time * GameConfig.REFUELING_RATE
+            price = int(airport.fuel_price * added_fuel)
+            if player.score < price:
+                price = player.score
+                added_fuel = price/airport.fuel_price
+
             player.score -= price
 
             new_level = player.position.tank_level + added_fuel
