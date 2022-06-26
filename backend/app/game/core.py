@@ -182,7 +182,7 @@ class PlayerPosition:
         coefficient = 0.27
         consumption = 2 ** (coefficient * scaled_down_velocity)
 
-        consumption = consumption * 50
+        consumption = consumption * 26
 
         # scaling to liters per hour
         consumption = consumption * 60 * 60
@@ -395,7 +395,7 @@ class GameSession:
                 description=airport_data['description'],
                 coordinates=airport_data['coordinates'],
                 elevation=airport_data['elevation'],
-                fuel_price=airport_data['fuel_price'],
+                fuel_price=airport_data['fuel_price'] * 0.3,
             )
             self._airports[airport.id] = airport
 

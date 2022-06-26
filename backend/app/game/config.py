@@ -11,8 +11,8 @@ class GameConfig:
     AIRPORT_MAXIMUM_DISTANCE_TO_LAND: int = 500  # 500km
     EARTH_RADIUS: float = 6371.0
     FLIGHT_ALTITUDE: float = 200.0
-    FUEL_TANK_SIZE: int = 50000  # 50000 liters
-    REFUELING_RATE: float = 3000  # liters per second
+    FUEL_TANK_SIZE: int = 100_000  # 100k liters
+    REFUELING_RATE: float = 2500  # liters per second
 
     @staticmethod
     def serialized():
