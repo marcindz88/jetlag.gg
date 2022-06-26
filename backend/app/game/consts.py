@@ -7,6 +7,7 @@ AIRPORTS = [
         "full_name": "Dubai International Airport",
         "description": "Primary international airport serving Dubai, United Arab Emirates, and is the world's busiest airport by international passenger traffic. In 2017, DXB handled 88 million passengers and 2.65 million tonnes of cargo and registered 409,493 aircraft movements.",
         "elevation": 0.019,
+        "fuel_price": 2.1,
     },
     {
         "name": "PARIS (CDG)",
@@ -14,6 +15,7 @@ AIRPORTS = [
         "full_name": "Paris Charles de Gaulle Airport",
         "description": "The largest international airport in France. In 2019, the airport handled 76,150,007 passengers and 498,175 aircraft movements, thus making it the world's ninth busiest airport and Europe's second busiest airport (after Heathrow) in terms of passenger numbers.",
         "elevation": 0.119,
+        "fuel_price": 1.1,
     },
     {
         "name": "HONG KONG (HKG)",
@@ -21,6 +23,7 @@ AIRPORTS = [
         "full_name": "Hong Kong International Airport",
         "description": "Hong Kong's main airport, built on reclaimed land on the island of Chek Lap Kok. The airport is the world's busiest cargo gateway and one of the world's busiest passenger airports. In 2015, HKIA handled 68.5 million passengers, making it the 8th busiest airport worldwide by passenger traffic and the 4th busiest airport worldwide by international passenger traffic.",
         "elevation": 0.009,
+        "fuel_price": 2.5,
     },
     {
         "name": "ANCHORAGE (ANC)",
@@ -28,6 +31,7 @@ AIRPORTS = [
         "full_name": "Ted Stevens Anchorage International Airport",
         "description": "A major airport in the U.S. state of Alaska, located 8 km southwest of downtown Anchorage. In 2020, it ranked as the United States' third-busiest airport and the world's fourth-busiest airport by cargo traffic. Cargo aircraft between China or Japan and the US prefer to have less fuel and more cargo and refuel on the way, so the opening of Russian airspace had little effect on such flights' use of Anchorage.",
         "elevation": 0.046,
+        "fuel_price": 1.2,
     },
     {
         "name": "SHANGHAI (PVG)",
@@ -35,6 +39,7 @@ AIRPORTS = [
         "full_name": "Shanghai Pudong International Airport",
         "description": "Pudong Airport is a fast-growing hub for both passenger and cargo traffic. With 3,703,431 metric tons handled in 2017, the airport is the world's third-busiest airport by cargo traffic. Pudong Airport also served a total of 74,006,331 passengers in 2018, making it the third-busiest airport in China. ",
         "elevation": 0.004,
+        "fuel_price": 2.7,
     },
     {
         "name": "MIAMI (MIA)",
@@ -42,6 +47,7 @@ AIRPORTS = [
         "full_name": "Miami International Airport",
         "description": "It is the largest gateway between the United States and Latin America and the Caribbean, and is one of the largest airline hubs in the United States. In 2021, Miami International Airport became the busiest international cargo airport in America as well as the busiest US gateway for international passengers, the latter surpassing JFK International Airport in New York.",
         "elevation": 0.003,
+        "fuel_price": 0.95,
     },
     {
         "name": "LOS ANGELES (LAX)",
@@ -49,6 +55,7 @@ AIRPORTS = [
         "full_name": "Los Angeles International Airport",
         "description": "In 2019, LAX handled 88,068,013 passengers, making it the world's third-busiest and the United States' second-busiest airport following Hartsfield–Jackson Atlanta International Airport. As the largest and busiest international airport on the U.S. West Coast, LAX is a major international gateway to the United States, and also serves a connection point for passengers traveling internationally.",
         "elevation": 0.039,
+        "fuel_price": 1.4,
     },
     {
         "name": "SIDNEY (SYD)",
@@ -56,6 +63,7 @@ AIRPORTS = [
         "full_name": "Sydney Kingsford Smith Airport",
         "description": "Sydney Airport is one of the world's longest continuously operated commercial airports and is the busiest airport in Australia, handling 42.6 million passengers and 348,904 aircraft movements in 2016–17.",
         "elevation": 0.006,
+        "fuel_price": 0.8,
     },
     {
         "name": "MUMBAI (BOM)",
@@ -63,6 +71,7 @@ AIRPORTS = [
         "full_name": "Chhatrapati Shivaji Maharaj International Airport",
         "description": "It is the second busiest airport in the country in terms of total and international passenger traffic after Delhi. Its passenger traffic was about 49.8 million in year 2018. It is also the second busiest airport in terms of cargo traffic. In March 2017, the airport surpassed London's Gatwick Airport as the world's busiest to operate a single runway at a time. The airport's IATA code BOM is associated with 'Bombay', the city's former legal name.",
         "elevation": 0.011,
+        "fuel_price": 0.7,
     },
     {
         "name": "JOHANNESBURG (JNB)",
@@ -70,6 +79,7 @@ AIRPORTS = [
         "full_name": "O. R. Tambo International Airport",
         "description": "It serves as the primary airport for domestic and international travel to/from South Africa and since 2020, it is Africa's second busiest airport, with a capacity to handle up to 28 million passengers annually. The airport serves as the hub for South African Airways. The airport handled over 21 million passengers in 2017.",
         "elevation": 1.694,
+        "fuel_price": 0.8,
     },
     {
         "name": "HONOLULU (HNL)",
@@ -77,6 +87,7 @@ AIRPORTS = [
         "full_name": "Daniel K. Inouye International Airport",
         "description": "The main airport of Oahu in the State of Hawaii. The airport covers a total area of 4,220 acres of land, more than 1% of Oahu's land area.",
         "elevation": 0.004,
+        "fuel_price": 0.85,
     },
     {
         "name": "TORONTO (YYZ)",
@@ -84,6 +95,7 @@ AIRPORTS = [
         "full_name": "Lester B. Pearson International Airport",
         "description": "It is the main airport serving Toronto, its metropolitan area, and the surrounding region known as the Golden Horseshoe. It handled 50.5 million passengers in 2019. It is the largest and busiest airport in Canada.",
         "elevation": 0.173,
+        "fuel_price": 1.05,
     },
     {
         "name": "BOGOTA (BOG)",
@@ -91,6 +103,7 @@ AIRPORTS = [
         "full_name": "El Dorado International Airport",
         "description": "It served over 35 million passengers in 2019 and 740,000 metric tons of cargo in 2018. This makes El Dorado the second busiest airport in South America in terms of passenger traffic and the busiest in terms of cargo traffic. El Dorado is also by far the busiest and most important airport in Colombia, accounting for just under half (49%) of the country's air traffic.",
         "elevation": 2.548,
+        "fuel_price": 1.2,
     },
     {
         "name": "SAO PAULO (GRU)",
@@ -98,6 +111,7 @@ AIRPORTS = [
         "full_name": "Sao Paulo/Guarulhos – Governor Andre Franco Montoro International Airport",
         "description": "The airport was the busiest in Brazil in terms of transported passengers, aircraft operations, and cargo handled in 2012.",
         "elevation": 0.750,
+        "fuel_price": 1.05,
     },
     {
         "name": "LAGOS (LOS)",
@@ -105,6 +119,7 @@ AIRPORTS = [
         "full_name": "Murtala Muhammed International Airport",
         "description": "A major airport serving the entire state. In 2010, the airport served 6,273,545 passengers.",
         "elevation": 0.041,
+        "fuel_price": 1,
     },
     {
         "name": "SINGAPORE (SIN)",
@@ -112,6 +127,7 @@ AIRPORTS = [
         "full_name": "Singapore Changi Airport",
         "description": "A major civilian international airport that serves Singapore, and is one of the largest transportation hubs in Asia. As one of the world's busiest airports by international passenger and cargo traffic, it is currently rated the World's Best Airport by Skytrax, the first airport in the world to do so for eight consecutive years. It has also been rated as one of the world's cleanest airports and highly rated international transit airports.",
         "elevation": 0.007,
+        "fuel_price": 1.9,
     },
     {
         "name": "VOSTOK STATION (AT28)",
@@ -119,6 +135,7 @@ AIRPORTS = [
         "full_name": "Vostok Station Skiway",
         "description": "Russian research station in inland Princess Elizabeth Land, Antarctica. Founded by the Soviet Union in 1957, the station lies at the southern Pole of Cold, with the lowest reliably measured natural temperature on Earth of −89.2 °C. Research includes ice core drilling and magnetometry.",
         "elevation": 3.489,
+        "fuel_price": 4.5,
     },
 ]
 

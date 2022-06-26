@@ -23,6 +23,7 @@ class EventType(str, enum.Enum):
     AIRPORT_SHIPMENT_DELIVERED = 'airport.shipment_delivered'
     AIRPORT_REFUELING_START_REQUEST = 'airport.refueling_start_request'
     AIRPORT_REFUELING_END_REQUEST = 'airport.refueling_end_request'
+    AIRPORT_REFUELING_STOPPED = 'airport.refueling_stopped'
     AIRPORT_UPDATED = 'airport.updated'
     AIRPORT_LIST = 'airport.list'
 
@@ -36,6 +37,7 @@ EVENTS_EMITTED_BY_SERVER = [
     EventType.PLAYER_UPDATED,
     EventType.PLAYER_POSITION_UPDATED,
     EventType.AIRPORT_SHIPMENT_DELIVERED,
+    EventType.AIRPORT_REFUELING_STOPPED,
     EventType.AIRPORT_UPDATED,
     EventType.AIRPORT_LIST,
 ]

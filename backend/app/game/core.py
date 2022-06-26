@@ -171,7 +171,7 @@ class PlayerPosition:
         coefficient = 0.27
         consumption = 2 ** (coefficient * scaled_down_velocity)
 
-        consumption = consumption * 100
+        consumption = consumption * 50
 
         # scaling to liters per hour
         consumption = consumption * 60 * 60
@@ -254,13 +254,22 @@ class Airport:
     shipments: dict = {}
     occupying_player: Optional[Player] = None
 
-    def __init__(self, name: str, full_name: str, description: str, elevation: float, coordinates: Coordinates):
+    def __init__(
+        self,
+        name: str,
+        full_name: str,
+        description: str,
+        elevation: float,
+        fuel_price: float,
+        coordinates: Coordinates,
+    ):
         self.id = uuid.uuid4()
         self.name = name
         self.full_name = full_name
         self.description = description
         self.coordinates = coordinates
         self.elevation = elevation
+        self.fuel_price = fuel_price
         self.shipments = {}
 
     @property
@@ -271,6 +280,7 @@ class Airport:
             "full_name": self.full_name,
             "description": self.description,
             "elevation": self.elevation,
+            "fuel_price": self.fuel_price,
             "coordinates": self.coordinates.serialized,
             "occupying_player": self.occupying_player.id if self.occupying_player else None,
             "shipments": [shipment.serialized for shipment in self.shipments.values()],
@@ -368,6 +378,7 @@ class GameSession:
                 description=airport_data['description'],
                 coordinates=airport_data['coordinates'],
                 elevation=airport_data['elevation'],
+                fuel_price=airport_data['fuel_price'],
             )
             self._airports[airport.id] = airport
 
@@ -841,24 +852,42 @@ class GameSession:
         if not player.is_grounded:
             raise RefuelingWhenFlying
 
+        airport: Airport = self._airports.get(player.airport_id)
+
         player.is_refueling = True
-        refueling_refresh_time = 0.5  # how much each iteration takes [s]
+        refueling_refresh_time = 0.2  # how much each iteration takes [s]
         while True:
             time.sleep(refueling_refresh_time)
             if not player.is_refueling:
                 break
             if player.position.tank_level == GameConfig.FUEL_TANK_SIZE:
                 break
-            new_level = player.position.tank_level + refueling_refresh_time * GameConfig.REFUELING_RATE
+            added_fuel = refueling_refresh_time * GameConfig.REFUELING_RATE
+            price = airport.fuel_price * added_fuel
+
+            if player.score < price:
+                logging.info(f"Player {player} doesn't have money to refuel anymore - {player.score} < {price}")
+                break
+            player.score -= price
+
+            new_level = player.position.tank_level + added_fuel
             player.position.tank_level = min(new_level, GameConfig.FUEL_TANK_SIZE)
 
-            position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
-                "id": player.id,
-                "is_grounded": player.is_grounded,
-                "position": player.position.serialized,
-            })
-            self.send_event(event=position_updated_event, player=player)
+            player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
+            self.broadcast_event(event=player_updated_event)
+
         player.is_refueling = False
+        refueling_stopped_event = Event(type=EventType.AIRPORT_REFUELING_STOPPED, data={
+            "id": airport.id,
+            "player_id": player.id,
+        })
+        self.send_event(event=refueling_stopped_event, player=player)
+        position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
+            "id": player.id,
+            "is_grounded": player.is_grounded,
+            "position": player.position.serialized,
+        })
+        self.send_event(event=position_updated_event, player=player)
 
     def handle_refueling_end_request_event(self, player: Player, event: Event):
         logging.info(f"handle_refueling_end_request_event {player.id} {event}")

@@ -48,6 +48,7 @@ only 1 connection per user at a time is allowed
 * 'player.updated'
 * 'player_position.updated'
 * 'airport.shipment_delivered'
+* 'airport.refueling_stopped'
 * 'airport.list'
 * 'airport.updated'
 
