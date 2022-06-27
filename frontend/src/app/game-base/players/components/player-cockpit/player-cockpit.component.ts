@@ -40,6 +40,7 @@ export class PlayerCockpitComponent implements OnInit {
     this.setupCockpitControls();
     this.setUpdateAirportsHandler();
     this.setPlayerDestroyHandler();
+    this.setPlayerLandedHandler();
   }
 
   private setupCockpitControls() {
@@ -73,21 +74,31 @@ export class PlayerCockpitComponent implements OnInit {
   }
 
   private setUpdatePositionAndAirportsHandler() {
-    this.player.lastPosition$.pipe(auditTime(CONFIG.MY_PLANE_POSITION_REFRESH_TIME)).subscribe(position => {
-      if (
-        (!this.position || !arePointsEqual(this.position?.coordinates, position.coordinates)) &&
-        this.position?.velocity !== 0
-      ) {
-        this.airportList = determineAirportsInProximity(this.airports, position.coordinates);
-        this.airportsUpdateTrigger$.next();
-      }
-      this.position = position;
-      this.cdr.markForCheck();
-    });
+    this.player.lastPosition$
+      .pipe(untilDestroyed(this), auditTime(CONFIG.MY_PLANE_POSITION_REFRESH_TIME))
+      .subscribe(position => {
+        if (
+          (!this.position || !arePointsEqual(this.position?.coordinates, position.coordinates)) &&
+          this.position?.velocity !== 0
+        ) {
+          this.airportList = determineAirportsInProximity(this.airports, position.coordinates);
+          this.airportsUpdateTrigger$.next();
+        }
+        this.position = position;
+        this.cdr.markForCheck();
+      });
   }
 
   private setPlayerDestroyHandler() {
-    this.player.destroy$.subscribe(() => this.cdr.detectChanges());
+    this.player.destroy$.pipe(untilDestroyed(this)).subscribe(() => {
+      this.cdr.detectChanges();
+    });
+  }
+
+  private setPlayerLandedHandler() {
+    this.player.landed$.pipe(untilDestroyed(this)).subscribe(() => {
+      this.cdr.detectChanges();
+    });
   }
 
   private setUpdateAirportsHandler() {

@@ -42,6 +42,7 @@ export class Player {
 
   flightParametersChanged$ = new Subject<void>();
   lastPosition$ = new Subject<PlanePosition>();
+  landed$ = new Subject<void>();
   destroy$ = new Subject<void>();
 
   lastPosition!: PlanePosition;
@@ -82,6 +83,7 @@ export class Player {
     }
     if ('is_grounded' in playerData) {
       this.isGrounded = !!playerData.is_grounded;
+      this.landed$.next();
     }
     if ('shipment' in playerData) {
       this.shipment = playerData.shipment || null;

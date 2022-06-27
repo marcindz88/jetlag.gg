@@ -164,9 +164,6 @@ export class PlaneComponent implements OnInit {
   private isDifferenceNegligibleOrHuge<T extends Euler | Vector3>(start: T, end: T, accuracy: number) {
     return ['x', 'y', 'z'].every((directionValue: string) => {
       const difference = Math.abs(end[directionValue as 'x' | 'y' | 'z'] - start[directionValue as 'x' | 'y' | 'z']);
-      if (difference > 5) {
-        console.log(difference);
-      }
       return difference < accuracy || difference > 5;
     });
   }
