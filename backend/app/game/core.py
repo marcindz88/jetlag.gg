@@ -632,6 +632,10 @@ class GameSession:
                 # death has already been detected but player has not been removed yet, no need to do anything
                 continue
 
+            if player.is_grounded:
+                # player shouldn't die when landed
+                continue
+
             # check tank level
             current_tank_level = player.position.future_tank_level(timestamp=now)
             if current_tank_level == 0:
