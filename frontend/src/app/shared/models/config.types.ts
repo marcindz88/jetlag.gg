@@ -26,6 +26,7 @@ const defaultClientConfig = {
   CAMERA_MAX_ALTITUDE: 3200,
   LOW_FUEL_THRESHOLD: 20, // %
   LOW_VELOCITY_THRESHOLD: 150000,
+  PLANE_POSITION_REFRESH_TIME: 500,
 };
 
 export const getDependentClientConfig = (CONFIG: BaseConfigType) => {

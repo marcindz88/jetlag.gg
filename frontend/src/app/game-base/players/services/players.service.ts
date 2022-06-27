@@ -105,6 +105,7 @@ export class PlayersService {
   }
 
   private removePlayer(player: OtherPlayer) {
+    this.players.get(player.id)?.destroy();
     this.players.delete(player.id);
     this.playersSorted$.next(this.playersSorted$.value.filter(p => p.id !== player.id));
 

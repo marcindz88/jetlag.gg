@@ -9,7 +9,7 @@ import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { KeyboardControlsService } from '@pg/game-base/services/keyboard-controls.service';
 import { arePointsEqual } from '@pg/game-base/utils/geo-utils';
 import { CONFIG } from '@shared/services/config.service';
-import { map, ReplaySubject, skipWhile, timer } from 'rxjs';
+import { ReplaySubject } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -39,6 +39,7 @@ export class PlayerCockpitComponent implements OnInit {
     this.setFlightParametersChangeHandler();
     this.setupCockpitControls();
     this.setUpdateAirportsHandler();
+    this.setPlayerDestroyHandler();
   }
 
   private setupCockpitControls() {
@@ -72,23 +73,21 @@ export class PlayerCockpitComponent implements OnInit {
   }
 
   private setUpdatePositionAndAirportsHandler() {
-    timer(0, 250)
-      .pipe(
-        untilDestroyed(this),
-        skipWhile(() => this.player.isGrounded || this.player.isCrashed),
-        map(() => this.player.position)
-      )
-      .subscribe(position => {
-        if (
-          (!this.position || !arePointsEqual(this.position?.coordinates, position.coordinates)) &&
-          this.position?.velocity !== 0
-        ) {
-          this.airportList = determineAirportsInProximity(this.airports, position.coordinates);
-          this.airportsUpdateTrigger$.next();
-        }
-        this.position = position;
-        this.cdr.markForCheck();
-      });
+    this.player.lastPosition$.subscribe(position => {
+      if (
+        (!this.position || !arePointsEqual(this.position?.coordinates, position.coordinates)) &&
+        this.position?.velocity !== 0
+      ) {
+        this.airportList = determineAirportsInProximity(this.airports, position.coordinates);
+        this.airportsUpdateTrigger$.next();
+      }
+      this.position = position;
+      this.cdr.markForCheck();
+    });
+  }
+
+  private setPlayerDestroyHandler() {
+    this.player.destroy$.subscribe(() => this.cdr.detectChanges());
   }
 
   private setUpdateAirportsHandler() {

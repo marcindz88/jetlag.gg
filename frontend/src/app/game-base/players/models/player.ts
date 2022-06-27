@@ -12,7 +12,7 @@ import { NotificationComponent } from '@shared/components/notification/notificat
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
 import { NotificationService } from '@shared/services/notification.service';
-import { Subject, take } from 'rxjs';
+import { Subject, take, takeUntil, takeWhile, tap, timer } from 'rxjs';
 import { Color, Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
@@ -41,6 +41,8 @@ export class Player {
   cartesianRotation!: Euler;
 
   flightParametersChanged$ = new Subject<void>();
+  lastPosition$ = new Subject<PlanePosition>();
+  destroy$ = new Subject<void>();
 
   lastPosition!: PlanePosition;
 
@@ -66,6 +68,7 @@ export class Player {
     this.color = new Color(player.color);
 
     this.setPositionFromEvent(player.position);
+    this.setPositionUpdater();
   }
 
   get position(): PlanePosition {
@@ -105,6 +108,7 @@ export class Player {
   endCrashingPlane() {
     this.isCrashed = true;
     this.isCrashing = false;
+    this.destroy();
   }
 
   accelerate() {
@@ -124,6 +128,14 @@ export class Player {
     this.lastPosition.bearing = calculateBearingFromDirectionAndRotation(this.planeObject!.rotation);
     this.lastChangeTimestamp = this.clockService.getCurrentTime();
     this.flightParametersChanged$.next();
+  }
+
+  isBlocked() {
+    return this.isCrashed || this.isCrashing || this.isGrounded;
+  }
+
+  destroy() {
+    this.destroy$.next();
   }
 
   private updateVelocity(isAccelerate: boolean) {
@@ -227,10 +239,6 @@ export class Player {
     this.shipment = null;
   }
 
-  private isBlocked() {
-    return this.isCrashed || this.isCrashing || this.isGrounded;
-  }
-
   private setPositionFromEvent(position: PlanePosition) {
     if (this.lastChangeTimestamp && this.lastChangeTimestamp > position.timestamp && !this.isGrounded) {
       // Ignore position update if locally was updated before or messages came out of order
@@ -248,12 +256,25 @@ export class Player {
     this.fuelConsumption = this.lastPosition.fuel_consumption;
   }
 
+  private setPositionUpdater() {
+    timer(0, CONFIG.PLANE_POSITION_REFRESH_TIME)
+      .pipe(
+        takeUntil(this.destroy$),
+        takeWhile(() => !this.isBlocked()),
+        tap(() => {
+          console.log(this.isBlocked(), this.isCrashing);
+        })
+      )
+      .subscribe(this.updatePositionInternally.bind(this));
+  }
+
   private updatePositionInternally() {
     this.lastPosition = calculatePositionAfterTimeInterval(
       this.lastPosition,
       CONFIG.FLIGHT_ALTITUDE_SCALED,
       this.clockService.getCurrentTime()
     );
+    this.lastPosition$.next(this.lastPosition);
     this.updateCartesianFromLastPosition();
     this.handleLowTankLevelNotification();
   }

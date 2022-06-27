@@ -20,8 +20,8 @@ export class GameOverComponent {
 
   constructor(private router: Router, private userService: UserService) {}
 
-  async restart() {
+  restart() {
     this.userService.resetUser();
-    await this.router.navigate(['/', ROUTES.login]);
+    void this.router.navigate(['/', ROUTES.login]);
   }
 }

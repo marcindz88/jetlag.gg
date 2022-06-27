@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, ViewChild } from '@angular/core';
 import { NgtGroup } from '@angular-three/core/group';
 import { NgtPrimitive } from '@angular-three/core/primitive';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { BeforeRenderedObject } from '@pg/game-base/models/game.types';
 import { CameraModesEnum } from '@pg/game-base/models/gane.enums';
 import { Player } from '@pg/game-base/players/models/player';
@@ -15,6 +16,7 @@ import { degToRad } from 'three/src/math/MathUtils';
 
 import { TextureModelsService } from '../../../services/texture-models.service';
 
+@UntilDestroy()
 @Component({
   selector: 'pg-plane',
   templateUrl: './plane.component.html',
@@ -53,10 +55,12 @@ export class PlaneComponent implements OnInit {
   constructor(
     private textureModelsService: TextureModelsService,
     private clockService: ClockService,
-    private playersService: PlayersService
+    private playersService: PlayersService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
+    this.setPlayerDestroyHandler();
     this.textures$ = this.textureModelsService.planeTextures$.pipe(
       map(({ model }) => {
         model = model.clone(true);
@@ -170,5 +174,9 @@ export class PlaneComponent implements OnInit {
     if (difference) {
       target[direction] += difference * multiplier;
     }
+  }
+
+  private setPlayerDestroyHandler() {
+    this.player.destroy$.pipe(untilDestroyed(this)).subscribe(() => this.cdr.detectChanges());
   }
 }
