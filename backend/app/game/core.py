@@ -162,7 +162,7 @@ class PlayerPosition:
                 longitude=random.uniform(-180, 180),
             ),
             bearing=random.uniform(0, 359),
-            velocity=0,
+            velocity=500_000,
             timestamp=timestamp_now(),
         )
 
@@ -416,7 +416,7 @@ class GameSession:
     def monitor_players(self):
         while True:
             self.remove_idle_players()
-            self.check_fuel_levels()
+            self.check_playing_conditions()
             time.sleep(0.2)
 
     def manage_airports(self):
@@ -519,7 +519,7 @@ class GameSession:
         minimum_distance: int = 300,
     ):
         minimum_sleep_duration = 0.05
-        min_velocity = 50000
+        min_velocity = self.config.FLYING_VELOCITY
         max_velocity = self.config.MAX_VELOCITY
         while True:
             player: Player = self._players[player_id]
@@ -623,8 +623,8 @@ class GameSession:
             if now - player.disconnected_since > self.config.PLAYER_TIME_TO_CONNECT:
                 self.remove_player(player)
 
-    def check_fuel_levels(self):
-        logging.debug(f"check_fuel_levels")
+    def check_playing_conditions(self):
+        logging.debug(f"check_playing_conditions")
         now = timestamp_now()
 
         for player in list(self._players.values()):
@@ -632,10 +632,16 @@ class GameSession:
                 # death has already been detected but player has not been removed yet, no need to do anything
                 continue
 
+            # check tank level
             current_tank_level = player.position.future_tank_level(timestamp=now)
-            if current_tank_level > 0:
+            if current_tank_level == 0:
+                self.pronounce_player_dead(player=player, cause=DeathCause.RUN_OUT_OF_FUEL)
                 continue
-            self.pronounce_player_dead(player=player, cause=DeathCause.RUN_OUT_OF_FUEL)
+
+            # check speed
+            if player.position.velocity < GameConfig.FLYING_VELOCITY:
+                self.pronounce_player_dead(player=player, cause=DeathCause.SPEED_TOO_LOW)
+                continue
 
     def get_player_by_token(self, token: str) -> Player:
         for player in self._players.values():
