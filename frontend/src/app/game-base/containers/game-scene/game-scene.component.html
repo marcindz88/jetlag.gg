@@ -1,5 +1,5 @@
 <ngt-ambient-light [intensity]="0.4"></ngt-ambient-light>
-<pg-earth></pg-earth>
+<pg-earth (loaded)="onEarthRendered()"></pg-earth>
 <pg-plane
   *ngFor="let player of players.values(); trackBy: trackById; index as index"
   [player]="player"

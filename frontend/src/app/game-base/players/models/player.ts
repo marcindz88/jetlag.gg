@@ -12,7 +12,7 @@ import { NotificationComponent } from '@shared/components/notification/notificat
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
 import { NotificationService } from '@shared/services/notification.service';
-import { Subject, take, takeUntil, takeWhile, tap, timer } from 'rxjs';
+import { filter, Subject, take, takeUntil, timer } from 'rxjs';
 import { Color, Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
@@ -257,18 +257,15 @@ export class Player {
   }
 
   private setPositionUpdater() {
-    timer(0, CONFIG.PLANE_POSITION_REFRESH_TIME)
+    timer(0, this.isMyPlayer ? CONFIG.MY_PLANE_POSITION_REFRESH_TIME : CONFIG.PLANE_POSITION_REFRESH_TIME)
       .pipe(
         takeUntil(this.destroy$),
-        takeWhile(() => !this.isBlocked()),
-        tap(() => {
-          console.log(this.isBlocked(), this.isCrashing);
-        })
+        filter(() => !this.isBlocked())
       )
       .subscribe(this.updatePositionInternally.bind(this));
   }
 
-  private updatePositionInternally() {
+  updatePositionInternally() {
     this.lastPosition = calculatePositionAfterTimeInterval(
       this.lastPosition,
       CONFIG.FLIGHT_ALTITUDE_SCALED,

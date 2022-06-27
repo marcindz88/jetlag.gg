@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output, ViewChild } from '@angular/core';
 import { NgtMesh } from '@angular-three/core/meshes';
 import { TextureModelsService } from '@pg/game-base/services/texture-models.service';
 import { CONFIG } from '@shared/services/config.service';
-import { LoaderService } from '@shared/services/loader.service';
 
 @Component({
   selector: 'pg-earth',
@@ -10,12 +9,17 @@ import { LoaderService } from '@shared/services/loader.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EarthComponent {
+  @Output() loaded = new EventEmitter<void>();
+
   @ViewChild(NgtMesh) set earth(earth: NgtMesh | null) {
     if (earth && !this.isloaded) {
       earth.instanceValue.onAfterRender = () => {
         if (!this.isloaded) {
           this.isloaded = true;
-          LoaderService.endLoader();
+          // delay 1s to let everything become more stable
+          setTimeout(() => {
+            this.loaded.emit();
+          }, 1000);
         }
       };
     }

@@ -73,6 +73,17 @@ export class PlaneComponent implements OnInit {
   }
 
   updatePlane(event: BeforeRenderedObject) {
+    if (this.player.isCrashed) {
+      return;
+    }
+
+    if (this.player.isCrashing) {
+      this.cameraMode = CameraModesEnum.FOLLOW;
+      this.handlePlaneCrashing(event.object, event.state.delta);
+      this.focusCameraOnPlayer(event.object);
+      return;
+    }
+
     this.movePlane(event.object, event.state.delta);
     this.focusCameraOnPlayer(event.object);
   }
@@ -81,32 +92,26 @@ export class PlaneComponent implements OnInit {
     return (model.children[0].children[0] as Mesh).material as MeshStandardMaterial;
   }
 
+  private handlePlaneCrashing(plane: Object3D, delta: number) {
+    const deltaMultiplier = delta / (1 / 60);
+    // Rotate
+    plane.rotateY(degToRad(3 * deltaMultiplier));
+    plane.rotateX(degToRad(0.5 * deltaMultiplier));
+
+    // Move closer to origin
+    const newPosition = plane.position.multiplyScalar(1 - 0.00015 * deltaMultiplier).clone();
+    plane.position.set(newPosition.x, newPosition.y, newPosition.z);
+
+    // decrease velocity and move forward
+    this.player.lastPosition.velocity *= 1 - 0.01 * deltaMultiplier;
+    plane.translateY(determineDisplacement(this.player.lastPosition.velocity, delta));
+
+    if (calculateAltitudeFromPosition(newPosition) <= 0) {
+      this.player.endCrashingPlane();
+    }
+  }
+
   private movePlane(plane: Object3D, delta: number) {
-    if (this.player.isCrashed) {
-      return;
-    }
-
-    if (this.player.isCrashing) {
-      const deltaMultiplier = delta / (1 / 60);
-      // Rotate
-      plane.rotateY(degToRad(3 * deltaMultiplier));
-      plane.rotateX(degToRad(0.5 * deltaMultiplier));
-
-      // Move closer to origin
-      const newPosition = plane.position.multiplyScalar(1 - 0.00015 * deltaMultiplier).clone();
-      plane.position.set(newPosition.x, newPosition.y, newPosition.z);
-
-      // decrease velocity and move forward
-      this.player.lastPosition.velocity *= 1 - 0.01 * deltaMultiplier;
-      plane.translateY(determineDisplacement(this.player.lastPosition.velocity, delta));
-
-      if (calculateAltitudeFromPosition(newPosition) <= 0) {
-        this.player.endCrashingPlane();
-      }
-
-      return;
-    }
-
     if (this.player.lastPosition.velocity) {
       const positionCopy = plane.position.clone();
 
@@ -145,7 +150,7 @@ export class PlaneComponent implements OnInit {
     multiplier = 1,
     accuracy = 0.00001
   ): void {
-    if (this.isDifferenceNegligible(start, end, accuracy)) {
+    if (this.isDifferenceNegligibleOrHuge(start, end, accuracy)) {
       ['x', 'y', 'z'].forEach(direction => {
         target[direction as 'x' | 'y' | 'z'] = end[direction as 'x' | 'y' | 'z'];
       });
@@ -156,11 +161,14 @@ export class PlaneComponent implements OnInit {
     });
   }
 
-  private isDifferenceNegligible<T extends Euler | Vector3>(start: T, end: T, accuracy: number) {
-    return ['x', 'y', 'z'].every(
-      (directionValue: string) =>
-        Math.abs(end[directionValue as 'x' | 'y' | 'z'] - start[directionValue as 'x' | 'y' | 'z']) < accuracy
-    );
+  private isDifferenceNegligibleOrHuge<T extends Euler | Vector3>(start: T, end: T, accuracy: number) {
+    return ['x', 'y', 'z'].every((directionValue: string) => {
+      const difference = Math.abs(end[directionValue as 'x' | 'y' | 'z'] - start[directionValue as 'x' | 'y' | 'z']);
+      if (difference > 5) {
+        console.log(difference);
+      }
+      return difference < accuracy || difference > 5;
+    });
   }
 
   private updateDirectionByDifference<T extends Euler | Vector3>(

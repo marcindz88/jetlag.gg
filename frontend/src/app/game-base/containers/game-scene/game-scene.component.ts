@@ -7,6 +7,7 @@ import { CameraModesEnum } from '@pg/game-base/models/gane.enums';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { CONFIG } from '@shared/services/config.service';
+import { LoaderService } from '@shared/services/loader.service';
 import { NotificationService } from '@shared/services/notification.service';
 import { take } from 'rxjs';
 import { DirectionalLight, PerspectiveCamera } from 'three';
@@ -31,6 +32,7 @@ export class GameSceneComponent {
   myPlayer?: Player;
   focusedPlayerId: string | null = null;
   cameraMode = CameraModesEnum.FOLLOW;
+  isEarthRendered = false;
 
   constructor(
     private keyboardControlsService: KeyboardControlsService,
@@ -39,15 +41,19 @@ export class GameSceneComponent {
     private cdr: ChangeDetectorRef,
     private ngtStore: NgtStore,
     private notificationService: NotificationService
-  ) {
-    this.setupAirportsChanges();
-    this.setupPlayersChanges();
-    this.setupCameraLight();
-    this.showHelpInfo();
-  }
+  ) {}
 
   trackById(index: number, object: Player | Airport) {
     return object.id;
+  }
+
+  onEarthRendered() {
+    this.isEarthRendered = true;
+    LoaderService.endLoader();
+    this.setupAirportsChanges();
+    this.setupPlayersChanges();
+    this.setupCameraLight();
+    this.showHelpSnackbar();
   }
 
   private setupAirportsChanges() {
@@ -142,7 +148,7 @@ export class GameSceneComponent {
     });
   }
 
-  private showHelpInfo() {
+  private showHelpSnackbar() {
     this.notificationService.openNotification({
       text: 'You can access help and steering info by pressing [H]',
       icon: 'info',
