@@ -64,7 +64,7 @@ export const calculatePositionAfterTimeInterval = (
   altitude: number,
   currentTimestamp: number
 ): PlanePosition => {
-  if (currentTimestamp === position.timestamp) {
+  if (currentTimestamp === position.timestamp || !position.velocity) {
     return position;
   }
   const timeDifferenceS = (currentTimestamp - position.timestamp) / 1000;
