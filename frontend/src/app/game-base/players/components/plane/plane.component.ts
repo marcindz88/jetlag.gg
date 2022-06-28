@@ -182,6 +182,7 @@ export class PlaneComponent implements OnInit {
   }
 
   private setPlayerDestroyHandler() {
+    // To quickly remove plane from scene when dead or disconnected
     this.player.destroy$.pipe(untilDestroyed(this)).subscribe(() => this.cdr.detectChanges());
   }
 }

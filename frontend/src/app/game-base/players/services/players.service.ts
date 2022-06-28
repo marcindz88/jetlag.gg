@@ -64,7 +64,7 @@ export class PlayersService {
     this.mainWebsocketService.sendWSSMessage({
       type: ClientMessageTypeEnum.PLAYER_POSITION_UPDATE_REQUEST,
       created: this.clockService.getCurrentTime(),
-      data: player.position,
+      data: player.currentPosition,
     });
   }
 
@@ -85,7 +85,7 @@ export class PlayersService {
     // If player has been already setup then don't override
     if (!this.players.get(player.id)) {
       const isMyPlayer = myUserId === player.id;
-      const newPlayer = new Player(player, isMyPlayer, this.clockService, this.notificationService);
+      const newPlayer = new Player(player, isMyPlayer, this.clockService);
       this.players.set(player.id, newPlayer);
 
       if (isMyPlayer) {

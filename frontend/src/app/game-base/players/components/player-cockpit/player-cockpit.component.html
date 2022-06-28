@@ -1,5 +1,5 @@
 <ng-container *ngIf="!player.isCrashed; else gameOverScreen">
-  <div class="player-cockpit" *ngIf="player && position">
+  <div class="player-cockpit" *ngIf="player && position && !player.isCrashing">
     <ng-container *ngIf="!player.isGrounded; else airportMainPanel">
       <pg-nearby-airports
         class="player-cockpit__airports"

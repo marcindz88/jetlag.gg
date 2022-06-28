@@ -73,15 +73,8 @@ export class GameSceneComponent {
       }
       this.myPlayer = this.playersService.myPlayer;
       this.focusOnMyPlayer();
-      this.setupPlaneUpdates();
       this.setupCameraControls();
       this.cdr.markForCheck();
-    });
-  }
-
-  private setupPlaneUpdates() {
-    this.myPlayer!.flightParametersChanged$.pipe(untilDestroyed(this)).subscribe(() => {
-      this.playersService.emitPlayerPositionUpdate(this.myPlayer!);
     });
   }
 

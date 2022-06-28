@@ -3,15 +3,15 @@
     <ngt-group [rotation]="[0, 1 | pi, 0]">
       <pg-elevated-text [text]="airport.name"></pg-elevated-text>
       <ngt-primitive [object]="textures.model" [scale]="0.5"></ngt-primitive>
-      <ngt-group *ngIf="airport.isNearbyAndAvailable$ | async">
+      <ngt-group *ngIf="airport.isNearby$ | async">
         <ngt-mesh>
           <pg-elevated-text
             [position]="[0, 0.7, 0]"
-            [text]="'Press F to land'"
+            [text]="airport.occupying_player ? 'Airport occupied' : 'Press F to land'"
             [colors]="[materials.textMaterialLight, materials.textMaterialDark]"></pg-elevated-text>
           <ngt-circle-geometry [args]="[NEARBY_AIRPORT_SCALED_DISTANCE, 64]"></ngt-circle-geometry>
           <ngt-mesh-basic-material
-            [color]="textures.shadeColor"
+            [color]="airport.occupying_player ? textures.shadeBlockedColor : textures.shadeColor"
             [transparent]="true"
             [opacity]="0.4"></ngt-mesh-basic-material>
         </ngt-mesh>

@@ -1,22 +1,18 @@
-import { MatSnackBarRef } from '@angular/material/snack-bar';
 import { Shipment } from '@pg/game-base/airports/models/airport.types';
-import { isTankLevelLow } from '@pg/game-base/utils/fuel-utils';
 import {
   calculateBearingFromDirectionAndRotation,
   calculatePositionAfterTimeInterval,
   transformCoordinatesIntoPoint,
   transformPointAndDirectionIntoRotation,
 } from '@pg/game-base/utils/geo-utils';
-import { determineNewVelocity, isLowVelocity } from '@pg/game-base/utils/velocity-utils';
-import { NotificationComponent } from '@shared/components/notification/notification.component';
+import { determineNewVelocity } from '@pg/game-base/utils/velocity-utils';
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
-import { NotificationService } from '@shared/services/notification.service';
-import { filter, Subject, take, takeUntil, timer } from 'rxjs';
+import { filter, Subject, takeUntil, timer } from 'rxjs';
 import { Color, Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
-import { DeathCauseEnum, OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
+import { DeathCauseEnum, OtherPlayer, PartialPlayerData, PlanePosition, PlayerUpdateType } from './player.types';
 
 export class Player {
   readonly id: string;
@@ -34,30 +30,20 @@ export class Player {
   deathCause?: DeathCauseEnum;
 
   shipment: null | Shipment = null;
-  shipmentTimeoutHandler?: number;
 
   planeObject?: Object3D;
   cartesianPosition!: Vector3;
   cartesianRotation!: Euler;
 
-  flightParametersChanged$ = new Subject<void>();
-  lastPosition$ = new Subject<PlanePosition>();
-  landed$ = new Subject<void>();
-  destroy$ = new Subject<void>();
+  change$ = new Subject<PlayerUpdateType>();
+  destroy$ = this.getChangeNotifier(PlayerUpdateType.DESTROY);
 
   lastPosition!: PlanePosition;
 
   private fuelConsumption!: number;
   private lastChangeTimestamp: number | null = null;
-  private fuelSnackBarRef?: MatSnackBarRef<NotificationComponent>;
-  private velocitySnackBarRef?: MatSnackBarRef<NotificationComponent>;
 
-  constructor(
-    player: OtherPlayer,
-    isMyPlayer: boolean,
-    private clockService: ClockService,
-    private notificationService: NotificationService
-  ) {
+  constructor(player: OtherPlayer, isMyPlayer: boolean, private clockService: ClockService) {
     this.id = player.id;
     this.nickname = player.nickname;
     this.connected = player.connected;
@@ -72,22 +58,32 @@ export class Player {
     this.setPositionUpdater();
   }
 
-  get position(): PlanePosition {
-    this.updatePositionInternally();
-    return this.lastPosition;
+  get currentPosition(): PlanePosition {
+    return calculatePositionAfterTimeInterval(
+      this.lastPosition,
+      CONFIG.FLIGHT_ALTITUDE_SCALED,
+      this.clockService.getCurrentTime()
+    );
+  }
+
+  getChangeNotifier(...updateTypes: PlayerUpdateType[]) {
+    if (!updateTypes.length) {
+      return this.change$;
+    }
+    return this.change$.pipe(filter(type => updateTypes.includes(type)));
   }
 
   updatePlayer(playerData: PartialPlayerData) {
     if ('connected' in playerData) {
       this.connected = !!playerData.connected;
     }
-    if ('is_grounded' in playerData) {
+    if ('is_grounded' in playerData && playerData.is_grounded !== this.isGrounded) {
       this.isGrounded = !!playerData.is_grounded;
-      this.landed$.next();
+      this.change$.next(PlayerUpdateType.GROUNDED);
     }
-    if ('shipment' in playerData) {
+    if ('shipment' in playerData && playerData.shipment !== this.shipment) {
       this.shipment = playerData.shipment || null;
-      this.setShipmentExpirationHandler();
+      this.change$.next(PlayerUpdateType.SHIPMENT);
     }
     if ('score' in playerData) {
       this.score = playerData.score!;
@@ -98,12 +94,11 @@ export class Player {
     if (playerData.death_cause) {
       this.deathCause = playerData.death_cause;
       this.startCrashingPlane();
+      this.change$.next(PlayerUpdateType.BEFORE_CRASH);
     }
   }
 
   startCrashingPlane() {
-    this.velocitySnackBarRef?.dismiss();
-    this.fuelSnackBarRef?.dismiss();
     this.isCrashing = true;
   }
 
@@ -126,10 +121,10 @@ export class Player {
       return;
     }
     this.planeObject!.rotation.z += degToRad(bearingChange);
-    this.updatePositionInternally();
+    this.updateLastPosition();
     this.lastPosition.bearing = calculateBearingFromDirectionAndRotation(this.planeObject!.rotation);
     this.lastChangeTimestamp = this.clockService.getCurrentTime();
-    this.flightParametersChanged$.next();
+    this.change$.next(PlayerUpdateType.BEARING);
   }
 
   isBlocked() {
@@ -137,7 +132,7 @@ export class Player {
   }
 
   destroy() {
-    this.destroy$.next();
+    this.change$.next(PlayerUpdateType.DESTROY);
   }
 
   private updateVelocity(isAccelerate: boolean) {
@@ -147,114 +142,21 @@ export class Player {
 
     const velocity = determineNewVelocity(this.lastPosition.velocity, isAccelerate);
     if (velocity !== this.lastPosition.velocity) {
-      this.updatePositionInternally();
+      this.updateLastPositionAndAdjustPlane();
       this.lastPosition.velocity = velocity;
       this.lastChangeTimestamp = this.clockService.getCurrentTime();
-      this.flightParametersChanged$.next();
-      this.handleLowVelocityNotification();
+      this.change$.next(PlayerUpdateType.VELOCITY);
     }
-  }
-
-  private handleLowVelocityNotification() {
-    // Not my player -> no notification
-    if (!this.isMyPlayer) {
-      return;
-    }
-
-    // Show notification if low velocity
-    if (!this.isGrounded && isLowVelocity(this.lastPosition.velocity) && !this.velocitySnackBarRef) {
-      this.velocitySnackBarRef = this.notificationService.openNotification(
-        {
-          text: 'You are travelling at extremely low velocity, accelerate to avoid crashing',
-          icon: 'warning',
-          style: 'warn',
-        },
-        { duration: 0 }
-      );
-      this.velocitySnackBarRef
-        .afterDismissed()
-        .pipe(take(1))
-        .subscribe(() => (this.velocitySnackBarRef = undefined));
-      return;
-    }
-
-    // Hide snackbar if velocity is no longer low
-    if ((!isLowVelocity(this.lastPosition.velocity) || this.isGrounded) && this.velocitySnackBarRef) {
-      this.velocitySnackBarRef.dismiss();
-    }
-  }
-
-  private handleLowTankLevelNotification() {
-    // Not my player -> no notification
-    if (!this.isMyPlayer) {
-      return;
-    }
-
-    // Show notification if tank level below 20% and not on the airport
-    if (!this.isGrounded && isTankLevelLow(this.lastPosition.tank_level) && !this.fuelSnackBarRef) {
-      this.fuelSnackBarRef = this.notificationService.openNotification(
-        {
-          text: 'You are running out of fuel, get to the nearest airport to refuel!!!',
-          icon: 'warning',
-          style: 'warn',
-        },
-        { duration: 0 }
-      );
-      this.fuelSnackBarRef
-        .afterDismissed()
-        .pipe(take(1))
-        .subscribe(() => (this.fuelSnackBarRef = undefined));
-      return;
-    }
-
-    // Hide snackbar if tank is already empty or plane is grounded
-    if ((!this.lastPosition.tank_level || this.isGrounded) && this.fuelSnackBarRef) {
-      this.fuelSnackBarRef.dismiss();
-    }
-  }
-
-  private setShipmentExpirationHandler() {
-    if (!this.isMyPlayer) {
-      return;
-    }
-    if (this.shipment) {
-      const remainingTime = this.shipment.valid_till - this.clockService.getCurrentTime();
-      if (remainingTime <= 0) {
-        this.showShipmentExpiredMessage.bind(this);
-        return;
-      }
-      this.shipmentTimeoutHandler = setTimeout(this.showShipmentExpiredMessage.bind(this), remainingTime);
-    } else {
-      if (this.shipmentTimeoutHandler !== undefined) {
-        clearTimeout(this.shipmentTimeoutHandler);
-        this.shipmentTimeoutHandler = undefined;
-      }
-    }
-  }
-
-  private showShipmentExpiredMessage() {
-    this.notificationService.openNotification({
-      text: `Your shipment containing ${this.shipment!.name} has expired`,
-      icon: 'running_with_errors',
-      style: 'error',
-    });
-    this.shipment = null;
   }
 
   private setPositionFromEvent(position: PlanePosition) {
-    if (this.lastChangeTimestamp && this.lastChangeTimestamp > position.timestamp && !this.isGrounded) {
+    if (this.lastChangeTimestamp && this.lastChangeTimestamp >= position.timestamp && !this.isGrounded) {
       // Ignore position update if locally was updated before or messages came out of order
       return;
     }
 
-    this.lastPosition = calculatePositionAfterTimeInterval(
-      position,
-      CONFIG.FLIGHT_ALTITUDE_SCALED,
-      this.clockService.getCurrentTime()
-    );
+    this.updateLastPositionAndAdjustPlane(position);
     this.lastChangeTimestamp = this.lastPosition.timestamp;
-    this.updateCartesianFromLastPosition();
-
     this.fuelConsumption = this.lastPosition.fuel_consumption;
   }
 
@@ -264,18 +166,27 @@ export class Player {
         takeUntil(this.destroy$),
         filter(() => !this.isBlocked())
       )
-      .subscribe(this.updatePositionInternally.bind(this));
+      .subscribe(() => this.updateLastPositionAndAdjustPlane());
   }
 
-  updatePositionInternally() {
+  updateLastPosition(position: PlanePosition = this.lastPosition) {
+    const lastTankLevel = this.lastPosition?.tank_level;
     this.lastPosition = calculatePositionAfterTimeInterval(
-      this.lastPosition,
+      position,
       CONFIG.FLIGHT_ALTITUDE_SCALED,
       this.clockService.getCurrentTime()
     );
-    this.lastPosition$.next(this.lastPosition);
+    // If it is blocked then only tanking could be the change
+    if (!this.isBlocked() && position.velocity) {
+      this.change$.next(PlayerUpdateType.POSITION);
+    } else if (this.lastPosition.tank_level !== lastTankLevel) {
+      this.change$.next(PlayerUpdateType.FUEL_LEVEL);
+    }
+  }
+
+  private updateLastPositionAndAdjustPlane(position: PlanePosition = this.lastPosition) {
+    this.updateLastPosition(position);
     this.updateCartesianFromLastPosition();
-    this.handleLowTankLevelNotification();
   }
 
   private updateCartesianFromLastPosition() {

@@ -1,15 +1,21 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { MatSnackBarRef } from '@angular/material/snack-bar';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { NearAirportsList } from '@pg/game-base/airports/models/airport.types';
 import { AirportsService } from '@pg/game-base/airports/services/airports.service';
 import { determineAirportsInProximity } from '@pg/game-base/airports/utils/utils';
 import { KeyEventEnum } from '@pg/game-base/models/keyboard.types';
-import { PlanePosition } from '@pg/game-base/players/models/player.types';
+import { PlanePosition, PlayerUpdateType } from '@pg/game-base/players/models/player.types';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { KeyboardControlsService } from '@pg/game-base/services/keyboard-controls.service';
+import { isTankLevelLow } from '@pg/game-base/utils/fuel-utils';
 import { arePointsEqual } from '@pg/game-base/utils/geo-utils';
+import { isLowVelocity } from '@pg/game-base/utils/velocity-utils';
+import { NotificationComponent } from '@shared/components/notification/notification.component';
+import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
-import { auditTime, ReplaySubject } from 'rxjs';
+import { NotificationService } from '@shared/services/notification.service';
+import { auditTime, ReplaySubject, take } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -22,25 +28,35 @@ export class PlayerCockpitComponent implements OnInit {
   readonly player = this.playersService.myPlayer!;
   readonly airports = this.airportsService.airports;
 
-  position?: PlanePosition;
   airportList: NearAirportsList = [];
   airportsUpdateTrigger$ = new ReplaySubject<void>();
   showHelp = false;
+
+  private fuelSnackBarRef?: MatSnackBarRef<NotificationComponent>;
+  private velocitySnackBarRef?: MatSnackBarRef<NotificationComponent>;
+  private shipmentTimeoutHandler?: number;
+  private lastPosition!: PlanePosition;
+
+  get position(): PlanePosition {
+    return this.player.lastPosition;
+  }
 
   constructor(
     private cdr: ChangeDetectorRef,
     private keyboardControlsService: KeyboardControlsService,
     private airportsService: AirportsService,
-    private playersService: PlayersService
+    private playersService: PlayersService,
+    private notificationService: NotificationService,
+    private clockService: ClockService
   ) {}
 
   ngOnInit() {
-    this.setUpdatePositionAndAirportsHandler();
-    this.setFlightParametersChangeHandler();
+    this.setAirportsAndFuelUpdater();
     this.setupCockpitControls();
     this.setUpdateAirportsHandler();
-    this.setPlayerDestroyHandler();
-    this.setPlayerLandedHandler();
+    this.setPlayerUiChanges();
+    this.setPlayerPositionUpdateNotifier();
+    this.setPlayerShipmentHandler();
   }
 
   private setupCockpitControls() {
@@ -62,46 +78,143 @@ export class PlayerCockpitComponent implements OnInit {
   }
 
   private startLandingProcedure() {
-    if (!this.player.isGrounded && this.airportList[0]?.isNearbyAndAvailable$.value) {
+    if (!this.player.isGrounded && this.airportList[0]?.isNearby$.value) {
       this.airportsService.requestLandingPermission(this.airportList[0].id);
     }
   }
 
-  private setFlightParametersChangeHandler() {
-    this.player.flightParametersChanged$.pipe(untilDestroyed(this)).subscribe(() => {
-      this.cdr.markForCheck();
-    });
-  }
-
-  private setUpdatePositionAndAirportsHandler() {
-    this.player.lastPosition$
-      .pipe(untilDestroyed(this), auditTime(CONFIG.MY_PLANE_POSITION_REFRESH_TIME))
-      .subscribe(position => {
-        if (
-          (!this.position || !arePointsEqual(this.position?.coordinates, position.coordinates)) &&
-          this.position?.velocity !== 0
-        ) {
-          this.airportList = determineAirportsInProximity(this.airports, position.coordinates);
-          this.airportsUpdateTrigger$.next();
-        }
-        this.position = position;
+  private setAirportsAndFuelUpdater() {
+    this.player
+      .getChangeNotifier(PlayerUpdateType.POSITION, PlayerUpdateType.FUEL_LEVEL)
+      .pipe(untilDestroyed(this), auditTime(250))
+      .subscribe(() => {
+        this.updateNearbyAirports();
+        this.handleLowTankLevelNotification();
         this.cdr.markForCheck();
       });
   }
 
-  private setPlayerDestroyHandler() {
-    this.player.destroy$.pipe(untilDestroyed(this)).subscribe(() => {
-      this.cdr.detectChanges();
-    });
+  private setPlayerShipmentHandler() {
+    this.player
+      .getChangeNotifier(PlayerUpdateType.SHIPMENT)
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.setShipmentExpirationHandler();
+        this.cdr.markForCheck();
+      });
   }
 
-  private setPlayerLandedHandler() {
-    this.player.landed$.pipe(untilDestroyed(this)).subscribe(() => {
-      this.cdr.detectChanges();
-    });
+  private setPlayerUiChanges() {
+    this.player
+      .getChangeNotifier(PlayerUpdateType.GROUNDED, PlayerUpdateType.DESTROY, PlayerUpdateType.BEFORE_CRASH)
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.discardWarningSnackbars();
+        this.cdr.detectChanges();
+      });
+  }
+
+  private setPlayerPositionUpdateNotifier() {
+    this.player
+      .getChangeNotifier(PlayerUpdateType.VELOCITY, PlayerUpdateType.BEARING)
+      .pipe(untilDestroyed(this))
+      .subscribe(type => {
+        if (type === PlayerUpdateType.VELOCITY) {
+          this.handleLowVelocityNotification();
+        }
+        this.playersService.emitPlayerPositionUpdate(this.player);
+      });
+  }
+
+  private updateNearbyAirports() {
+    if (
+      (!this.lastPosition || !arePointsEqual(this.position?.coordinates, this.lastPosition.coordinates)) &&
+      this.position?.velocity !== 0
+    ) {
+      this.airportList = determineAirportsInProximity(this.airports, this.position.coordinates);
+      this.airportsUpdateTrigger$.next();
+    }
+  }
+
+  private discardWarningSnackbars() {
+    this.velocitySnackBarRef?.dismiss();
+    this.fuelSnackBarRef?.dismiss();
   }
 
   private setUpdateAirportsHandler() {
     this.airportsService.updated$.pipe(untilDestroyed(this)).subscribe(() => this.airportsUpdateTrigger$.next());
+  }
+
+  private handleLowVelocityNotification() {
+    // Show notification if low velocity
+    if (!this.player.isGrounded && isLowVelocity(this.position.velocity) && !this.velocitySnackBarRef) {
+      this.velocitySnackBarRef = this.notificationService.openNotification(
+        {
+          text: 'You are travelling at extremely low velocity, accelerate to avoid crashing',
+          icon: 'warning',
+          style: 'warn',
+        },
+        { duration: 0 }
+      );
+      this.velocitySnackBarRef
+        .afterDismissed()
+        .pipe(take(1))
+        .subscribe(() => (this.velocitySnackBarRef = undefined));
+      return;
+    }
+
+    // Hide snackbar if velocity is no longer low
+    if ((!isLowVelocity(this.position.velocity) || this.player.isGrounded) && this.velocitySnackBarRef) {
+      this.velocitySnackBarRef.dismiss();
+    }
+  }
+
+  private handleLowTankLevelNotification() {
+    // Show notification if tank level below 20% and not on the airport
+    if (!this.player.isGrounded && isTankLevelLow(this.position.tank_level) && !this.fuelSnackBarRef) {
+      this.fuelSnackBarRef = this.notificationService.openNotification(
+        {
+          text: 'You are running out of fuel, get to the nearest airport to refuel!!!',
+          icon: 'warning',
+          style: 'warn',
+        },
+        { duration: 0 }
+      );
+      this.fuelSnackBarRef
+        .afterDismissed()
+        .pipe(take(1))
+        .subscribe(() => (this.fuelSnackBarRef = undefined));
+      return;
+    }
+
+    // Hide snackbar if tank is already empty or plane is grounded
+    if ((!this.position.tank_level || this.player.isGrounded) && this.fuelSnackBarRef) {
+      this.fuelSnackBarRef.dismiss();
+    }
+  }
+
+  private setShipmentExpirationHandler() {
+    if (this.player.shipment) {
+      const remainingTime = this.player.shipment.valid_till - this.clockService.getCurrentTime();
+      if (remainingTime <= 0) {
+        this.showShipmentExpiredMessage.bind(this);
+        return;
+      }
+      this.shipmentTimeoutHandler = window.setTimeout(this.showShipmentExpiredMessage.bind(this), remainingTime);
+    } else {
+      if (this.shipmentTimeoutHandler !== undefined) {
+        clearTimeout(this.shipmentTimeoutHandler);
+        this.shipmentTimeoutHandler = undefined;
+      }
+    }
+  }
+
+  private showShipmentExpiredMessage() {
+    this.notificationService.openNotification({
+      text: `Your shipment containing ${this.player.shipment!.name} has expired`,
+      icon: 'running_with_errors',
+      style: 'error',
+    });
+    this.player.shipment = null;
   }
 }

@@ -18,7 +18,8 @@ export class Airport implements AirportType {
   readonly coordinates: GeoLocationPoint;
   readonly fuel_price: number;
   readonly changed$ = new Subject<void>();
-  readonly isNearbyAndAvailable$ = new BehaviorSubject<boolean>(false);
+  readonly isNearby$ = new BehaviorSubject<boolean>(false);
+  readonly occupiedChange$ = new Subject<void>();
 
   occupying_player: string;
   shipments: Shipment[];
@@ -45,7 +46,10 @@ export class Airport implements AirportType {
   }
 
   updateAirport(airportUpdate: AirportUpdate) {
-    this.occupying_player = airportUpdate.occupying_player;
+    if (this.occupying_player != airportUpdate.occupying_player) {
+      this.occupying_player = airportUpdate.occupying_player;
+      this.occupiedChange$.next();
+    }
     this.shipments = airportUpdate.shipments;
     this.updateIsNearbyAndAvailable();
     this.changed$.next();
@@ -63,8 +67,6 @@ export class Airport implements AirportType {
   }
 
   private updateIsNearbyAndAvailable() {
-    this.isNearbyAndAvailable$.next(
-      this.isClosest && this.distance < CONFIG.AIRPORT_MAXIMUM_DISTANCE_TO_LAND && !this.occupying_player
-    );
+    this.isNearby$.next(this.isClosest && this.distance < CONFIG.AIRPORT_MAXIMUM_DISTANCE_TO_LAND);
   }
 }

@@ -11,6 +11,7 @@ export class TextureModelsService {
   airportTextures$!: Observable<{
     model: Object3D;
     shadeColor: Color;
+    shadeBlockedColor: Color;
   }>;
 
   materials = {
@@ -59,6 +60,7 @@ export class TextureModelsService {
       map(([model]) => ({
         model,
         shadeColor: new Color('#676767'),
+        shadeBlockedColor: new Color('#f64444'),
       })),
       shareReplay(1)
     );
