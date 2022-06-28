@@ -26,9 +26,12 @@ export class AirportsService {
 
   resetAll() {
     this.airports = new Map<string, Airport>();
+    this.listChanged$.complete();
     this.listChanged$ = new ReplaySubject<void>();
-    this.updated$ = new ReplaySubject<void>();
+    this.refuellingStopped$.complete();
     this.refuellingStopped$ = new Subject<void>();
+    this.updated$.complete();
+    this.updated$ = new ReplaySubject<void>();
     this.reset$.next();
   }
 

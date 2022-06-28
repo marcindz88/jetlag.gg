@@ -26,6 +26,7 @@ export class PlayersService {
     this.players = new Map<string, Player>();
     this.playersSorted$ = new BehaviorSubject<Player[]>([]);
     this.myPlayer = null;
+    this.changed$.complete();
     this.changed$ = new ReplaySubject<void>();
     this.reset$.next();
   }

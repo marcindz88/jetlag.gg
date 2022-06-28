@@ -49,11 +49,19 @@ export class GameSceneComponent {
 
   onEarthRendered() {
     this.isEarthRendered = true;
+    this.teleportPlaneToCorrectPosition();
     LoaderService.endLoader();
     this.setupAirportsChanges();
     this.setupPlayersChanges();
     this.setupCameraLight();
     this.showHelpSnackbar();
+  }
+
+  private teleportPlaneToCorrectPosition() {
+    if (this.myPlayer) {
+      this.myPlayer.updateLastPosition();
+      this.myPlayer.initialPosition = this.myPlayer.cartesianPosition;
+    }
   }
 
   private setupAirportsChanges() {

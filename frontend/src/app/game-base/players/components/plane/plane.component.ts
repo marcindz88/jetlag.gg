@@ -27,13 +27,6 @@ export class PlaneComponent implements OnInit {
     this.player.planeObject = plane?.instanceValue;
   }
 
-  @Input() set position(position: Vector3) {
-    if (!this.initialPosition || !this.player.planeObject) {
-      this.initialPosition = position;
-    }
-    this.targetPosition = position;
-  }
-
   @Input() camera?: Camera;
   @Input() player!: Player;
   @Input() cameraMode: CameraModesEnum = CameraModesEnum.FREE;
@@ -46,8 +39,6 @@ export class PlaneComponent implements OnInit {
   }
 
   textures$?: Observable<{ model: Object3D }>;
-  initialPosition?: Vector3;
-  targetPosition?: Vector3;
   cameraFocused = false;
 
   readonly materials = this.textureModelsService.materials;
@@ -100,7 +91,7 @@ export class PlaneComponent implements OnInit {
 
     // Move closer to origin
     const newPosition = plane.position.multiplyScalar(1 - 0.00015 * deltaMultiplier).clone();
-    plane.position.set(newPosition.x, newPosition.y, newPosition.z);
+    plane.position.copy(newPosition);
 
     // decrease velocity and move forward
     this.player.lastPosition.velocity *= 1 - 0.01 * deltaMultiplier;
@@ -121,24 +112,27 @@ export class PlaneComponent implements OnInit {
       plane.translateY(displacement);
 
       // Update targets by current movement
-      this.updateByDifference(this.targetPosition!, positionCopy, plane.position, 1, 0.0000000001);
+      this.updateByDifference(this.player.cartesianPosition, positionCopy, plane.position, 1, 0.0000000001);
     }
 
     // Update position up to target gradually
-    this.updateByDifference(plane.position, plane.position, this.targetPosition!, 0.1);
+    this.updateByDifference(plane.position, plane.position, this.player.cartesianPosition, 0.1);
   }
 
   private focusCameraOnPlayer(plane: Object3D) {
     if (this.player.isFocused && this.cameraMode !== CameraModesEnum.FREE && this.camera) {
+      // SET position
       const position = plane.position.clone().multiplyScalar(CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER);
-      const mock = this.camera.clone();
-      mock.position.set(position.x, position.y, position.z);
-      mock.lookAt(plane.position);
+      this.camera.position.copy(position);
+      // SET rotation gradually using a copy that is looked at
+      const cameraQuaternionCopy = this.camera.quaternion.clone();
+      this.camera.lookAt(plane.position);
       if (this.cameraMode === CameraModesEnum.POSITION) {
-        mock.rotation.z -= plane.rotation.z;
+        this.camera.rotation.z -= plane.rotation.z;
       }
-      this.camera.position.set(position.x, position.y, position.z);
-      this.camera.quaternion.slerp(mock.quaternion, this.cameraFocused ? 0.1 : 1);
+      const updatedCameraQuaternion = this.camera.quaternion.clone();
+      this.camera.quaternion.copy(cameraQuaternionCopy);
+      this.camera.quaternion.slerp(updatedCameraQuaternion, this.cameraFocused ? 0.1 : 1);
       this.cameraFocused = true;
     }
   }
@@ -183,6 +177,6 @@ export class PlaneComponent implements OnInit {
 
   private setPlayerDestroyHandler() {
     // To quickly remove plane from scene when dead or disconnected
-    this.player.destroy$.pipe(untilDestroyed(this)).subscribe(() => this.cdr.detectChanges());
+    this.player.changeNotifiers.destroy$.pipe(untilDestroyed(this)).subscribe(() => this.cdr.markForCheck());
   }
 }

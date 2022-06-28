@@ -12,7 +12,7 @@ import { filter, Subject, takeUntil, timer } from 'rxjs';
 import { Color, Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
-import { DeathCauseEnum, OtherPlayer, PartialPlayerData, PlanePosition, PlayerUpdateType } from './player.types';
+import { DeathCauseEnum, OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
 
 export class Player {
   readonly id: string;
@@ -32,11 +32,17 @@ export class Player {
   shipment: null | Shipment = null;
 
   planeObject?: Object3D;
+  initialPosition!: Vector3;
   cartesianPosition!: Vector3;
   cartesianRotation!: Euler;
 
-  change$ = new Subject<PlayerUpdateType>();
-  destroy$ = this.getChangeNotifier(PlayerUpdateType.DESTROY);
+  changeNotifiers = {
+    position$: new Subject<void>(),
+    destroy$: new Subject<void>(),
+    shipment$: new Subject<void>(),
+    velocityOrBearing$: new Subject<void>(),
+    blocked$: new Subject<void>(),
+  };
 
   lastPosition!: PlanePosition;
 
@@ -56,6 +62,8 @@ export class Player {
 
     this.setPositionFromEvent(player.position);
     this.setPositionUpdater();
+
+    this.initialPosition = this.cartesianPosition;
   }
 
   get currentPosition(): PlanePosition {
@@ -66,24 +74,17 @@ export class Player {
     );
   }
 
-  getChangeNotifier(...updateTypes: PlayerUpdateType[]) {
-    if (!updateTypes.length) {
-      return this.change$;
-    }
-    return this.change$.pipe(filter(type => updateTypes.includes(type)));
-  }
-
   updatePlayer(playerData: PartialPlayerData) {
     if ('connected' in playerData) {
       this.connected = !!playerData.connected;
     }
     if ('is_grounded' in playerData && playerData.is_grounded !== this.isGrounded) {
       this.isGrounded = !!playerData.is_grounded;
-      this.change$.next(PlayerUpdateType.GROUNDED);
+      this.changeNotifiers.blocked$.next();
     }
     if ('shipment' in playerData && playerData.shipment !== this.shipment) {
       this.shipment = playerData.shipment || null;
-      this.change$.next(PlayerUpdateType.SHIPMENT);
+      this.changeNotifiers.shipment$.next();
     }
     if ('score' in playerData) {
       this.score = playerData.score!;
@@ -94,7 +95,7 @@ export class Player {
     if (playerData.death_cause) {
       this.deathCause = playerData.death_cause;
       this.startCrashingPlane();
-      this.change$.next(PlayerUpdateType.BEFORE_CRASH);
+      this.changeNotifiers.blocked$.next();
     }
   }
 
@@ -124,7 +125,7 @@ export class Player {
     this.updateLastPosition();
     this.lastPosition.bearing = calculateBearingFromDirectionAndRotation(this.planeObject!.rotation);
     this.lastChangeTimestamp = this.clockService.getCurrentTime();
-    this.change$.next(PlayerUpdateType.BEARING);
+    this.changeNotifiers.velocityOrBearing$.next();
   }
 
   isBlocked() {
@@ -132,7 +133,9 @@ export class Player {
   }
 
   destroy() {
-    this.change$.next(PlayerUpdateType.DESTROY);
+    this.changeNotifiers.blocked$.next();
+    this.changeNotifiers.destroy$.next();
+    Object.values(this.changeNotifiers).forEach(notifier => notifier.complete());
   }
 
   private updateVelocity(isAccelerate: boolean) {
@@ -142,10 +145,10 @@ export class Player {
 
     const velocity = determineNewVelocity(this.lastPosition.velocity, isAccelerate);
     if (velocity !== this.lastPosition.velocity) {
-      this.updateLastPositionAndAdjustPlane();
+      this.updateLastPosition();
       this.lastPosition.velocity = velocity;
       this.lastChangeTimestamp = this.clockService.getCurrentTime();
-      this.change$.next(PlayerUpdateType.VELOCITY);
+      this.changeNotifiers.velocityOrBearing$.next();
     }
   }
 
@@ -163,25 +166,19 @@ export class Player {
   private setPositionUpdater() {
     timer(0, this.isMyPlayer ? CONFIG.MY_PLANE_POSITION_REFRESH_TIME : CONFIG.PLANE_POSITION_REFRESH_TIME)
       .pipe(
-        takeUntil(this.destroy$),
+        takeUntil(this.changeNotifiers.destroy$),
         filter(() => !this.isBlocked())
       )
       .subscribe(() => this.updateLastPositionAndAdjustPlane());
   }
 
   updateLastPosition(position: PlanePosition = this.lastPosition) {
-    const lastTankLevel = this.lastPosition?.tank_level;
     this.lastPosition = calculatePositionAfterTimeInterval(
       position,
       CONFIG.FLIGHT_ALTITUDE_SCALED,
       this.clockService.getCurrentTime()
     );
-    // If it is blocked then only tanking could be the change
-    if (!this.isBlocked() && position.velocity) {
-      this.change$.next(PlayerUpdateType.POSITION);
-    } else if (this.lastPosition.tank_level !== lastTankLevel) {
-      this.change$.next(PlayerUpdateType.FUEL_LEVEL);
-    }
+    this.changeNotifiers.position$.next();
   }
 
   private updateLastPositionAndAdjustPlane(position: PlanePosition = this.lastPosition) {

@@ -5,7 +5,7 @@ import { NearAirportsList } from '@pg/game-base/airports/models/airport.types';
 import { AirportsService } from '@pg/game-base/airports/services/airports.service';
 import { determineAirportsInProximity } from '@pg/game-base/airports/utils/utils';
 import { KeyEventEnum } from '@pg/game-base/models/keyboard.types';
-import { PlanePosition, PlayerUpdateType } from '@pg/game-base/players/models/player.types';
+import { PlanePosition } from '@pg/game-base/players/models/player.types';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { KeyboardControlsService } from '@pg/game-base/services/keyboard-controls.service';
 import { isTankLevelLow } from '@pg/game-base/utils/fuel-utils';
@@ -31,15 +31,11 @@ export class PlayerCockpitComponent implements OnInit {
   airportList: NearAirportsList = [];
   airportsUpdateTrigger$ = new ReplaySubject<void>();
   showHelp = false;
+  lastPosition!: PlanePosition;
 
   private fuelSnackBarRef?: MatSnackBarRef<NotificationComponent>;
   private velocitySnackBarRef?: MatSnackBarRef<NotificationComponent>;
   private shipmentTimeoutHandler?: number;
-  private lastPosition!: PlanePosition;
-
-  get position(): PlanePosition {
-    return this.player.lastPosition;
-  }
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -84,54 +80,42 @@ export class PlayerCockpitComponent implements OnInit {
   }
 
   private setAirportsAndFuelUpdater() {
-    this.player
-      .getChangeNotifier(PlayerUpdateType.POSITION, PlayerUpdateType.FUEL_LEVEL)
-      .pipe(untilDestroyed(this), auditTime(250))
-      .subscribe(() => {
-        this.updateNearbyAirports();
-        this.handleLowTankLevelNotification();
-        this.cdr.markForCheck();
-      });
+    this.player.changeNotifiers.position$.pipe(untilDestroyed(this), auditTime(250)).subscribe(() => {
+      const position = this.player.lastPosition;
+      this.updateNearbyAirports(position);
+      this.handleLowTankLevelNotification();
+      this.lastPosition = position;
+      this.cdr.markForCheck();
+    });
   }
 
   private setPlayerShipmentHandler() {
-    this.player
-      .getChangeNotifier(PlayerUpdateType.SHIPMENT)
-      .pipe(untilDestroyed(this))
-      .subscribe(() => {
-        this.setShipmentExpirationHandler();
-        this.cdr.markForCheck();
-      });
+    this.player.changeNotifiers.shipment$.pipe(untilDestroyed(this)).subscribe(() => {
+      this.setShipmentExpirationHandler();
+      this.cdr.markForCheck();
+    });
   }
 
   private setPlayerUiChanges() {
-    this.player
-      .getChangeNotifier(PlayerUpdateType.GROUNDED, PlayerUpdateType.DESTROY, PlayerUpdateType.BEFORE_CRASH)
-      .pipe(untilDestroyed(this))
-      .subscribe(() => {
-        this.discardWarningSnackbars();
-        this.cdr.detectChanges();
-      });
+    this.player.changeNotifiers.blocked$.pipe(untilDestroyed(this)).subscribe(() => {
+      this.discardWarningSnackbars();
+      this.cdr.detectChanges();
+    });
   }
 
   private setPlayerPositionUpdateNotifier() {
-    this.player
-      .getChangeNotifier(PlayerUpdateType.VELOCITY, PlayerUpdateType.BEARING)
-      .pipe(untilDestroyed(this))
-      .subscribe(type => {
-        if (type === PlayerUpdateType.VELOCITY) {
-          this.handleLowVelocityNotification();
-        }
-        this.playersService.emitPlayerPositionUpdate(this.player);
-      });
+    this.player.changeNotifiers.velocityOrBearing$.pipe(untilDestroyed(this)).subscribe(() => {
+      this.handleLowVelocityNotification();
+      this.playersService.emitPlayerPositionUpdate(this.player);
+    });
   }
 
-  private updateNearbyAirports() {
+  private updateNearbyAirports(position: PlanePosition) {
     if (
-      (!this.lastPosition || !arePointsEqual(this.position?.coordinates, this.lastPosition.coordinates)) &&
-      this.position?.velocity !== 0
+      (!this.lastPosition || !arePointsEqual(this.lastPosition?.coordinates, position.coordinates)) &&
+      position?.velocity !== 0
     ) {
-      this.airportList = determineAirportsInProximity(this.airports, this.position.coordinates);
+      this.airportList = determineAirportsInProximity(this.airports, position.coordinates);
       this.airportsUpdateTrigger$.next();
     }
   }
@@ -147,7 +131,7 @@ export class PlayerCockpitComponent implements OnInit {
 
   private handleLowVelocityNotification() {
     // Show notification if low velocity
-    if (!this.player.isGrounded && isLowVelocity(this.position.velocity) && !this.velocitySnackBarRef) {
+    if (!this.player.isGrounded && isLowVelocity(this.player.lastPosition.velocity) && !this.velocitySnackBarRef) {
       this.velocitySnackBarRef = this.notificationService.openNotification(
         {
           text: 'You are travelling at extremely low velocity, accelerate to avoid crashing',
@@ -164,14 +148,14 @@ export class PlayerCockpitComponent implements OnInit {
     }
 
     // Hide snackbar if velocity is no longer low
-    if ((!isLowVelocity(this.position.velocity) || this.player.isGrounded) && this.velocitySnackBarRef) {
+    if ((!isLowVelocity(this.player.lastPosition.velocity) || this.player.isGrounded) && this.velocitySnackBarRef) {
       this.velocitySnackBarRef.dismiss();
     }
   }
 
   private handleLowTankLevelNotification() {
     // Show notification if tank level below 20% and not on the airport
-    if (!this.player.isGrounded && isTankLevelLow(this.position.tank_level) && !this.fuelSnackBarRef) {
+    if (!this.player.isGrounded && isTankLevelLow(this.player.lastPosition.tank_level) && !this.fuelSnackBarRef) {
       this.fuelSnackBarRef = this.notificationService.openNotification(
         {
           text: 'You are running out of fuel, get to the nearest airport to refuel!!!',
@@ -188,7 +172,7 @@ export class PlayerCockpitComponent implements OnInit {
     }
 
     // Hide snackbar if tank is already empty or plane is grounded
-    if ((!this.position.tank_level || this.player.isGrounded) && this.fuelSnackBarRef) {
+    if ((!this.player.lastPosition.tank_level || this.player.isGrounded) && this.fuelSnackBarRef) {
       this.fuelSnackBarRef.dismiss();
     }
   }

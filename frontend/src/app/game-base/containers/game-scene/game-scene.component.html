@@ -3,7 +3,6 @@
 <pg-plane
   *ngFor="let player of players.values(); trackBy: trackById; index as index"
   [player]="player"
-  [position]="player.cartesianPosition"
   [camera]="camera"
   [cameraMode]="cameraMode"
   [isFocused]="focusedPlayerId === player.id"></pg-plane>

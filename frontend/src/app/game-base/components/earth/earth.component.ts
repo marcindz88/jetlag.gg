@@ -16,10 +16,7 @@ export class EarthComponent {
       earth.instanceValue.onAfterRender = () => {
         if (!this.isloaded) {
           this.isloaded = true;
-          // delay 1s to let everything become more stable
-          setTimeout(() => {
-            this.loaded.emit();
-          }, 1000);
+          this.loaded.emit();
         }
       };
     }

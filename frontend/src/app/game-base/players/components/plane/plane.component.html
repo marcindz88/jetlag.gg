@@ -1,7 +1,7 @@
 <ng-container *ngIf="textures$ | async as textures">
   <ngt-group
     *ngIf="!player.isCrashed"
-    [position]="initialPosition"
+    [position]="player.initialPosition"
     [rotation]="player.cartesianRotation"
     (beforeRender)="updatePlane($event)">
     <ngt-group [rotation]="[0, 1 | pi, 0]" *ngIf="!player.isMyPlayer">

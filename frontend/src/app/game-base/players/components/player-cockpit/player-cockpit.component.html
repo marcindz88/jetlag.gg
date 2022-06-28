@@ -1,13 +1,13 @@
 <ng-container *ngIf="!player.isCrashed; else gameOverScreen">
-  <div class="player-cockpit" *ngIf="player && position && !player.isCrashing">
+  <div class="player-cockpit" *ngIf="player && lastPosition && !player.isCrashing">
     <ng-container *ngIf="!player.isGrounded; else airportMainPanel">
       <pg-nearby-airports
         class="player-cockpit__airports"
         [airportList]="airportList"
         [updateTrigger$]="airportsUpdateTrigger$"></pg-nearby-airports>
-      <p class="player-cockpit__velocity">{{ position.velocity | number: '7.0-0' }} km/h</p>
-      <pg-player-cockpit-stats class="player-cockpit__stats" [position]="position"></pg-player-cockpit-stats>
-      <pg-compass class="player-cockpit__compass" [bearing]="position.bearing"></pg-compass>
+      <p class="player-cockpit__velocity">{{ lastPosition.velocity | number: '7.0-0' }} km/h</p>
+      <pg-player-cockpit-stats class="player-cockpit__stats" [position]="lastPosition"></pg-player-cockpit-stats>
+      <pg-compass class="player-cockpit__compass" [bearing]="lastPosition.bearing"></pg-compass>
       <pg-shipment-details
         class="player-cockpit__shipment"
         *ngIf="player.shipment"
