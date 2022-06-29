@@ -61,6 +61,7 @@ export class GameSceneComponent {
     if (this.myPlayer) {
       this.myPlayer.updateLastPosition();
       this.myPlayer.initialPosition = this.myPlayer.cartesianPosition;
+      this.myPlayer.initialRotation = this.myPlayer.cartesianRotation;
     }
   }
 

@@ -17,8 +17,8 @@ export class KeyboardControlsService {
     // Quick events
     this.handleKeyEvent(KeyEventEnum.FORWARD, ['w', 'W', 'ArrowUp', 'Up'], 200);
     this.handleKeyEvent(KeyEventEnum.BACKWARD, ['s', 'S', 'ArrowDown', 'Down'], 200);
-    this.handleKeyEvent(KeyEventEnum.TURN_LEFT, ['a', 'A', 'ArrowLeft', 'Left'], 100);
-    this.handleKeyEvent(KeyEventEnum.TURN_RIGHT, ['d', 'D', 'ArrowRight', 'Right'], 100);
+    this.handleKeyEvent(KeyEventEnum.TURN_LEFT, ['a', 'A', 'ArrowLeft', 'Left'], 200);
+    this.handleKeyEvent(KeyEventEnum.TURN_RIGHT, ['d', 'D', 'ArrowRight', 'Right'], 200);
 
     // Ordinary slow events
     this.handleKeyEvent(KeyEventEnum.PLAYER_FOCUS_PREV, ['<', ',']);

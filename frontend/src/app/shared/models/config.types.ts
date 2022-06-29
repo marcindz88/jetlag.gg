@@ -14,7 +14,7 @@ const defaultServerConfig = {
 const defaultClientConfig = {
   MIN_STEP_VELOCITY: 500,
   MAX_STEP_VELOCITY: 50000,
-  STEP_BEARING: 2,
+  STEP_BEARING: 4,
   EARTH_RADIUS_SCALED: 40,
   NUMBER_OF_CLOSE_AIRPORTS: 6,
   CAMERA_DEFAULT_ZOOM: 1 / 3,

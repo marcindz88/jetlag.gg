@@ -148,7 +148,7 @@ export class PlayerCockpitComponent implements OnInit {
     }
 
     // Hide snackbar if velocity is no longer low
-    if ((!isLowVelocity(this.player.lastPosition.velocity) || this.player.isGrounded) && this.velocitySnackBarRef) {
+    if ((!isLowVelocity(this.player.lastPosition.velocity) || this.player.isBlocked()) && this.velocitySnackBarRef) {
       this.velocitySnackBarRef.dismiss();
     }
   }
@@ -169,11 +169,6 @@ export class PlayerCockpitComponent implements OnInit {
         .pipe(take(1))
         .subscribe(() => (this.fuelSnackBarRef = undefined));
       return;
-    }
-
-    // Hide snackbar if tank is already empty or plane is grounded
-    if ((!this.player.lastPosition.tank_level || this.player.isGrounded) && this.fuelSnackBarRef) {
-      this.fuelSnackBarRef.dismiss();
     }
   }
 

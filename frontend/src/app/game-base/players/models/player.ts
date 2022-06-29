@@ -32,9 +32,10 @@ export class Player {
   shipment: null | Shipment = null;
 
   planeObject?: Object3D;
-  initialPosition!: Vector3;
-  cartesianPosition!: Vector3;
-  cartesianRotation!: Euler;
+  initialPosition = new Vector3();
+  cartesianPosition = new Vector3();
+  initialRotation = new Euler();
+  cartesianRotation = new Euler();
 
   changeNotifiers = {
     position$: new Subject<void>(),
@@ -47,7 +48,7 @@ export class Player {
   lastPosition!: PlanePosition;
 
   private fuelConsumption!: number;
-  private lastChangeTimestamp: number | null = null;
+  private lastInternalChangeTimestamp: number | null = null;
 
   constructor(player: OtherPlayer, isMyPlayer: boolean, private clockService: ClockService) {
     this.id = player.id;
@@ -64,6 +65,7 @@ export class Player {
     this.setPositionUpdater();
 
     this.initialPosition = this.cartesianPosition;
+    this.initialRotation = this.cartesianRotation;
   }
 
   get currentPosition(): PlanePosition {
@@ -121,10 +123,10 @@ export class Player {
     if (this.isBlocked()) {
       return;
     }
-    this.planeObject!.rotation.z += degToRad(bearingChange);
-    this.updateLastPosition();
-    this.lastPosition.bearing = calculateBearingFromDirectionAndRotation(this.planeObject!.rotation);
-    this.lastChangeTimestamp = this.clockService.getCurrentTime();
+    this.updateLastPositionAndAdjustPlane();
+    this.cartesianRotation.z += degToRad(bearingChange);
+    this.lastPosition.bearing = calculateBearingFromDirectionAndRotation(this.cartesianRotation);
+    this.lastInternalChangeTimestamp = this.clockService.getCurrentTime();
     this.changeNotifiers.velocityOrBearing$.next();
   }
 
@@ -147,19 +149,19 @@ export class Player {
     if (velocity !== this.lastPosition.velocity) {
       this.updateLastPosition();
       this.lastPosition.velocity = velocity;
-      this.lastChangeTimestamp = this.clockService.getCurrentTime();
+      this.lastInternalChangeTimestamp = this.clockService.getCurrentTime();
       this.changeNotifiers.velocityOrBearing$.next();
     }
   }
 
   private setPositionFromEvent(position: PlanePosition) {
-    if (this.lastChangeTimestamp && this.lastChangeTimestamp >= position.timestamp && !this.isGrounded) {
+    if (this.lastInternalChangeTimestamp && this.lastInternalChangeTimestamp > position.timestamp && !this.isGrounded) {
       // Ignore position update if locally was updated before or messages came out of order
       return;
     }
 
     this.updateLastPositionAndAdjustPlane(position);
-    this.lastChangeTimestamp = this.lastPosition.timestamp;
+    this.lastInternalChangeTimestamp = this.lastPosition.timestamp;
     this.fuelConsumption = this.lastPosition.fuel_consumption;
   }
 

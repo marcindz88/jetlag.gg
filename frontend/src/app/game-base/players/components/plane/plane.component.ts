@@ -11,7 +11,7 @@ import { determineDisplacement } from '@pg/game-base/utils/velocity-utils';
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
 import { map, Observable } from 'rxjs';
-import { Camera, Euler, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
+import { Camera, Euler, Mesh, MeshStandardMaterial, Object3D, Quaternion, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
 import { TextureModelsService } from '../../../services/texture-models.service';
@@ -38,20 +38,25 @@ export class PlaneComponent implements OnInit {
     }
   }
 
-  textures$?: Observable<{ model: Object3D }>;
-  cameraFocused = false;
-
+  readonly textures$: Observable<{ model: Object3D }>;
   readonly materials = this.textureModelsService.materials;
+
+  private cameraFocused = false;
+  private temps = {
+    planeQuaternion: new Quaternion(),
+    cameraQuaternionCopy: new Quaternion(),
+    cameraQuaternionCopy2: new Quaternion(),
+    cameraPositionCopy: new Vector3(),
+    lastInitialPosition: new Vector3(),
+    lastInitialRotation: new Euler(),
+  };
 
   constructor(
     private textureModelsService: TextureModelsService,
     private clockService: ClockService,
     private playersService: PlayersService,
     private cdr: ChangeDetectorRef
-  ) {}
-
-  ngOnInit() {
-    this.setPlayerDestroyHandler();
+  ) {
     this.textures$ = this.textureModelsService.planeTextures$.pipe(
       map(({ model }) => {
         model = model.clone(true);
@@ -61,6 +66,10 @@ export class PlaneComponent implements OnInit {
         return { model };
       })
     );
+  }
+
+  ngOnInit() {
+    this.setPlayerDestroyHandler();
   }
 
   updatePlane(event: BeforeRenderedObject) {
@@ -75,12 +84,28 @@ export class PlaneComponent implements OnInit {
       return;
     }
 
+    if (
+      this.temps.lastInitialPosition !== this.player.initialPosition ||
+      this.temps.lastInitialRotation !== this.player.initialRotation
+    ) {
+      this.handleInitialPlaneMove(event.object);
+      return;
+    }
+
     this.movePlane(event.object, event.state.delta);
     this.focusCameraOnPlayer(event.object);
   }
 
   getMaterial(model: Object3D) {
     return (model.children[0].children[0] as Mesh).material as MeshStandardMaterial;
+  }
+
+  private handleInitialPlaneMove(plane: Object3D) {
+    plane.rotation.copy(this.player.initialRotation);
+    plane.position.copy(this.player.initialPosition);
+
+    this.temps.lastInitialRotation = this.player.initialRotation;
+    this.temps.lastInitialPosition = this.player.initialPosition;
   }
 
   private handlePlaneCrashing(plane: Object3D, delta: number) {
@@ -104,79 +129,48 @@ export class PlaneComponent implements OnInit {
 
   private movePlane(plane: Object3D, delta: number) {
     if (this.player.lastPosition.velocity) {
-      const positionCopy = plane.position.clone();
+      const targetPlane = new Object3D();
+      targetPlane.position.copy(this.player.cartesianPosition);
+      targetPlane.rotation.copy(this.player.cartesianRotation);
 
       // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
       const displacement = determineDisplacement(this.player.lastPosition.velocity, delta); // delta in s convert to h
-      plane.rotateX(degToRad((displacement / CONFIG.FLIGHT_MOVING_CIRCUMFERENCE) * 360));
+      const rotation = degToRad((displacement / CONFIG.FLIGHT_MOVING_CIRCUMFERENCE) * 360);
+      plane.rotateX(rotation);
+      targetPlane.rotateX(rotation);
       plane.translateY(displacement);
+      targetPlane.translateY(displacement);
 
       // Update targets by current movement
-      this.updateByDifference(this.player.cartesianPosition, positionCopy, plane.position, 1, 0.0000000001);
+      this.player.cartesianPosition = targetPlane.position.clone();
+      this.player.cartesianRotation = targetPlane.rotation.clone();
     }
 
     // Update position up to target gradually
-    this.updateByDifference(plane.position, plane.position, this.player.cartesianPosition, 0.1);
+    plane.position.lerp(this.player.cartesianPosition, 0.1);
+    this.temps.planeQuaternion.setFromEuler(this.player.cartesianRotation);
+    plane.quaternion.slerp(this.temps.planeQuaternion, 0.1);
   }
 
   private focusCameraOnPlayer(plane: Object3D) {
     if (this.player.isFocused && this.cameraMode !== CameraModesEnum.FREE && this.camera) {
       // SET position
-      const position = plane.position.clone().multiplyScalar(CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER);
-      this.camera.position.copy(position);
+      this.camera.position.copy(plane.position.clone().multiplyScalar(CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER));
       // SET rotation gradually using a copy that is looked at
-      const cameraQuaternionCopy = this.camera.quaternion.clone();
+      this.temps.cameraQuaternionCopy.copy(this.camera.quaternion);
       this.camera.lookAt(plane.position);
       if (this.cameraMode === CameraModesEnum.POSITION) {
         this.camera.rotation.z -= plane.rotation.z;
       }
-      const updatedCameraQuaternion = this.camera.quaternion.clone();
-      this.camera.quaternion.copy(cameraQuaternionCopy);
-      this.camera.quaternion.slerp(updatedCameraQuaternion, this.cameraFocused ? 0.1 : 1);
+      this.temps.cameraQuaternionCopy2.copy(this.camera.quaternion);
+      this.camera.quaternion.copy(this.temps.cameraQuaternionCopy);
+      this.camera.quaternion.slerp(this.temps.cameraQuaternionCopy2, this.cameraFocused ? 0.1 : 1);
       this.cameraFocused = true;
-    }
-  }
-
-  private updateByDifference<T extends Euler | Vector3>(
-    target: T,
-    start: T,
-    end: T,
-    multiplier = 1,
-    accuracy = 0.00001
-  ): void {
-    if (this.isDifferenceNegligibleOrHuge(start, end, accuracy)) {
-      ['x', 'y', 'z'].forEach(direction => {
-        target[direction as 'x' | 'y' | 'z'] = end[direction as 'x' | 'y' | 'z'];
-      });
-      return;
-    }
-    ['x', 'y', 'z'].forEach(direction => {
-      this.updateDirectionByDifference(direction as 'x' | 'y' | 'z', target, start, end, multiplier);
-    });
-  }
-
-  private isDifferenceNegligibleOrHuge<T extends Euler | Vector3>(start: T, end: T, accuracy: number) {
-    return ['x', 'y', 'z'].every((directionValue: string) => {
-      const difference = Math.abs(end[directionValue as 'x' | 'y' | 'z'] - start[directionValue as 'x' | 'y' | 'z']);
-      return difference < accuracy || difference > 5;
-    });
-  }
-
-  private updateDirectionByDifference<T extends Euler | Vector3>(
-    direction: 'x' | 'y' | 'z',
-    target: T,
-    start: T,
-    end: T,
-    multiplier: number
-  ) {
-    const difference = end[direction] - start[direction];
-    if (difference) {
-      target[direction] += difference * multiplier;
     }
   }
 
   private setPlayerDestroyHandler() {
     // To quickly remove plane from scene when dead or disconnected
-    this.player.changeNotifiers.destroy$.pipe(untilDestroyed(this)).subscribe(() => this.cdr.markForCheck());
+    this.player.changeNotifiers.destroy$.pipe(untilDestroyed(this)).subscribe(() => this.cdr.detectChanges());
   }
 }

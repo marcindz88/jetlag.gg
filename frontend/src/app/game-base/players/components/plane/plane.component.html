@@ -1,9 +1,5 @@
 <ng-container *ngIf="textures$ | async as textures">
-  <ngt-group
-    *ngIf="!player.isCrashed"
-    [position]="player.initialPosition"
-    [rotation]="player.cartesianRotation"
-    (beforeRender)="updatePlane($event)">
+  <ngt-group *ngIf="!player.isCrashed" (beforeRender)="updatePlane($event)">
     <ngt-group [rotation]="[0, 1 | pi, 0]" *ngIf="!player.isMyPlayer">
       <pg-elevated-text
         [text]="player.nickname"
