@@ -15,7 +15,7 @@ import { NotificationComponent } from '@shared/components/notification/notificat
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
 import { NotificationService } from '@shared/services/notification.service';
-import { auditTime, ReplaySubject, take } from 'rxjs';
+import { ReplaySubject, take, throttleTime } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -80,7 +80,7 @@ export class PlayerCockpitComponent implements OnInit {
   }
 
   private setAirportsAndFuelUpdater() {
-    this.player.changeNotifiers.position$.pipe(untilDestroyed(this), auditTime(250)).subscribe(() => {
+    this.player.changeNotifiers.position$.pipe(untilDestroyed(this), throttleTime(250)).subscribe(() => {
       const position = this.player.lastPosition;
       this.updateNearbyAirports(position);
       this.handleLowTankLevelNotification();
@@ -106,7 +106,7 @@ export class PlayerCockpitComponent implements OnInit {
   private setPlayerPositionUpdateNotifier() {
     this.player.changeNotifiers.velocityOrBearing$.pipe(untilDestroyed(this)).subscribe(() => {
       this.handleLowVelocityNotification();
-      this.playersService.emitPlayerPositionUpdate(this.player);
+      this.playersService.emitPlayerPositionUpdate(this.player.lastPosition);
     });
   }
 

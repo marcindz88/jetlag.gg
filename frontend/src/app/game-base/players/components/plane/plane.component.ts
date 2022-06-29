@@ -7,7 +7,7 @@ import { CameraModesEnum } from '@pg/game-base/models/gane.enums';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
 import { calculateAltitudeFromPosition } from '@pg/game-base/utils/geo-utils';
-import { determineDisplacement } from '@pg/game-base/utils/velocity-utils';
+import { determineDisplacementAndRotation } from '@pg/game-base/utils/velocity-utils';
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
 import { map, Observable } from 'rxjs';
@@ -24,7 +24,9 @@ import { TextureModelsService } from '../../../services/texture-models.service';
 })
 export class PlaneComponent implements OnInit {
   @ViewChild(NgtGroup) set plane(plane: NgtPrimitive) {
-    this.player.planeObject = plane?.instanceValue;
+    if (plane) {
+      this.player.perfectPlaneObject = plane?.instanceValue.clone();
+    }
   }
 
   @Input() camera?: Camera;
@@ -106,6 +108,7 @@ export class PlaneComponent implements OnInit {
 
     this.temps.lastInitialRotation = this.player.initialRotation;
     this.temps.lastInitialPosition = this.player.initialPosition;
+    this.cameraFocused = false;
   }
 
   private handlePlaneCrashing(plane: Object3D, delta: number) {
@@ -120,7 +123,8 @@ export class PlaneComponent implements OnInit {
 
     // decrease velocity and move forward
     this.player.lastPosition.velocity *= 1 - 0.01 * deltaMultiplier;
-    plane.translateY(determineDisplacement(this.player.lastPosition.velocity, delta));
+    const { displacement } = determineDisplacementAndRotation(this.player.lastPosition.velocity, delta);
+    plane.translateY(displacement);
 
     if (calculateAltitudeFromPosition(newPosition) <= 0) {
       this.player.endCrashingPlane();
@@ -128,28 +132,25 @@ export class PlaneComponent implements OnInit {
   }
 
   private movePlane(plane: Object3D, delta: number) {
+    // Update instantly if change bigger than 5 units
+    if (this.player.perfectPlaneObject.position.distanceTo(plane.position) > 3) {
+      plane.position.copy(this.player.perfectPlaneObject.position);
+      plane.quaternion.copy(this.player.perfectPlaneObject.quaternion);
+      return;
+    }
+
+    // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
     if (this.player.lastPosition.velocity) {
-      const targetPlane = new Object3D();
-      targetPlane.position.copy(this.player.cartesianPosition);
-      targetPlane.rotation.copy(this.player.cartesianRotation);
-
-      // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
-      const displacement = determineDisplacement(this.player.lastPosition.velocity, delta); // delta in s convert to h
-      const rotation = degToRad((displacement / CONFIG.FLIGHT_MOVING_CIRCUMFERENCE) * 360);
+      const { displacement, rotation } = determineDisplacementAndRotation(this.player.lastPosition.velocity, delta); // delta in s convert to h
       plane.rotateX(rotation);
-      targetPlane.rotateX(rotation);
+      this.player.perfectPlaneObject.rotateX(rotation);
       plane.translateY(displacement);
-      targetPlane.translateY(displacement);
-
-      // Update targets by current movement
-      this.player.cartesianPosition = targetPlane.position.clone();
-      this.player.cartesianRotation = targetPlane.rotation.clone();
+      this.player.perfectPlaneObject.translateY(displacement);
     }
 
     // Update position up to target gradually
-    plane.position.lerp(this.player.cartesianPosition, 0.1);
-    this.temps.planeQuaternion.setFromEuler(this.player.cartesianRotation);
-    plane.quaternion.slerp(this.temps.planeQuaternion, 0.1);
+    plane.position.lerp(this.player.perfectPlaneObject.position, delta * 4);
+    plane.quaternion.slerp(this.player.perfectPlaneObject.quaternion, 0.1);
   }
 
   private focusCameraOnPlayer(plane: Object3D) {
@@ -164,6 +165,7 @@ export class PlaneComponent implements OnInit {
       }
       this.temps.cameraQuaternionCopy2.copy(this.camera.quaternion);
       this.camera.quaternion.copy(this.temps.cameraQuaternionCopy);
+      // when player was not in focus move instantly to it
       this.camera.quaternion.slerp(this.temps.cameraQuaternionCopy2, this.cameraFocused ? 0.1 : 1);
       this.cameraFocused = true;
     }

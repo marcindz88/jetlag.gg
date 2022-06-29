@@ -31,11 +31,9 @@ export class Player {
 
   shipment: null | Shipment = null;
 
-  planeObject?: Object3D;
+  perfectPlaneObject: Object3D = new Object3D();
   initialPosition = new Vector3();
-  cartesianPosition = new Vector3();
   initialRotation = new Euler();
-  cartesianRotation = new Euler();
 
   changeNotifiers = {
     position$: new Subject<void>(),
@@ -62,10 +60,8 @@ export class Player {
     this.color = new Color(player.color);
 
     this.setPositionFromEvent(player.position);
+    this.updatePlanePositionInstantly();
     this.setPositionUpdater();
-
-    this.initialPosition = this.cartesianPosition;
-    this.initialRotation = this.cartesianRotation;
   }
 
   get currentPosition(): PlanePosition {
@@ -74,6 +70,12 @@ export class Player {
       CONFIG.FLIGHT_ALTITUDE_SCALED,
       this.clockService.getCurrentTime()
     );
+  }
+
+  updatePlanePositionInstantly() {
+    this.updateLastPosition();
+    this.initialPosition = this.perfectPlaneObject.position.clone();
+    this.initialRotation = this.perfectPlaneObject.rotation.clone();
   }
 
   updatePlayer(playerData: PartialPlayerData) {
@@ -123,9 +125,13 @@ export class Player {
     if (this.isBlocked()) {
       return;
     }
-    this.updateLastPositionAndAdjustPlane();
-    this.cartesianRotation.z += degToRad(bearingChange);
-    this.lastPosition.bearing = calculateBearingFromDirectionAndRotation(this.cartesianRotation);
+
+    // Update position before bearing change
+    this.updateLastPosition();
+
+    // Update bearing and last position
+    this.perfectPlaneObject.rotation.z += degToRad(bearingChange);
+    this.lastPosition.bearing = calculateBearingFromDirectionAndRotation(this.perfectPlaneObject.rotation);
     this.lastInternalChangeTimestamp = this.clockService.getCurrentTime();
     this.changeNotifiers.velocityOrBearing$.next();
   }
@@ -160,7 +166,7 @@ export class Player {
       return;
     }
 
-    this.updateLastPositionAndAdjustPlane(position);
+    this.updateLastPosition(position);
     this.lastInternalChangeTimestamp = this.lastPosition.timestamp;
     this.fuelConsumption = this.lastPosition.fuel_consumption;
   }
@@ -171,7 +177,9 @@ export class Player {
         takeUntil(this.changeNotifiers.destroy$),
         filter(() => !this.isBlocked())
       )
-      .subscribe(() => this.updateLastPositionAndAdjustPlane());
+      .subscribe(() => {
+        this.updateLastPosition();
+      });
   }
 
   updateLastPosition(position: PlanePosition = this.lastPosition) {
@@ -180,22 +188,17 @@ export class Player {
       CONFIG.FLIGHT_ALTITUDE_SCALED,
       this.clockService.getCurrentTime()
     );
+    this.updateCartesianFromLastPosition();
     this.changeNotifiers.position$.next();
   }
 
-  private updateLastPositionAndAdjustPlane(position: PlanePosition = this.lastPosition) {
-    this.updateLastPosition(position);
-    this.updateCartesianFromLastPosition();
-  }
-
   private updateCartesianFromLastPosition() {
-    this.cartesianPosition = transformCoordinatesIntoPoint(
-      this.lastPosition.coordinates,
-      CONFIG.FLIGHT_ALTITUDE_SCALED
+    this.perfectPlaneObject.position.copy(
+      transformCoordinatesIntoPoint(this.lastPosition.coordinates, CONFIG.FLIGHT_ALTITUDE_SCALED)
     );
-    this.cartesianRotation = transformPointAndDirectionIntoRotation(
-      this.lastPosition.coordinates,
-      this.lastPosition.bearing
+
+    this.perfectPlaneObject.rotation.copy(
+      transformPointAndDirectionIntoRotation(this.lastPosition.coordinates, this.lastPosition.bearing)
     );
   }
 }

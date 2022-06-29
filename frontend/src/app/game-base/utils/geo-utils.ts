@@ -15,7 +15,8 @@ export const arePointsEqual = (start: GeoLocationPoint, end: GeoLocationPoint) =
 };
 
 export const normalizeBearing = (bearing: number) => {
-  return bearing < 0 ? bearing + 360 : bearing;
+  const normalizedBearing = bearing < 0 ? bearing + 360 : bearing;
+  return normalizedBearing > 360 ? normalizedBearing - 360 : normalizedBearing;
 };
 
 export const transformPointIntoCoordinates = (vector: Vector3): GeoLocationPoint => {

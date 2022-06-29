@@ -1,4 +1,5 @@
 import { CONFIG } from '@shared/services/config.service';
+import { degToRad } from 'three/src/math/MathUtils';
 
 const determineVelocityChange = (velocity: number, accelerate: boolean) => {
   if (
@@ -32,6 +33,16 @@ export const isLowVelocity = (velocity: number) => {
 };
 
 // timeDelta in s
-export const determineDisplacement = (velocity: number, timeDelta: number) => {
-  return (velocity / 3600) * CONFIG.MAP_SCALE * timeDelta;
+export const determineDisplacementAndRotation = (velocity: number, timeDelta: number) => {
+  let displacement = (velocity / 3600) * CONFIG.MAP_SCALE * timeDelta;
+  let rotation = determineRotationFromDisplacement(displacement);
+
+  displacement = displacement / Math.cos(rotation);
+  rotation = determineRotationFromDisplacement(displacement);
+
+  return { rotation, displacement };
+};
+
+const determineRotationFromDisplacement = (displacement: number) => {
+  return degToRad((displacement / CONFIG.FLIGHT_MOVING_CIRCUMFERENCE) * 360);
 };

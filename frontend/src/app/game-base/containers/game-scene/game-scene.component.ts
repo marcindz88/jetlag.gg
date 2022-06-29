@@ -59,9 +59,7 @@ export class GameSceneComponent {
 
   private teleportPlaneToCorrectPosition() {
     if (this.myPlayer) {
-      this.myPlayer.updateLastPosition();
-      this.myPlayer.initialPosition = this.myPlayer.cartesianPosition;
-      this.myPlayer.initialRotation = this.myPlayer.cartesianRotation;
+      this.myPlayer.updatePlanePositionInstantly();
     }
   }
 

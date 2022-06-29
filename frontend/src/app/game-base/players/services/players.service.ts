@@ -6,7 +6,7 @@ import { NotificationService } from '@shared/services/notification.service';
 import { BehaviorSubject, ReplaySubject, Subject, takeUntil } from 'rxjs';
 
 import { Player } from '../models/player';
-import { OtherPlayer, PartialPlayerWithId, PlayerList } from '../models/player.types';
+import { OtherPlayer, PartialPlayerWithId, PlanePosition, PlayerList } from '../models/player.types';
 
 @Injectable({ providedIn: 'root' })
 export class PlayersService {
@@ -61,11 +61,11 @@ export class PlayersService {
     });
   }
 
-  emitPlayerPositionUpdate(player: Player) {
+  emitPlayerPositionUpdate(position: PlanePosition) {
     this.mainWebsocketService.sendWSSMessage({
       type: ClientMessageTypeEnum.PLAYER_POSITION_UPDATE_REQUEST,
       created: this.clockService.getCurrentTime(),
-      data: player.currentPosition,
+      data: position,
     });
   }
 
