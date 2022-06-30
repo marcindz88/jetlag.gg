@@ -1,40 +1,35 @@
 import dataclasses
-import enum
 import logging
 import random
 import threading
 import time
 import uuid
-from typing import Optional, List
+from typing import List
 
 from app.game.config import GameConfig
 from app.game.consts import AIRPORTS, BOT_NAMES, COLORS
-from app.game.coordinates import Coordinates
+from app.game.core.coordinates import Coordinates
+from app.game.core.airport import Airport
+from app.game.core.shipment import Shipment
+from app.game.core.player import Player
+from app.game.enums import DeathCause
 from app.game.events import Event, EventType
 from app.game.exceptions import (
-    PlayerLimitExceeded,
+    AirportFull,
+    ShipmentExpired,
     PlayerNotFound,
-    PlayerAlreadyConnected,
+    PlayerLimitExceeded,
     PlayerInvalidNickname,
+    PlayerAlreadyConnected,
+    CantFlyWhenGrounded,
     ChangingPastPosition,
     ChangingFuturePosition,
-    AirportFull,
-    TooFarToLand,
-    InvalidAirport,
-    CantFlyWhenGrounded,
-    ShipmentOperationWhenFlying,
-    ShipmentNotFound,
-    InvalidOperation,
-    ShipmentExpired,
-    ShipmentDestinationInvalid,
     InvalidVelocity,
+    InvalidAirport,
+    ShipmentOperationWhenFlying,
     RefuelingWhenFlying,
 )
-from app.game.models import (
-    PlayerPositionUpdateRequest,
-    AirportRequest,
-    ShipmentRequest,
-)
+from app.game.models import PlayerPositionUpdateRequest, AirportRequest, ShipmentRequest
 from app.tools.encoder import encode
 from app.tools.misc import random_with_probability
 from app.tools.timestamp import timestamp_now
@@ -42,339 +37,6 @@ from app.tools.websocket_server import WebSocketSession
 
 
 logging.getLogger().setLevel(logging.INFO)
-
-
-class DeathCause(str, enum.Enum):
-    RUN_OUT_OF_FUEL = 'run_out_of_fuel'
-    SPEED_TOO_LOW = 'speed_too_low'
-
-
-class Shipment:
-    id: uuid.UUID
-    name: str
-    award: int
-    _origin: "Airport"
-    _destination: "Airport"
-    time_to_deliver: int
-    valid_till: int
-    player_id: Optional[uuid.UUID] = None  # id of the player that is transporting the shipment
-
-    def __init__(self, origin: "Airport", destination: "Airport"):
-        self.id = uuid.uuid4()
-        self.name = random.choice(Shipment.shipment_names())
-        self._origin = origin
-        self._destination = destination
-        self.time_to_deliver = random.randint(50, 90) * 1000
-        self.award = self._get_random_award()
-        self.valid_till = timestamp_now() + self.time_to_deliver
-        self.player_id = None
-
-    def _get_random_award(self):
-        distance_between_endpoints = Coordinates.distance_between(
-            coord1=self._origin.coordinates,
-            coord2=self._destination.coordinates,
-        )
-        random_factor = random.uniform(0.85, 1.15)
-        scaling = 150000
-        return int(distance_between_endpoints / self.time_to_deliver * random_factor * scaling)
-
-    @staticmethod
-    def shipment_names():
-        return [
-            "Mail",
-            "Garbage from Aliexpress",
-            "Masks & Vaccines",
-            "Overpriced GPUs",
-            "Futomaki",
-            "Drones",
-            "HAZMAT",
-        ]
-
-    @property
-    def origin_id(self):
-        return self._origin.id
-
-    @property
-    def destination_id(self):
-        return self._destination.id
-
-    @property
-    def serialized(self) -> dict:
-        return {
-            "id": self.id,
-            "name": self.name,
-            "award": self.award,
-            "origin_id": self.origin_id,
-            "destination_id": self.destination_id,
-            "valid_till": self.valid_till,
-        }
-
-
-class PlayerPosition:
-    coordinates: Coordinates
-    bearing: float
-    velocity: int  # km/h
-    timestamp: int
-
-    def __init__(
-        self,
-        coordinates: Coordinates,
-        bearing: float,
-        velocity: int,
-        timestamp: int,
-        tank_level: float = GameConfig.FUEL_TANK_SIZE,
-    ):
-        self.coordinates = coordinates
-        self.bearing = bearing
-        self.velocity = velocity
-        self.timestamp = timestamp
-        self.tank_level = tank_level
-
-    def future_tank_level(self, timestamp: int) -> float:
-        timestamp_delta = timestamp - self.timestamp
-        new_tank_level = self.tank_level - timestamp_delta * self.fuel_consumption / 3_600_000
-        new_tank_level = max(new_tank_level, 0)
-        return new_tank_level
-
-    def future_position(self, timestamp: int, calculate_bearing: bool = False) -> "PlayerPosition":
-        timestamp_delta = timestamp - self.timestamp
-        distance_traveled = self.velocity * timestamp_delta / 3_600_000  # s = v*t, convert timestamp to hours
-        future_coordinates = self.coordinates.destination_coordinates(distance=distance_traveled, bearing=self.bearing)
-        if calculate_bearing:
-            bearing_diff = (Coordinates.bearing_between(future_coordinates, self.coordinates) - 180) % 360 - Coordinates.bearing_between(self.coordinates, future_coordinates)
-            future_bearing = self.bearing + bearing_diff
-        else:
-            future_bearing = self.bearing
-
-        return PlayerPosition(
-            coordinates=future_coordinates,
-            bearing=future_bearing,
-            velocity=self.velocity,
-            timestamp=timestamp,
-            tank_level=self.future_tank_level(timestamp=timestamp),
-        )
-
-    @staticmethod
-    def random() -> "PlayerPosition":
-        return PlayerPosition(
-            coordinates=Coordinates(
-                latitude=random.uniform(-90, 90),
-                longitude=random.uniform(-180, 180),
-            ),
-            bearing=random.uniform(0, 359),
-            velocity=500_000,
-            timestamp=timestamp_now(),
-        )
-
-    @property
-    def fuel_consumption(self) -> int:
-        # todo cleanup & simplify
-        # in liters per hour
-        max_velocity = GameConfig.MAX_VELOCITY
-        upper_limit = 15
-        lower_limit = 2
-
-        if self.velocity == 0:
-            return 0
-
-        scaled_down_velocity = (self.velocity / (max_velocity / (upper_limit - lower_limit))) + lower_limit
-
-        coefficient = 0.28
-        consumption = 2 ** (coefficient * scaled_down_velocity)
-
-        consumption = consumption * 43
-
-        # scaling to liters per hour
-        consumption = consumption * 60 * 60
-        return int(consumption)
-
-    @property
-    def serialized(self) -> dict:
-        return {
-            "coordinates": self.coordinates.serialized,
-            "velocity": self.velocity,
-            "fuel_consumption": self.fuel_consumption,
-            "tank_level": self.tank_level,
-            "bearing": self.bearing,
-            "timestamp": self.timestamp,
-        }
-
-
-class Player:
-
-    def __init__(self, nickname: str, color: str, bot: bool = False):
-        self._id: uuid.UUID = uuid.uuid4()
-        self._nickname: str = nickname
-        self._token: str = uuid.uuid4().hex
-        self._airport_id: Optional[uuid.UUID] = None
-        self.disconnected_since: int = timestamp_now()
-        self.session_id: Optional[uuid.UUID] = None
-        self.position: PlayerPosition = PlayerPosition.random()
-        self.score: int = 0
-        self.is_bot: bool = bot
-        self.shipment: Optional[Shipment] = None
-        self.color: str = color
-        self.is_refueling: bool = False
-        self.death_cause: Optional[DeathCause] = None
-
-    @property
-    def id(self) -> uuid.UUID:
-        return self._id
-
-    @property
-    def nickname(self) -> str:
-        return self._nickname
-
-    @property
-    def token(self) -> str:
-        return self._token
-
-    @property
-    def is_connected(self) -> bool:
-        return self.is_bot or bool(self.session_id)
-
-    @property
-    def is_grounded(self) -> bool:
-        return bool(self._airport_id)
-
-    @property
-    def is_dead(self) -> bool:
-        return bool(self.death_cause)
-
-    @property
-    def airport_id(self) -> uuid.UUID:
-        return self._airport_id
-
-    @property
-    def serialized(self) -> dict:
-        return {
-            "id": self.id,
-            "nickname": self.nickname,
-            "color": self.color,
-            "connected": self.is_connected,
-            "is_grounded": self.is_grounded,
-            "is_bot": self.is_bot,
-            "score": self.score,
-            "death_cause": self.death_cause,
-            "position": self.position.serialized,
-            "shipment": self.shipment.serialized if self.shipment else None,
-        }
-
-
-class Airport:
-    id: uuid.UUID
-    name: str
-    full_name: str
-    description: str
-    coordinates: Coordinates
-    elevation: float
-    shipments: dict = {}
-    occupying_player: Optional[Player] = None
-
-    def __init__(
-        self,
-        name: str,
-        full_name: str,
-        description: str,
-        elevation: float,
-        fuel_price: float,
-        coordinates: Coordinates,
-    ):
-        self.id = uuid.uuid4()
-        self.name = name
-        self.full_name = full_name
-        self.description = description
-        self.coordinates = coordinates
-        self.elevation = elevation
-        self.fuel_price = fuel_price
-        self.shipments = {}
-
-    @property
-    def serialized(self) -> dict:
-        return {
-            "id": self.id,
-            "name": self.name,
-            "full_name": self.full_name,
-            "description": self.description,
-            "elevation": self.elevation,
-            "fuel_price": self.fuel_price,
-            "coordinates": self.coordinates.serialized,
-            "occupying_player": self.occupying_player.id if self.occupying_player else None,
-            "shipments": [shipment.serialized for shipment in self.shipments.values()],
-        }
-
-    def land_player(self, player: Player):
-        now = timestamp_now()
-        current_player_position = player.position.future_position(timestamp=now)
-        logging.info(
-            "land_player player coords %s, airport coords %s",
-            current_player_position.coordinates.serialized,
-            self.coordinates.serialized,
-        )
-        distance = Coordinates.distance_between(current_player_position.coordinates, self.coordinates)
-        logging.info("distance between: %s, max distance: %s", distance, GameConfig.AIRPORT_MAXIMUM_DISTANCE_TO_LAND)
-        if distance > GameConfig.AIRPORT_MAXIMUM_DISTANCE_TO_LAND:
-            raise TooFarToLand
-
-        if self.occupying_player:
-            raise AirportFull
-
-        self.occupying_player = player
-        player._airport_id = self.id
-
-        player.position = current_player_position
-        player.position.coordinates.latitude = self.coordinates.latitude
-        player.position.coordinates.longitude = self.coordinates.longitude
-        player.position.velocity = 0
-        player.position.timestamp = now
-
-    def remove_player(self, player: Player) -> bool:
-        if player != self.occupying_player:
-            return False
-        self.occupying_player = None
-        player._airport_id = None
-
-        now = timestamp_now()
-        player.position.coordinates.latitude = self.coordinates.latitude
-        player.position.coordinates.longitude = self.coordinates.longitude
-        player.position.velocity = 500000
-        player.position.timestamp = now
-        player.is_refueling = False
-        return True
-
-    def dispatch_shipment(self, shipment_id: uuid.UUID, player: Player) -> Shipment:
-        if player != self.occupying_player:
-            raise InvalidOperation
-
-        if player.shipment:
-            raise InvalidOperation
-
-        shipment: Shipment = self.shipments.get(shipment_id)
-        if not shipment:
-            raise ShipmentNotFound
-
-        shipment.player_id = player.id
-        player.shipment = shipment
-        self.shipments.pop(shipment_id)
-        return shipment
-
-    def accept_shipment_delivery(self, player: Player) -> Shipment:
-        if player != self.occupying_player:
-            raise InvalidOperation
-
-        shipment = player.shipment
-        if not shipment:
-            raise ShipmentNotFound
-
-        if shipment.destination_id != self.id:
-            raise ShipmentDestinationInvalid
-
-        if shipment.valid_till < timestamp_now():
-            raise ShipmentExpired
-
-        player.score += player.shipment.award
-        player.shipment = None
-        return shipment
 
 
 class GameSession:

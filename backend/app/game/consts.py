@@ -1,4 +1,4 @@
-from app.game.coordinates import Coordinates
+from app.game.core.coordinates import Coordinates
 
 AIRPORTS = [
     {

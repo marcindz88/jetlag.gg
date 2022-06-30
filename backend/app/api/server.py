@@ -7,7 +7,7 @@ from pydantic import constr, BaseModel
 from fastapi.websockets import WebSocketDisconnect
 
 from app.game import exceptions
-from app.game.core import GameSession
+from app.game.core.game import GameSession
 from app.game.events import dict_to_event
 from app.game.exceptions import PlayerNotFound
 from app.tools.timestamp import timestamp_now
