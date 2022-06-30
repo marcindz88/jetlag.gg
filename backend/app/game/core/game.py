@@ -43,7 +43,7 @@ logging.getLogger().setLevel(logging.INFO)
 class GameSession:
     config = GameConfig()
     FILL_GAME_WITH_BOTS_TILL = 10
-    SPAWN_BOTS_WHEN_NO_PLAYERS = True
+    SPAWN_BOTS_WHEN_NO_PLAYERS = False
 
     def __init__(self):
         self._players = {}
