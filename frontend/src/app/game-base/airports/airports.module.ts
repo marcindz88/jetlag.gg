@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { NgtPiPipeModule } from '@angular-three/core';
 import { NgtCircleGeometryModule } from '@angular-three/core/geometries';
 import { NgtGroupModule } from '@angular-three/core/group';
@@ -29,6 +30,7 @@ import { SharedModule } from '@shared/shared.module';
     NgtMeshBasicMaterialModule,
     NgtMeshModule,
     NgtCircleGeometryModule,
+    MatTooltipModule,
   ],
   exports: [AirportComponent, NearbyAirportsComponent, AirportMainPanelComponent, ShipmentDetailsComponent],
 })

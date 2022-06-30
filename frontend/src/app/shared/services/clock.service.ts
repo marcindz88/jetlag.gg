@@ -35,8 +35,8 @@ export class ClockService extends AbstractWebsocketService<ClockServerMessage, C
     this.timeSyncerSubscription = this.timeSyncer$.subscribe(() => this.sendWSSMessage(this.getTime()));
   }
 
-  protected override closeHandler() {
-    super.closeHandler();
+  protected override closeHandler(event: CloseEvent) {
+    super.closeHandler(event);
     this.timeSyncerSubscription?.unsubscribe();
   }
 

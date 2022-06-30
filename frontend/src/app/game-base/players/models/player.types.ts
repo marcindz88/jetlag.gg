@@ -14,6 +14,7 @@ export type OtherPlayer = {
   is_bot: boolean;
   shipment: Shipment | null;
   score: number;
+  death_cause?: DeathCauseEnum;
 } & BasePlayer;
 
 export type PlayerList = {
@@ -29,6 +30,8 @@ export type PlanePosition = {
   bearing: number;
   velocity: number;
   timestamp: number;
+  tank_level: number;
+  fuel_consumption: number;
 };
 
 export type PlayerPositionUpdate = {
@@ -36,3 +39,19 @@ export type PlayerPositionUpdate = {
   position: PlanePosition;
   is_grounded?: boolean;
 };
+
+export enum DeathCauseEnum {
+  RUN_OUT_OF_FUEL = 'run_out_of_fuel',
+  SPEED_TOO_LOW = 'speed_too_low',
+}
+
+export enum PlayerUpdateType {
+  VELOCITY = 'VELOCITY',
+  BEARING = 'BEARING',
+  BEFORE_CRASH = 'BEFORE_CRASH',
+  DESTROY = 'DESTROY',
+  SHIPMENT = 'SHIPMENT',
+  GROUNDED = 'GROUNDED',
+  POSITION = 'POSITION',
+  FUEL_LEVEL = 'FUEL_LEVEL',
+}

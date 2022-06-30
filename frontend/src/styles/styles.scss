@@ -2,12 +2,15 @@
 @use './icons';
 @use './snackbar';
 @use './button';
+@use './tooltip';
 
 html,
 body {
+  background-color: var(--primary-color-3);
   height: 100%;
   margin: 0;
   overflow: hidden;
+  user-select: none;
   width: 100%;
 }
 

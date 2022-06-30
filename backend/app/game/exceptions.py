@@ -64,3 +64,7 @@ class InvalidOperation(Exception):
 
 class InvalidVelocity(Exception):
     pass
+
+
+class RefuelingWhenFlying(Exception):
+    pass

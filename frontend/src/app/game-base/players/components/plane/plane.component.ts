@@ -1,19 +1,22 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, ViewChild } from '@angular/core';
 import { NgtGroup } from '@angular-three/core/group';
 import { NgtPrimitive } from '@angular-three/core/primitive';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { BeforeRenderedObject } from '@pg/game-base/models/game.types';
 import { CameraModesEnum } from '@pg/game-base/models/gane.enums';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
+import { calculateAltitudeFromPosition } from '@pg/game-base/utils/geo-utils';
+import { determineDisplacementAndRotation } from '@pg/game-base/utils/velocity-utils';
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
-import { Logger } from '@shared/services/logger.service';
 import { map, Observable } from 'rxjs';
-import { Camera, Euler, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
+import { Camera, Euler, Mesh, MeshStandardMaterial, Object3D, Quaternion, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
 import { TextureModelsService } from '../../../services/texture-models.service';
 
+@UntilDestroy()
 @Component({
   selector: 'pg-plane',
   templateUrl: './plane.component.html',
@@ -21,14 +24,9 @@ import { TextureModelsService } from '../../../services/texture-models.service';
 })
 export class PlaneComponent implements OnInit {
   @ViewChild(NgtGroup) set plane(plane: NgtPrimitive) {
-    this.player.planeObject = plane?.instanceValue;
-  }
-
-  @Input() set position(position: Vector3) {
-    if (!this.initialPosition || !this.player.planeObject) {
-      this.initialPosition = position;
+    if (plane) {
+      this.player.perfectPlaneObject = plane?.instanceValue.clone();
     }
-    this.targetPosition = position;
   }
 
   @Input() camera?: Camera;
@@ -42,20 +40,25 @@ export class PlaneComponent implements OnInit {
     }
   }
 
-  textures$?: Observable<{ model: Object3D }>;
-  initialPosition?: Vector3;
-  targetPosition?: Vector3;
-  cameraFocused = false;
-
+  readonly textures$: Observable<{ model: Object3D }>;
   readonly materials = this.textureModelsService.materials;
+
+  private cameraFocused = false;
+  private temps = {
+    planeQuaternion: new Quaternion(),
+    cameraQuaternionCopy: new Quaternion(),
+    cameraQuaternionCopy2: new Quaternion(),
+    cameraPositionCopy: new Vector3(),
+    lastInitialPosition: new Vector3(),
+    lastInitialRotation: new Euler(),
+  };
 
   constructor(
     private textureModelsService: TextureModelsService,
     private clockService: ClockService,
-    private playersService: PlayersService
-  ) {}
-
-  ngOnInit() {
+    private playersService: PlayersService,
+    private cdr: ChangeDetectorRef
+  ) {
     this.textures$ = this.textureModelsService.planeTextures$.pipe(
       map(({ model }) => {
         model = model.clone(true);
@@ -67,7 +70,30 @@ export class PlaneComponent implements OnInit {
     );
   }
 
+  ngOnInit() {
+    this.setPlayerDestroyHandler();
+  }
+
   updatePlane(event: BeforeRenderedObject) {
+    if (this.player.isCrashed) {
+      return;
+    }
+
+    if (this.player.isCrashing) {
+      this.cameraMode = CameraModesEnum.FOLLOW;
+      this.handlePlaneCrashing(event.object, event.state.delta);
+      this.focusCameraOnPlayer(event.object);
+      return;
+    }
+
+    if (
+      this.temps.lastInitialPosition !== this.player.initialPosition ||
+      this.temps.lastInitialRotation !== this.player.initialRotation
+    ) {
+      this.handleInitialPlaneMove(event.object);
+      return;
+    }
+
     this.movePlane(event.object, event.state.delta);
     this.focusCameraOnPlayer(event.object);
   }
@@ -76,91 +102,77 @@ export class PlaneComponent implements OnInit {
     return (model.children[0].children[0] as Mesh).material as MeshStandardMaterial;
   }
 
+  private handleInitialPlaneMove(plane: Object3D) {
+    plane.rotation.copy(this.player.initialRotation);
+    plane.position.copy(this.player.initialPosition);
+
+    this.temps.lastInitialRotation = this.player.initialRotation;
+    this.temps.lastInitialPosition = this.player.initialPosition;
+    this.cameraFocused = false;
+  }
+
+  private handlePlaneCrashing(plane: Object3D, delta: number) {
+    const deltaMultiplier = delta / (1 / 60);
+    // Rotate
+    plane.rotateY(degToRad(3 * deltaMultiplier));
+    plane.rotateX(degToRad(0.5 * deltaMultiplier));
+
+    // Move closer to origin
+    const newPosition = plane.position.multiplyScalar(1 - 0.00015 * deltaMultiplier).clone();
+    plane.position.copy(newPosition);
+
+    // decrease velocity and move forward
+    this.player.lastPosition.velocity *= 1 - 0.01 * deltaMultiplier;
+    const { displacement } = determineDisplacementAndRotation(this.player.lastPosition.velocity, delta);
+    plane.translateY(displacement);
+
+    if (calculateAltitudeFromPosition(newPosition) <= 0) {
+      this.player.endCrashingPlane();
+    }
+  }
+
   private movePlane(plane: Object3D, delta: number) {
-    if (this.player.velocity) {
-      // Suspected inactivity
-      if (delta > 0.18) {
-        this.recoverFromInactivity(plane, delta);
-        return;
-      }
+    // Update instantly if change bigger than 5 units
+    if (this.player.perfectPlaneObject.position.distanceTo(plane.position) > 3) {
+      plane.position.copy(this.player.perfectPlaneObject.position);
+      plane.quaternion.copy(this.player.perfectPlaneObject.quaternion);
+      return;
+    }
 
-      const positionCopy = plane.position.clone();
-
-      // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
-      const displacement = (this.player.velocity / 3600) * CONFIG.MAP_SCALE * delta; // delta in s convert to h
-      plane.rotateX(degToRad((displacement / CONFIG.FLIGHT_MOVING_CIRCUMFERENCE) * 360));
+    // Move forward by displacement and rotate downward to continue nosing down with curvature of earth
+    if (this.player.lastPosition.velocity) {
+      const { displacement, rotation } = determineDisplacementAndRotation(this.player.lastPosition.velocity, delta); // delta in s convert to h
+      plane.rotateX(rotation);
+      this.player.perfectPlaneObject.rotateX(rotation);
       plane.translateY(displacement);
-
-      // Update targets by current movement
-      this.updateByDifference(this.targetPosition!, positionCopy, plane.position, 1, 0.0000000001);
+      this.player.perfectPlaneObject.translateY(displacement);
     }
 
     // Update position up to target gradually
-    this.updateByDifference(plane.position, plane.position, this.targetPosition!, 0.1);
-  }
-
-  private recoverFromInactivity(plane: Object3D, delta: number) {
-    if (delta > 1) {
-      this.cameraFocused = false;
-    }
-    this.player.position = {
-      ...this.player.position,
-      timestamp: this.clockService.getCurrentTime() - delta * 1000,
-    };
-    this.updateByDifference(plane.position, plane.position, this.player.cartesianPosition, 1, 0.0000000001);
-    Logger.warn(PlaneComponent, `Recovered after inactivity, delta: ${delta}`);
+    plane.position.lerp(this.player.perfectPlaneObject.position, delta * 4);
+    plane.quaternion.slerp(this.player.perfectPlaneObject.quaternion, 0.1);
   }
 
   private focusCameraOnPlayer(plane: Object3D) {
     if (this.player.isFocused && this.cameraMode !== CameraModesEnum.FREE && this.camera) {
-      const position = plane.position.clone().multiplyScalar(CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER);
-      const mock = this.camera.clone();
-      mock.position.set(position.x, position.y, position.z);
-      mock.lookAt(plane.position);
+      // SET position
+      this.camera.position.copy(plane.position.clone().multiplyScalar(CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER));
+      // SET rotation gradually using a copy that is looked at
+      this.temps.cameraQuaternionCopy.copy(this.camera.quaternion);
+      this.camera.lookAt(plane.position);
       if (this.cameraMode === CameraModesEnum.POSITION) {
-        mock.rotation.z -= plane.rotation.z;
+        this.camera.rotation.z -= plane.rotation.z;
       }
-      this.camera.position.set(position.x, position.y, position.z);
-      this.camera.quaternion.slerp(mock.quaternion, this.cameraFocused ? 0.1 : 1);
+      this.temps.cameraQuaternionCopy2.copy(this.camera.quaternion);
+      this.camera.quaternion.copy(this.temps.cameraQuaternionCopy);
+      // when player was not in focus move instantly to it
+      this.camera.quaternion.slerp(this.temps.cameraQuaternionCopy2, this.cameraFocused ? 0.1 : 1);
       this.cameraFocused = true;
     }
   }
 
-  private updateByDifference<T extends Euler | Vector3>(
-    target: T,
-    start: T,
-    end: T,
-    multiplier = 1,
-    accuracy = 0.00001
-  ): void {
-    if (this.isDifferenceNegligible(start, end, accuracy)) {
-      ['x', 'y', 'z'].forEach(direction => {
-        target[direction as 'x' | 'y' | 'z'] = end[direction as 'x' | 'y' | 'z'];
-      });
-      return;
-    }
-    ['x', 'y', 'z'].forEach(direction => {
-      this.updateDirectionByDifference(direction as 'x' | 'y' | 'z', target, start, end, multiplier);
-    });
-  }
-
-  private isDifferenceNegligible<T extends Euler | Vector3>(start: T, end: T, accuracy: number) {
-    return ['x', 'y', 'z'].every(
-      (directionValue: string) =>
-        Math.abs(end[directionValue as 'x' | 'y' | 'z'] - start[directionValue as 'x' | 'y' | 'z']) < accuracy
-    );
-  }
-
-  private updateDirectionByDifference<T extends Euler | Vector3>(
-    direction: 'x' | 'y' | 'z',
-    target: T,
-    start: T,
-    end: T,
-    multiplier: number
-  ) {
-    const difference = end[direction] - start[direction];
-    if (difference) {
-      target[direction] += difference * multiplier;
-    }
+  private setPlayerDestroyHandler() {
+    // To quickly remove plane from scene when dead or disconnected
+    this.player.changeNotifiers.destroy$.pipe(untilDestroyed(this)).subscribe(() => this.cdr.detectChanges());
   }
 }

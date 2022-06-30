@@ -5,6 +5,9 @@ import { Shipment } from '@pg/game-base/airports/models/airport.types';
 import { AirportsService } from '@pg/game-base/airports/services/airports.service';
 import { KeyEventEnum } from '@pg/game-base/models/keyboard.types';
 import { KeyboardControlsService } from '@pg/game-base/services/keyboard-controls.service';
+import { ClientMessageTypeEnum } from '@shared/models/wss.types';
+import { CONFIG } from '@shared/services/config.service';
+import { Subject } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -16,10 +19,17 @@ import { KeyboardControlsService } from '@pg/game-base/services/keyboard-control
 export class AirportMainPanelComponent implements OnInit {
   @Input() airport!: Airport;
   @Input() playerShipment: Shipment | null = null;
+  @Input() playerTankLevel = 0;
+  @Input() playerScore = 0;
 
   selectedId: string | null = null;
   focusedId: string | null = null;
   firstPackageIndex = 0;
+  isRefuelling = false;
+
+  readonly CONFIG = CONFIG;
+  readonly stopRefueling$ = this.airportsService.refuellingStopped$;
+  readonly toggleRefuelling$ = new Subject<void>();
 
   constructor(
     private keyboardControlsService: KeyboardControlsService,
@@ -39,6 +49,11 @@ export class AirportMainPanelComponent implements OnInit {
   }
 
   startDepartureProcedure() {
+    // Unable to depart when refuelling
+    if (this.isRefuelling) {
+      return;
+    }
+
     if (this.selectedId) {
       this.airportsService.requestShipmentDispatch(this.selectedId);
     }
@@ -46,7 +61,13 @@ export class AirportMainPanelComponent implements OnInit {
   }
 
   startFuelingProcedure() {
-    console.log('TODO fueling procedure');
+    this.isRefuelling = true;
+    this.airportsService.sendAirportRequest(ClientMessageTypeEnum.AIRPORT_REFUELLING_START_REQUEST);
+  }
+
+  finishFuelingProcedure() {
+    this.isRefuelling = false;
+    this.airportsService.sendAirportRequest(ClientMessageTypeEnum.AIRPORT_REFUELLING_END_REQUEST);
   }
 
   goToNextPackage() {
@@ -91,7 +112,7 @@ export class AirportMainPanelComponent implements OnInit {
 
   private returnPackage() {
     if (this.playerShipment && this.playerShipment.destination_id === this.airport.id) {
-      this.airportsService.requestShipmentDelivery();
+      this.airportsService.sendAirportRequest(ClientMessageTypeEnum.AIRPORT_SHIPMENT_DELIVERY_REQUEST);
     }
   }
 
@@ -106,6 +127,7 @@ export class AirportMainPanelComponent implements OnInit {
   private setKeyboardControls() {
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.RIGHT, this, this.goToNextPackage.bind(this));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LEFT, this, this.goToPreviousPackage.bind(this));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FUEL, this, () => this.toggleRefuelling$.next());
     this.keyboardControlsService.setupKeyEvent(
       KeyEventEnum.LAND_OR_TAKE_OFF,
       this,

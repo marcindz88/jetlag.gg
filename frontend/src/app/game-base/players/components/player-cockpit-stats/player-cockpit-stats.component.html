@@ -1,0 +1,24 @@
+<pg-card class="player-cockpit-stats">
+  <table>
+    <tr>
+      <td>Bearing:</td>
+      <td>{{ position.bearing | number: '2.2-2' }} deg</td>
+    </tr>
+    <tr>
+      <td>Latitude:</td>
+      <td>{{ position.coordinates.lat | number: '2.3-3' }} deg</td>
+    </tr>
+    <tr>
+      <td>Longitude:</td>
+      <td>{{ position.coordinates.lon | number: '2.3-3' }} deg</td>
+    </tr>
+    <tr>
+      <td>Fuel consumption:</td>
+      <td>{{ position.fuel_consumption / 3600 | number: '1.0-0' }} l/s</td>
+    </tr>
+    <tr>
+      <td>Tank level:</td>
+      <td>{{ position.tank_level | number: '5.0-0' }} l</td>
+    </tr>
+  </table>
+</pg-card>

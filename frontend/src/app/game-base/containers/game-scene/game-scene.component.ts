@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { NgtStore } from '@angular-three/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Airport } from '@pg/game-base/airports/models/airport';
@@ -7,8 +6,9 @@ import { AirportsService } from '@pg/game-base/airports/services/airports.servic
 import { CameraModesEnum } from '@pg/game-base/models/gane.enums';
 import { Player } from '@pg/game-base/players/models/player';
 import { PlayersService } from '@pg/game-base/players/services/players.service';
-import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { CONFIG } from '@shared/services/config.service';
+import { LoaderService } from '@shared/services/loader.service';
+import { NotificationService } from '@shared/services/notification.service';
 import { take } from 'rxjs';
 import { DirectionalLight, PerspectiveCamera } from 'three';
 
@@ -32,6 +32,7 @@ export class GameSceneComponent {
   myPlayer?: Player;
   focusedPlayerId: string | null = null;
   cameraMode = CameraModesEnum.FOLLOW;
+  isEarthRendered = false;
 
   constructor(
     private keyboardControlsService: KeyboardControlsService,
@@ -39,16 +40,27 @@ export class GameSceneComponent {
     private airportsService: AirportsService,
     private cdr: ChangeDetectorRef,
     private ngtStore: NgtStore,
-    private matSnackbar: MatSnackBar
-  ) {
-    this.setupAirportsChanges();
-    this.setupPlayersChanges();
-    this.setupCameraLight();
-    this.showHelpInfo();
-  }
+    private notificationService: NotificationService
+  ) {}
 
   trackById(index: number, object: Player | Airport) {
     return object.id;
+  }
+
+  onEarthRendered() {
+    this.isEarthRendered = true;
+    this.teleportPlaneToCorrectPosition();
+    LoaderService.endLoader();
+    this.setupAirportsChanges();
+    this.setupPlayersChanges();
+    this.setupCameraLight();
+    this.showHelpSnackbar();
+  }
+
+  private teleportPlaneToCorrectPosition() {
+    if (this.myPlayer) {
+      this.myPlayer.updatePlanePositionInstantly();
+    }
   }
 
   private setupAirportsChanges() {
@@ -68,15 +80,8 @@ export class GameSceneComponent {
       }
       this.myPlayer = this.playersService.myPlayer;
       this.focusOnMyPlayer();
-      this.setupPlaneUpdates();
       this.setupCameraControls();
       this.cdr.markForCheck();
-    });
-  }
-
-  private setupPlaneUpdates() {
-    this.myPlayer!.flightParametersChanged$.pipe(untilDestroyed(this)).subscribe(() => {
-      this.playersService.emitPlayerPositionUpdate(this.myPlayer!);
     });
   }
 
@@ -143,10 +148,10 @@ export class GameSceneComponent {
     });
   }
 
-  private showHelpInfo() {
-    this.matSnackbar.openFromComponent(NotificationComponent, {
-      data: { text: 'You can access help and steering info by pressing [H]', icon: 'info' },
-      duration: 3000,
+  private showHelpSnackbar() {
+    this.notificationService.openNotification({
+      text: 'You can access help and steering info by pressing [H]',
+      icon: 'info',
     });
   }
 }

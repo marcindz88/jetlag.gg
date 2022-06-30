@@ -1,4 +1,5 @@
 import dataclasses
+import enum
 import logging
 import random
 import threading
@@ -27,6 +28,7 @@ from app.game.exceptions import (
     ShipmentExpired,
     ShipmentDestinationInvalid,
     InvalidVelocity,
+    RefuelingWhenFlying,
 )
 from app.game.models import (
     PlayerPositionUpdateRequest,
@@ -40,6 +42,11 @@ from app.tools.websocket_server import WebSocketSession
 
 
 logging.getLogger().setLevel(logging.INFO)
+
+
+class DeathCause(str, enum.Enum):
+    RUN_OUT_OF_FUEL = 'run_out_of_fuel'
+    SPEED_TOO_LOW = 'speed_too_low'
 
 
 class Shipment:
@@ -68,7 +75,7 @@ class Shipment:
             coord2=self._destination.coordinates,
         )
         random_factor = random.uniform(0.85, 1.15)
-        scaling = 100000
+        scaling = 150000
         return int(distance_between_endpoints / self.time_to_deliver * random_factor * scaling)
 
     @staticmethod
@@ -106,7 +113,7 @@ class Shipment:
 class PlayerPosition:
     coordinates: Coordinates
     bearing: float
-    velocity: int
+    velocity: int  # km/h
     timestamp: int
 
     def __init__(
@@ -115,14 +122,23 @@ class PlayerPosition:
         bearing: float,
         velocity: int,
         timestamp: int,
+        tank_level: float = GameConfig.FUEL_TANK_SIZE,
     ):
         self.coordinates = coordinates
         self.bearing = bearing
         self.velocity = velocity
         self.timestamp = timestamp
+        self.tank_level = tank_level
 
-    def future_position(self, timestamp_delta: int, calculate_bearing: bool = False) -> "PlayerPosition":
-        distance_traveled = self.velocity * timestamp_delta / 3600000  # s = v*t, convert timestamp to hours
+    def future_tank_level(self, timestamp: int) -> float:
+        timestamp_delta = timestamp - self.timestamp
+        new_tank_level = self.tank_level - timestamp_delta * self.fuel_consumption / 3_600_000
+        new_tank_level = max(new_tank_level, 0)
+        return new_tank_level
+
+    def future_position(self, timestamp: int, calculate_bearing: bool = False) -> "PlayerPosition":
+        timestamp_delta = timestamp - self.timestamp
+        distance_traveled = self.velocity * timestamp_delta / 3_600_000  # s = v*t, convert timestamp to hours
         future_coordinates = self.coordinates.destination_coordinates(distance=distance_traveled, bearing=self.bearing)
         if calculate_bearing:
             bearing_diff = (Coordinates.bearing_between(future_coordinates, self.coordinates) - 180) % 360 - Coordinates.bearing_between(self.coordinates, future_coordinates)
@@ -134,7 +150,8 @@ class PlayerPosition:
             coordinates=future_coordinates,
             bearing=future_bearing,
             velocity=self.velocity,
-            timestamp=self.timestamp + timestamp_delta,
+            timestamp=timestamp,
+            tank_level=self.future_tank_level(timestamp=timestamp),
         )
 
     @staticmethod
@@ -145,15 +162,39 @@ class PlayerPosition:
                 longitude=random.uniform(-180, 180),
             ),
             bearing=random.uniform(0, 359),
-            velocity=0,
+            velocity=500_000,
             timestamp=timestamp_now(),
         )
+
+    @property
+    def fuel_consumption(self) -> int:
+        # todo cleanup & simplify
+        # in liters per hour
+        max_velocity = GameConfig.MAX_VELOCITY
+        upper_limit = 15
+        lower_limit = 2
+
+        if self.velocity == 0:
+            return 0
+
+        scaled_down_velocity = (self.velocity / (max_velocity / (upper_limit - lower_limit))) + lower_limit
+
+        coefficient = 0.28
+        consumption = 2 ** (coefficient * scaled_down_velocity)
+
+        consumption = consumption * 43
+
+        # scaling to liters per hour
+        consumption = consumption * 60 * 60
+        return int(consumption)
 
     @property
     def serialized(self) -> dict:
         return {
             "coordinates": self.coordinates.serialized,
             "velocity": self.velocity,
+            "fuel_consumption": self.fuel_consumption,
+            "tank_level": self.tank_level,
             "bearing": self.bearing,
             "timestamp": self.timestamp,
         }
@@ -173,6 +214,8 @@ class Player:
         self.is_bot: bool = bot
         self.shipment: Optional[Shipment] = None
         self.color: str = color
+        self.is_refueling: bool = False
+        self.death_cause: Optional[DeathCause] = None
 
     @property
     def id(self) -> uuid.UUID:
@@ -195,6 +238,10 @@ class Player:
         return bool(self._airport_id)
 
     @property
+    def is_dead(self) -> bool:
+        return bool(self.death_cause)
+
+    @property
     def airport_id(self) -> uuid.UUID:
         return self._airport_id
 
@@ -208,6 +255,7 @@ class Player:
             "is_grounded": self.is_grounded,
             "is_bot": self.is_bot,
             "score": self.score,
+            "death_cause": self.death_cause,
             "position": self.position.serialized,
             "shipment": self.shipment.serialized if self.shipment else None,
         }
@@ -223,13 +271,22 @@ class Airport:
     shipments: dict = {}
     occupying_player: Optional[Player] = None
 
-    def __init__(self, name: str, full_name: str, description: str, elevation: float, coordinates: Coordinates):
+    def __init__(
+        self,
+        name: str,
+        full_name: str,
+        description: str,
+        elevation: float,
+        fuel_price: float,
+        coordinates: Coordinates,
+    ):
         self.id = uuid.uuid4()
         self.name = name
         self.full_name = full_name
         self.description = description
         self.coordinates = coordinates
         self.elevation = elevation
+        self.fuel_price = fuel_price
         self.shipments = {}
 
     @property
@@ -240,6 +297,7 @@ class Airport:
             "full_name": self.full_name,
             "description": self.description,
             "elevation": self.elevation,
+            "fuel_price": self.fuel_price,
             "coordinates": self.coordinates.serialized,
             "occupying_player": self.occupying_player.id if self.occupying_player else None,
             "shipments": [shipment.serialized for shipment in self.shipments.values()],
@@ -247,7 +305,7 @@ class Airport:
 
     def land_player(self, player: Player):
         now = timestamp_now()
-        current_player_position = player.position.future_position(timestamp_delta=now-player.position.timestamp)
+        current_player_position = player.position.future_position(timestamp=now)
         logging.info(
             "land_player player coords %s, airport coords %s",
             current_player_position.coordinates.serialized,
@@ -264,6 +322,7 @@ class Airport:
         self.occupying_player = player
         player._airport_id = self.id
 
+        player.position = current_player_position
         player.position.coordinates.latitude = self.coordinates.latitude
         player.position.coordinates.longitude = self.coordinates.longitude
         player.position.velocity = 0
@@ -280,6 +339,7 @@ class Airport:
         player.position.coordinates.longitude = self.coordinates.longitude
         player.position.velocity = 500000
         player.position.timestamp = now
+        player.is_refueling = False
         return True
 
     def dispatch_shipment(self, shipment_id: uuid.UUID, player: Player) -> Shipment:
@@ -336,6 +396,7 @@ class GameSession:
                 description=airport_data['description'],
                 coordinates=airport_data['coordinates'],
                 elevation=airport_data['elevation'],
+                fuel_price=airport_data['fuel_price'] * 0.3,
             )
             self._airports[airport.id] = airport
 
@@ -355,6 +416,7 @@ class GameSession:
     def monitor_players(self):
         while True:
             self.remove_idle_players()
+            self.check_playing_conditions()
             time.sleep(0.2)
 
     def manage_airports(self):
@@ -428,13 +490,16 @@ class GameSession:
                     if destination_airport.occupying_player != player:
                         raise e
                 logging.info("bot landed %s %s", player.id, player.nickname)
+                arrival_time = timestamp_now()
 
                 if player.shipment:
                     try:
                         self.handle_shipment_delivery(airport=destination_airport, player=player)
                     except ShipmentExpired:
                         pass
-                time.sleep(5)
+                self.refuel_player(player=player, airport=destination_airport)
+                idle_time_left = max(5000 - (timestamp_now() - arrival_time), 0)
+                time.sleep(idle_time_left/1000)
 
                 shipment_ids = list(destination_airport.shipments.keys())
                 if shipment_ids:
@@ -454,7 +519,7 @@ class GameSession:
         minimum_distance: int = 300,
     ):
         minimum_sleep_duration = 0.05
-        min_velocity = 50000
+        min_velocity = self.config.FLYING_VELOCITY
         max_velocity = self.config.MAX_VELOCITY
         while True:
             player: Player = self._players[player_id]
@@ -464,7 +529,7 @@ class GameSession:
 
             now = timestamp_now() + 1
             current_player_position = player.position.future_position(
-                timestamp_delta=now-player.position.timestamp,
+                timestamp=now,
                 calculate_bearing=True,
             )
             distance_to_destination = Coordinates.distance_between(
@@ -558,6 +623,30 @@ class GameSession:
             if now - player.disconnected_since > self.config.PLAYER_TIME_TO_CONNECT:
                 self.remove_player(player)
 
+    def check_playing_conditions(self):
+        logging.debug(f"check_playing_conditions")
+        now = timestamp_now()
+
+        for player in list(self._players.values()):
+            if player.is_dead:
+                # death has already been detected but player has not been removed yet, no need to do anything
+                continue
+
+            if player.is_grounded:
+                # player shouldn't die when landed
+                continue
+
+            # check tank level
+            current_tank_level = player.position.future_tank_level(timestamp=now)
+            if current_tank_level == 0:
+                self.pronounce_player_dead(player=player, cause=DeathCause.RUN_OUT_OF_FUEL)
+                continue
+
+            # check speed
+            if player.position.velocity < GameConfig.FLYING_VELOCITY:
+                self.pronounce_player_dead(player=player, cause=DeathCause.SPEED_TOO_LOW)
+                continue
+
     def get_player_by_token(self, token: str) -> Player:
         for player in self._players.values():
             if player.token == token:
@@ -640,6 +729,17 @@ class GameSession:
         except KeyError:
             pass
 
+    def pronounce_player_dead(self, player: Player, cause: DeathCause):
+        # XD
+        player.death_cause = cause
+        player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
+        self.broadcast_event(event=player_updated_event)
+
+        if player.is_bot:
+            self._bots.pop(player.id)
+            return
+        self.remove_player(player=player)
+
     def update_player_position(self, player: Player, timestamp: int, velocity: int, bearing: float):
         logging.info(f"update_player_position {player.id} timestamp: {timestamp} V={velocity} bearing={bearing}")
         last_position = player.position
@@ -665,7 +765,7 @@ class GameSession:
             logging.warning(f"update_player_position invalid velocity: %s", velocity)
             raise InvalidVelocity
 
-        new_position = last_position.future_position(timestamp_delta=timestamp-last_position.timestamp)
+        new_position = last_position.future_position(timestamp=timestamp)
         new_position.velocity = velocity  # todo more validation (delta)
         new_position.bearing = bearing  # todo validation
 
@@ -710,6 +810,51 @@ class GameSession:
             if airport.shipments.pop(shipment.id, None):
                 airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
                 self.broadcast_event(event=airport_updated_event)
+
+    def refuel_player(self, player: Player, airport: Airport):
+        now = timestamp_now()
+        player.position.tank_level = player.position.future_tank_level(timestamp=now)
+        player.position.timestamp = now
+
+        player.is_refueling = True
+        refueling_refresh_time = 0.2  # how much each iteration takes [s]
+        while True:
+            time.sleep(refueling_refresh_time)
+            if not player.is_refueling:
+                break
+            if player.position.tank_level == GameConfig.FUEL_TANK_SIZE:
+                break
+            if player.score == 0:
+                logging.info(f"Player {player} has no money to refuel!")
+                break
+
+            added_fuel = refueling_refresh_time * GameConfig.REFUELING_RATE
+            price = int(airport.fuel_price * added_fuel)
+            if player.score < price:
+                price = player.score
+                added_fuel = price/airport.fuel_price
+
+            player.score -= price
+
+            new_level = player.position.tank_level + added_fuel
+            player.position.tank_level = min(new_level, GameConfig.FUEL_TANK_SIZE)
+            player.position.timestamp = timestamp_now()
+
+            player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
+            self.broadcast_event(event=player_updated_event)
+
+        player.is_refueling = False
+        refueling_stopped_event = Event(type=EventType.AIRPORT_REFUELING_STOPPED, data={
+            "id": airport.id,
+            "player_id": player.id,
+        })
+        self.send_event(event=refueling_stopped_event, player=player)
+        position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
+            "id": player.id,
+            "is_grounded": player.is_grounded,
+            "position": player.position.serialized,
+        })
+        self.send_event(event=position_updated_event, player=player)
 
     def handle_player_position_update_request_event(self, player: Player, event: Event):
         logging.info(f"handle_player_position_update_request_event {player.id} {event}")
@@ -803,6 +948,25 @@ class GameSession:
         airport: Airport = self._airports.get(player.airport_id)
         self.handle_shipment_delivery(player=player, airport=airport)
 
+    def handle_refueling_start_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_refueling_start_request_event {player.id} {event}")
+
+        if not player.is_grounded:
+            raise RefuelingWhenFlying
+
+        airport: Airport = self._airports.get(player.airport_id)
+
+        t = threading.Thread(target=self.refuel_player, args=(player, airport))
+        t.start()
+
+    def handle_refueling_end_request_event(self, player: Player, event: Event):
+        logging.info(f"handle_refueling_end_request_event {player.id} {event}")
+
+        if not player.is_grounded:
+            raise RefuelingWhenFlying
+
+        player.is_refueling = False
+
     def handle_event(self, player: Player, event: Event):
         logging.info(f"handle_event {player.id} {event}")
 
@@ -824,4 +988,12 @@ class GameSession:
 
         if event.type == EventType.AIRPORT_SHIPMENT_DELIVERY_REQUEST:
             self.handle_shipment_delivery_request_event(player=player, event=event)
+            return
+
+        if event.type == EventType.AIRPORT_REFUELING_START_REQUEST:
+            self.handle_refueling_start_request_event(player=player, event=event)
+            return
+
+        if event.type == EventType.AIRPORT_REFUELING_END_REQUEST:
+            self.handle_refueling_end_request_event(player=player, event=event)
             return

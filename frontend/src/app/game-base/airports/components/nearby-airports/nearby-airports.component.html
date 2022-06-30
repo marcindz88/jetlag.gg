@@ -10,6 +10,7 @@
     <td class="packages">
       <span>{{ nearAirport.shipments.length }} </span><span class="icon">inventory_2</span>
     </td>
+    <td class="fuel-price">{{ nearAirport.fuel_price | number: '1.2-2' }} $/l</td>
     <td class="distance">{{ nearAirport.distance | number: '1.1-1' }} km</td>
   </tr>
 </ng-template>
