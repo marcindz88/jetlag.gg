@@ -6,7 +6,10 @@
   [camera]="camera"
   [cameraMode]="cameraMode"
   [isFocused]="focusedPlayerId === player.id"></pg-plane>
-<pg-airport *ngFor="let airport of airports.values(); trackBy: trackById" [airport]="airport"></pg-airport>
+<pg-airport
+  *ngFor="let airport of airports.values(); trackBy: trackById"
+  [airport]="airport"
+  [myPlayer]="myPlayer"></pg-airport>
 <ngt-soba-stars [count]="3000" [factor]="2" [fade]="true" [speed]="2"></ngt-soba-stars>
 <ngt-soba-orbit-controls
   [enabled]="cameraMode === CameraModesEnum.FREE"

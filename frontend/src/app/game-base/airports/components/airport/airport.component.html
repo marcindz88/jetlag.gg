@@ -3,7 +3,7 @@
     <ngt-group [rotation]="[0, 1 | pi, 0]">
       <pg-elevated-text [text]="airport.name"></pg-elevated-text>
       <ngt-primitive [object]="textures.model" [scale]="0.5"></ngt-primitive>
-      <ngt-group *ngIf="airport.isNearby$ | async">
+      <ngt-group *ngIf="(airport.isNearby$ | async) && airport.occupying_player !== myPlayer?.id">
         <ngt-mesh>
           <pg-elevated-text
             [position]="[0, 0.7, 0]"
