@@ -3,7 +3,7 @@ import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss
 import { ClockService } from '@shared/services/clock.service';
 import { MainWebsocketService } from '@shared/services/main-websocket.service';
 import { NotificationService } from '@shared/services/notification.service';
-import { BehaviorSubject, ReplaySubject, Subject, takeUntil } from 'rxjs';
+import { BehaviorSubject, ReplaySubject, Subject, take, takeUntil } from 'rxjs';
 
 import { Player } from '../models/player';
 import { OtherPlayer, PartialPlayerWithId, PlanePosition, PlayerList } from '../models/player.types';
@@ -106,17 +106,37 @@ export class PlayersService {
   }
 
   private removePlayer(player: OtherPlayer) {
-    this.players.get(player.id)?.destroy();
+    const foundPlayer = this.players.get(player.id);
+    if (!foundPlayer) {
+      return;
+    }
+
+    // If plane is not crashing remove instantly
+    if (!foundPlayer.isCrashing) {
+      foundPlayer.destroy();
+      this.removePlayerFromMapsAndNotify(foundPlayer);
+      return;
+    }
+
+    // Else remove after has crashed
+    foundPlayer.changeNotifiers.destroy$
+      .pipe(takeUntil(this.reset$), take(1))
+      .subscribe(() => this.removePlayerFromMapsAndNotify(foundPlayer));
+  }
+
+  private removePlayerFromMapsAndNotify(player: Player) {
     this.players.delete(player.id);
     this.playersSorted$.next(this.playersSorted$.value.filter(p => p.id !== player.id));
 
-    this.notificationService.openNotification(
-      {
-        text: `${player.is_bot ? 'Bot' : 'Player'} ${player.nickname} has left the game`,
-        icon: 'person_off',
-      },
-      { duration: 3000 }
-    );
+    if (!player.isMyPlayer) {
+      this.notificationService.openNotification(
+        {
+          text: `${player.isBot ? 'Bot' : 'Player'} ${player.nickname} has left the game`,
+          icon: 'person_off',
+        },
+        { duration: 3000 }
+      );
+    }
   }
 
   private updateSortedPlayers() {
