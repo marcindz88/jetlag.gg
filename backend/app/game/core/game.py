@@ -13,6 +13,7 @@ from app.game.core.airport import Airport
 from app.game.core.shipment import Shipment
 from app.game.core.player import Player
 from app.game.enums import DeathCause
+from app.game.event_factory import EventFactory
 from app.game.events import Event, EventType
 from app.game.exceptions import (
     AirportFull,
@@ -111,8 +112,7 @@ class GameSession:
         nickname = random.choice(list(nickname_set))
         player = Player(nickname=nickname, color=self._generate_player_color(), bot=True)
         self._players[player.id] = player
-        event = Event(type=EventType.PLAYER_REGISTERED, data=player.serialized)
-        self.broadcast_event(event=event)
+        self.broadcast_event(event=EventFactory.player_registered_event(player=player))
 
         thread = threading.Thread(target=self.play_with_bot, args=(player.id,))
         self._bots[player.id] = {'thread': thread, 'created': timestamp_now()}
@@ -270,9 +270,6 @@ class GameSession:
             raise PlayerNotFound
         return player
 
-    def player_list(self) -> List[dict]:
-        return [p.serialized for p in self._players.values()]
-
     def remove_idle_players(self):
         logging.debug(f"remove_idle_players")
         now = timestamp_now()
@@ -336,8 +333,7 @@ class GameSession:
 
         player = Player(nickname=nickname, color=self._generate_player_color())
         self._players[player.id] = player
-        event = Event(type=EventType.PLAYER_REGISTERED, data=player.serialized)
-        self.broadcast_event(event=event, everyone_except=[player])
+        self.broadcast_event(event=EventFactory.player_registered_event(player=player), everyone_except=[player])
         logging.info(f"add_player {nickname} added {player.id}")
         return player
 
@@ -347,20 +343,11 @@ class GameSession:
             raise PlayerAlreadyConnected
         self._sessions[ws_session.id] = (ws_session, player)
         player.session_id = ws_session.id
-        event = Event(type=EventType.PLAYER_CONNECTED, data=player.serialized)
-        self.broadcast_event(event=event, everyone_except=[player])
+        self.broadcast_event(event=EventFactory.player_connected_event(player=player), everyone_except=[player])
 
         # send game info
-        player_list_event = Event(
-            type=EventType.PLAYER_LIST,
-            data={"players": self.player_list()},
-        )
-        self.send_event(event=player_list_event, player=player)
-        airport_list_event = Event(
-            type=EventType.AIRPORT_LIST,
-            data={"airports": [airport.serialized for airport in self._airports.values()]}
-        )
-        self.send_event(event=airport_list_event, player=player)
+        self.send_event(event=EventFactory.player_list_event(player_list=list(self._players.values())), player=player)
+        self.send_event(event=EventFactory.airport_list_event(airport_list=list(self._airports.values())), player=player)
 
     def remove_session(self, ws_session: WebSocketSession):
         logging.info(f"remove_session {ws_session.id}")
@@ -369,8 +356,7 @@ class GameSession:
         player = self.get_player(player_id=ws_session.player_id)
         player.session_id = None
         player.disconnected_since = timestamp_now()
-        event = Event(type=EventType.PLAYER_DISCONNECTED, data=player.serialized)
-        self.broadcast_event(event=event, everyone_except=[player])
+        self.broadcast_event(event=EventFactory.player_disconnected_event(player=player), everyone_except=[player])
 
     def remove_player(self, player: Player):
         logging.info(f"remove_player {player.id}")
@@ -383,19 +369,16 @@ class GameSession:
             if player.is_grounded:
                 airport = self._airports.get(player.airport_id)
                 airport.remove_player(player)
-                airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
-                self.broadcast_event(event=airport_updated_event)
+                self.broadcast_event(event=EventFactory.airport_updated_event(airport=airport))
             self._players.pop(player.id)
-            event = Event(type=EventType.PLAYER_REMOVED, data=player.serialized)
-            self.broadcast_event(event=event, everyone_except=[player])
+            self.broadcast_event(event=EventFactory.player_removed_event(player=player), everyone_except=[player])
         except KeyError:
             pass
 
     def pronounce_player_dead(self, player: Player, cause: DeathCause):
         # XD
         player.death_cause = cause
-        player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
-        self.broadcast_event(event=player_updated_event)
+        self.broadcast_event(event=EventFactory.player_updated_event(player=player))
 
         if player.is_bot:
             self._bots.pop(player.id)
@@ -432,12 +415,7 @@ class GameSession:
         new_position.bearing = bearing  # todo validation
 
         player.position = new_position
-        event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
-            "id": player.id,
-            "is_grounded": player.is_grounded,
-            "position": new_position.serialized,
-        })
-        self.broadcast_event(event=event)
+        self.broadcast_event(event=EventFactory.player_position_updated_event(player=player))
 
     def add_random_airport_shipment(self):
         if len(self._shipments) >= self.config.MAX_SHIPMENTS_IN_GAME:
@@ -452,8 +430,7 @@ class GameSession:
         self._shipments[shipment.id] = shipment
         origin_airport.shipments[shipment.id] = shipment
 
-        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=origin_airport.serialized)
-        self.broadcast_event(event=airport_updated_event)
+        self.broadcast_event(event=EventFactory.airport_updated_event(airport=origin_airport))
 
     def remove_expired_shipments(self):
         shipments_to_remove = []
@@ -465,13 +442,11 @@ class GameSession:
             player: Player = self._players.get(shipment.player_id)
             if player:
                 player.shipment = None
-                player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
-                self.broadcast_event(event=player_updated_event)
+                self.broadcast_event(event=EventFactory.player_updated_event(player=player))
 
             airport: Airport = self._airports.get(shipment.origin_id)
             if airport.shipments.pop(shipment.id, None):
-                airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
-                self.broadcast_event(event=airport_updated_event)
+                self.broadcast_event(event=EventFactory.airport_updated_event(airport=airport))
 
     def refuel_player(self, player: Player, airport: Airport):
         now = timestamp_now()
@@ -502,21 +477,11 @@ class GameSession:
             player.position.tank_level = min(new_level, GameConfig.FUEL_TANK_SIZE)
             player.position.timestamp = timestamp_now()
 
-            player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
-            self.broadcast_event(event=player_updated_event)
+            self.broadcast_event(event=EventFactory.player_updated_event(player=player))
 
         player.is_refueling = False
-        refueling_stopped_event = Event(type=EventType.AIRPORT_REFUELING_STOPPED, data={
-            "id": airport.id,
-            "player_id": player.id,
-        })
-        self.send_event(event=refueling_stopped_event, player=player)
-        position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
-            "id": player.id,
-            "is_grounded": player.is_grounded,
-            "position": player.position.serialized,
-        })
-        self.send_event(event=position_updated_event, player=player)
+        self.send_event(event=EventFactory.refueling_stopped_event(airport=airport, player=player), player=player)
+        self.send_event(event=EventFactory.player_position_updated_event(player=player), player=player)
 
     def handle_player_position_update_request_event(self, player: Player, event: Event):
         logging.info(f"handle_player_position_update_request_event {player.id} {event}")
@@ -531,47 +496,27 @@ class GameSession:
     def handle_airport_landing(self, player: Player, airport: Airport):
         airport.land_player(player=player)
 
-        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
-        self.broadcast_event(event=airport_updated_event)
-
-        position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
-            "id": player.id,
-            "is_grounded": player.is_grounded,
-            "position": player.position.serialized,
-        })
-        self.broadcast_event(event=position_updated_event)
+        self.broadcast_event(event=EventFactory.airport_updated_event(airport=airport))
+        self.broadcast_event(event=EventFactory.player_position_updated_event(player=player))
 
     def handle_airport_departure(self, player: Player, airport: Airport):
         airport.remove_player(player=player)
 
-        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
-        self.broadcast_event(event=airport_updated_event)
-
-        position_updated_event = Event(type=EventType.PLAYER_POSITION_UPDATED, data={
-            "id": player.id,
-            "is_grounded": player.is_grounded,
-            "position": player.position.serialized,
-        })
-        self.broadcast_event(event=position_updated_event)
+        self.broadcast_event(event=EventFactory.airport_updated_event(airport=airport))
+        self.broadcast_event(event=EventFactory.player_position_updated_event(player=player))
 
     def handle_shipment_dispatch(self, airport: Airport, player: Player, shipment_id: uuid.UUID):
         airport.dispatch_shipment(shipment_id=shipment_id, player=player)
 
-        player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
-        self.broadcast_event(event=player_updated_event)
-
-        airport_updated_event = Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
-        self.broadcast_event(event=airport_updated_event)
+        self.broadcast_event(event=EventFactory.player_updated_event(player=player))
+        self.broadcast_event(event=EventFactory.airport_updated_event(airport=airport))
 
     def handle_shipment_delivery(self, airport: Airport, player: Player):
         shipment = airport.accept_shipment_delivery(player=player)
         self._shipments.pop(shipment.id)
 
-        shipment_delivered_event = Event(type=EventType.AIRPORT_SHIPMENT_DELIVERED, data=shipment.serialized)
-        self.send_event(event=shipment_delivered_event, player=player)
-
-        player_updated_event = Event(type=EventType.PLAYER_UPDATED, data=player.serialized)
-        self.broadcast_event(event=player_updated_event)
+        self.send_event(event=EventFactory.shipment_delivered_event(shipment=shipment), player=player)
+        self.broadcast_event(event=EventFactory.player_updated_event(player=player))
 
     def handle_airport_landing_request_event(self, player: Player, event: Event):
         logging.info(f"handle_airport_landing_request_event {player.id} {event}")
