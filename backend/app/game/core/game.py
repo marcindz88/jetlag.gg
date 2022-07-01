@@ -54,12 +54,12 @@ class GameSession:
 
         for airport_data in AIRPORTS:
             airport = Airport(
-                name=airport_data['name'],
-                full_name=airport_data['full_name'],
-                description=airport_data['description'],
-                coordinates=airport_data['coordinates'],
-                elevation=airport_data['elevation'],
-                fuel_price=airport_data['fuel_price'] * 0.3,
+                name=airport_data["name"],
+                full_name=airport_data["full_name"],
+                description=airport_data["description"],
+                coordinates=airport_data["coordinates"],
+                elevation=airport_data["elevation"],
+                fuel_price=airport_data["fuel_price"] * 0.3,
             )
             self._airports[airport.id] = airport
 
@@ -115,11 +115,11 @@ class GameSession:
         self.broadcast_event(event=EventFactory.player_registered_event(player=player))
 
         thread = threading.Thread(target=self.play_with_bot, args=(player.id,))
-        self._bots[player.id] = {'thread': thread, 'created': timestamp_now()}
+        self._bots[player.id] = {"thread": thread, "created": timestamp_now()}
         thread.start()
 
     def decrease_bot_count(self):
-        bots = [(self._players[player_id], bot_data['created']) for player_id, bot_data in self._bots.items()]
+        bots = [(self._players[player_id], bot_data["created"]) for player_id, bot_data in self._bots.items()]
         bots = sorted(bots, key=lambda b: b[1])
         bot_to_remove: Player = bots[0][0]  # select the oldest bot
         self._bots.pop(bot_to_remove.id)
@@ -161,7 +161,7 @@ class GameSession:
                         pass
                 self.refuel_player(player=player, airport=destination_airport)
                 idle_time_left = max(5000 - (timestamp_now() - arrival_time), 0)
-                time.sleep(idle_time_left/1000)
+                time.sleep(idle_time_left / 1000)
 
                 shipment_ids = list(destination_airport.shipments.keys())
                 if shipment_ids:
@@ -232,8 +232,8 @@ class GameSession:
 
             sleep_duration = minimum_sleep_duration
             if abs(bearing_delta) < 0.01 and velocity == max_velocity:
-                distance_to_destination = max(distance_to_destination-minimum_distance*1.1, 0)
-                sleep_duration = distance_to_destination/velocity * 3600
+                distance_to_destination = max(distance_to_destination - minimum_distance * 1.1, 0)
+                sleep_duration = distance_to_destination / velocity * 3600
 
                 sleep_duration = max(sleep_duration, minimum_sleep_duration)
                 sleep_duration = min(sleep_duration, 3)  # not more than 3 seconds for synchronisation reasons
@@ -347,7 +347,9 @@ class GameSession:
 
         # send game info
         self.send_event(event=EventFactory.player_list_event(player_list=list(self._players.values())), player=player)
-        self.send_event(event=EventFactory.airport_list_event(airport_list=list(self._airports.values())), player=player)
+        self.send_event(
+            event=EventFactory.airport_list_event(airport_list=list(self._airports.values())), player=player
+        )
 
     def remove_session(self, ws_session: WebSocketSession):
         logging.info(f"remove_session {ws_session.id}")
@@ -435,7 +437,7 @@ class GameSession:
     def remove_expired_shipments(self):
         shipments_to_remove = []
         for shipment in self._shipments.values():
-            if shipment.valid_till + 3*1000 < timestamp_now():
+            if shipment.valid_till + 3 * 1000 < timestamp_now():
                 shipments_to_remove.append(shipment)
         for shipment in shipments_to_remove:
             self._shipments.pop(shipment.id, None)
@@ -469,7 +471,7 @@ class GameSession:
             price = int(airport.fuel_price * added_fuel)
             if player.score < price:
                 price = player.score
-                added_fuel = price/airport.fuel_price
+                added_fuel = price / airport.fuel_price
 
             player.score -= price
 

@@ -8,7 +8,6 @@ from app.tools.timestamp import timestamp_now
 
 
 class Player:
-
     def __init__(self, nickname: str, color: str, bot: bool = False):
         self._id: uuid.UUID = uuid.uuid4()
         self._nickname: str = nickname

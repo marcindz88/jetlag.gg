@@ -36,7 +36,9 @@ class PlayerPosition:
         distance_traveled = self.velocity * timestamp_delta / 3_600_000  # s = v*t, convert timestamp to hours
         future_coordinates = self.coordinates.destination_coordinates(distance=distance_traveled, bearing=self.bearing)
         if calculate_bearing:
-            bearing_diff = (Coordinates.bearing_between(future_coordinates, self.coordinates) - 180) % 360 - Coordinates.bearing_between(self.coordinates, future_coordinates)
+            bearing_diff = (
+                Coordinates.bearing_between(future_coordinates, self.coordinates) - 180
+            ) % 360 - Coordinates.bearing_between(self.coordinates, future_coordinates)
             future_bearing = self.bearing + bearing_diff
         else:
             future_bearing = self.bearing

@@ -53,7 +53,6 @@ def add_player(body: AddPlayerRequestBody):
 
 
 class GameWebsocketServer(StarletteWebsocketServer):
-
     def validate_session(self, ws_session: WebSocketSession):
         token = ws_session.connection.headers.get("sec-websocket-protocol", "")
         try:

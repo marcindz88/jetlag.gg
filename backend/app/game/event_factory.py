@@ -7,24 +7,23 @@ from app.game.events import Event, EventType
 
 
 class EventFactory:
-
     @staticmethod
     def airport_updated_event(airport: "Airport") -> Event:
         return Event(type=EventType.AIRPORT_UPDATED, data=airport.serialized)
 
     @staticmethod
     def airport_list_event(airport_list: List["Airport"]) -> Event:
-        return Event(
-            type=EventType.AIRPORT_LIST,
-            data={"airports": [airport.serialized for airport in airport_list]}
-        )
+        return Event(type=EventType.AIRPORT_LIST, data={"airports": [airport.serialized for airport in airport_list]})
 
     @staticmethod
     def refueling_stopped_event(airport: "Airport", player: "Player") -> Event:
-        return Event(type=EventType.AIRPORT_REFUELING_STOPPED, data={
-            "id": airport.id,
-            "player_id": player.id,
-        })
+        return Event(
+            type=EventType.AIRPORT_REFUELING_STOPPED,
+            data={
+                "id": airport.id,
+                "player_id": player.id,
+            },
+        )
 
     @staticmethod
     def shipment_delivered_event(shipment: "Shipment") -> Event:
@@ -59,8 +58,11 @@ class EventFactory:
 
     @staticmethod
     def player_position_updated_event(player: "Player") -> Event:
-        return Event(type=EventType.PLAYER_POSITION_UPDATED, data={
-            "id": player.id,
-            "is_grounded": player.is_grounded,
-            "position": player.position.serialized,
-        })
+        return Event(
+            type=EventType.PLAYER_POSITION_UPDATED,
+            data={
+                "id": player.id,
+                "is_grounded": player.is_grounded,
+                "position": player.position.serialized,
+            },
+        )

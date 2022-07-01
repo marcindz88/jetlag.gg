@@ -30,7 +30,6 @@ class WebSocketSession:
 
 
 class StarletteWebsocketServer:
-
     def __init__(self):
         self._thread_manager = ThreadManager()
 
@@ -45,12 +44,19 @@ class StarletteWebsocketServer:
             while True:
                 try:
                     message = await ws_session.connection.receive_text()
-                    thread = threading.Thread(target=self.on_message, args=(ws_session, message,))
+                    thread = threading.Thread(
+                        target=self.on_message,
+                        args=(
+                            ws_session,
+                            message,
+                        ),
+                    )
                     self._thread_manager.add_thread(str(ws_session.id), thread)
                 except WebSocketDisconnect:
                     thread = threading.Thread(target=self.on_disconnect, args=(ws_session,))
                     self._thread_manager.add_thread(str(ws_session.id), thread)
                     return
+
         self.handler = handler
 
     def validate_session(self, ws_session: WebSocketSession) -> bool:
