@@ -17,11 +17,14 @@ It kills all existing containers, rebuilds images and starts new containers
 ### Get game config
 > GET /api/game/config/
 
-### Get player list
-> GET /api/game/players/
-
-### Register a player in the game
+### Register a player in the game (persistent)
 > POST /api/game/players/
+
+### Join a game session
+required before creating ws connection
+
+"token" header is expected to be present in the request
+> POST /api/game/join/
 
 ### Establish a websocket connection 
 only 1 connection per user at a time is allowed
