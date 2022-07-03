@@ -4,10 +4,25 @@ services:
   game:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     image: core_local_planegame
     container_name: game
     tty: true
     ports:
       - "9999:9999"
-    command: python run.py
+    depends_on:
+      - game_redis
+
+  game_redis:
+    build:
+      context: .
+      dockerfile: redis/dockerfile
+    image: core_local_planegame_redis
+    container_name: game_redis
+    ports:
+     - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+    redis_data:

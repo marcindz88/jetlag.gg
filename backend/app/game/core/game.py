@@ -31,6 +31,7 @@ from app.game.exceptions import (
     RefuelingWhenFlying,
 )
 from app.game.models import PlayerPositionUpdateRequest, AirportRequest, ShipmentRequest
+from app.game.persistence.redis import RedisPersistentStorage
 from app.tools.encoder import encode
 from app.tools.misc import random_with_probability
 from app.tools.timestamp import timestamp_now
@@ -323,15 +324,12 @@ class GameSession:
         available_colors = list(set(COLORS) - set([p.color for p in self._players.values()]))
         return random.choice(available_colors)
 
-    def add_player(self, nickname: str) -> Player:
+    def add_player(self, nickname: str, token: str) -> Player:
         logging.info(f"add_player {nickname}")
         if len(self._players) >= self.config.MAX_PLAYERS:
             raise PlayerLimitExceeded
-        for player in self._players.values():
-            if player.nickname.lower().strip() == nickname.lower().strip():
-                raise PlayerInvalidNickname
 
-        player = Player(nickname=nickname, color=self._generate_player_color())
+        player = Player(nickname=nickname, token=token, color=self._generate_player_color())
         self._players[player.id] = player
         self.broadcast_event(event=EventFactory.player_registered_event(player=player), everyone_except=[player])
         logging.info(f"add_player {nickname} added {player.id}")
@@ -385,6 +383,15 @@ class GameSession:
         if player.is_bot:
             self._bots.pop(player.id)
             return
+        storage = RedisPersistentStorage()
+        now = timestamp_now()
+        storage.add_game_record(
+            full_nickname=player.nickname,
+            timestamp=now,
+            score=player.score,
+            shipments_delivered=player.shipments_delivered,
+            time_alive=now-player.joined,
+        )
         self.remove_player(player=player)
 
     def update_player_position(self, player: Player, timestamp: int, velocity: int, bearing: float):
