@@ -118,6 +118,7 @@ class RedisPersistentStorage(BasePersistentStorage):
 
     def clear_db(self):
         self.client.flushdb()
+        self.rebuild_index()
 
     def rebuild_index(self):
         index_name = "idx:players_json"
