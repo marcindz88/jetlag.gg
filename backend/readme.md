@@ -17,6 +17,14 @@ It kills all existing containers, rebuilds images and starts new containers
 ### Get game config
 > GET /api/game/config/
 
+### Get leaderboard
+> GET /api/game/leaderboard/
+
+with pagination
+> GET /api/game/leaderboard/?limit=10&offset=30
+
+where limit is the size of one page
+
 ### Register a player in the game (persistent)
 > POST /api/game/players/
 
