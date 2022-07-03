@@ -41,7 +41,7 @@ class Coordinates:
 
         delta_lat = lat2 - lat1
         delta_lon = lon2 - lon1
-        a = sin(delta_lat/2)**2 + cos(lat1)*cos(lat2)*sin(delta_lon/2)**2
+        a = sin(delta_lat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(delta_lon / 2) ** 2
         c = 2 * atan2(sqrt(a), sqrt(max(1 - a, 0)))
         d = Coordinates._earth_radius() * c
         return d
@@ -53,8 +53,8 @@ class Coordinates:
         lat2 = radians(coord2.latitude)
         lon2 = radians(coord2.longitude)
 
-        y = sin(lon2 - lon1)*cos(lat2)
-        x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(lon2 - lon1)
+        y = sin(lon2 - lon1) * cos(lat2)
+        x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(lon2 - lon1)
 
         return ((atan2(y, x) * 180) / pi + 360) % 360
 
@@ -71,8 +71,8 @@ class Coordinates:
         cos_dr = cos(distance / r)
         sin_dr = sin(distance / r)
 
-        lat2 = asin(sin_lat1*cos_dr + cos_lat1*sin_dr*cos(bearing))
-        lon2 = lon1 + atan2(sin(bearing)*sin_dr*cos_lat1, cos_dr - sin_lat1*sin(lat2))
+        lat2 = asin(sin_lat1 * cos_dr + cos_lat1 * sin_dr * cos(bearing))
+        lon2 = lon1 + atan2(sin(bearing) * sin_dr * cos_lat1, cos_dr - sin_lat1 * sin(lat2))
 
         lat2 = degrees(lat2)
         lon2 = degrees(lon2)

@@ -1,14 +1,16 @@
 import json
 import logging
 
-from fastapi import FastAPI, WebSocket, HTTPException
+from fastapi import FastAPI, WebSocket, HTTPException, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import constr, BaseModel
 from fastapi.websockets import WebSocketDisconnect
 
 from app.game import exceptions
-from app.game.core import GameSession
+from app.game.core.game import GameSession
 from app.game.events import dict_to_event
+from app.game.exceptions import PlayerNotFound
+from app.game.persistence.redis import RedisPersistentStorage
 from app.tools.timestamp import timestamp_now
 from app.tools.websocket_server import StarletteWebsocketServer, WebSocketSession
 
@@ -35,74 +37,95 @@ def get_config():
     return game_session.config.serialized()
 
 
-@app.get("/api/game/players/")
-def list_players():
-    return game_session.player_list()
-
-
-class AddPlayerRequestBody(BaseModel):
+class RegisterPlayerRequestBody(BaseModel):
     nickname: constr(min_length=1)
 
 
 @app.post("/api/game/players/")
-def add_player(body: AddPlayerRequestBody):
-    try:
-        player = game_session.add_player(nickname=body.nickname)
-    except exceptions.PlayerInvalidNickname:
+def register_player(body: RegisterPlayerRequestBody):
+    nickname = body.nickname
+    if ":" in nickname:
         raise HTTPException(status_code=400, detail="Invalid nickname")
+
+    storage = RedisPersistentStorage()
+    player = storage.add_new_player(nickname=body.nickname)
+
+    return {
+        "nickname": player.full_nickname,
+        "token": player.token,
+    }
+
+
+@app.post("/api/game/join/")
+def join_game_session(token: str = Header(default="")):
+    storage = RedisPersistentStorage()
+    persistent_player = storage.get_player_by_token(token=token)
+
+    if not persistent_player:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    try:
+        player = game_session.add_player(nickname=persistent_player.full_nickname, token=token)
     except exceptions.PlayerLimitExceeded:
         raise HTTPException(status_code=409, detail="Lobby is full")
 
     return {**player.serialized, "token": player.token}
 
 
-def validate_connection(ws_session: WebSocketSession) -> bool:
-    token = ws_session.connection.headers.get("sec-websocket-protocol", "")
-    try:
-        player = game_session.get_player_by_token(token)
-    except exceptions.PlayerNotFound:
-        return False
-    if player.is_connected:
-        return False
+@app.get("/api/game/leaderboard/")
+def leaderboard(
+    limit: int = Query(default=10, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+):
+    storage = RedisPersistentStorage()
+    player_list = storage.get_player_list(limit=limit, offset=offset)
 
-    ws_session.token = token
-    ws_session.player_id = player.id
-    return True
+    return player_list.serialized
 
 
-def on_connect(ws_session: WebSocketSession):
-    print("On connect", ws_session)
-    player = game_session.get_player(player_id=ws_session.player_id)
-    game_session.add_session(player=player, ws_session=ws_session)
+class GameWebsocketServer(StarletteWebsocketServer):
+    def validate_session(self, ws_session: WebSocketSession):
+        token = ws_session.connection.headers.get("sec-websocket-protocol", "")
+        try:
+            player = game_session.get_player_by_token(token)
+        except exceptions.PlayerNotFound:
+            return False
+        if player.is_connected:
+            return False
 
+        ws_session.token = token
+        ws_session.player_id = player.id
+        return True
 
-def on_disconnect(ws_session: WebSocketSession):
-    print("On disconnect", ws_session)
-    game_session.remove_session(ws_session=ws_session)
+    def on_connect(self, ws_session: WebSocketSession):
+        print("On connect", ws_session)
+        player = game_session.get_player(player_id=ws_session.player_id)
+        game_session.add_session(player=player, ws_session=ws_session)
 
+    def on_disconnect(self, ws_session: WebSocketSession):
+        print("On disconnect", ws_session)
+        try:
+            game_session.remove_session(ws_session=ws_session)
+        except PlayerNotFound:
+            pass
 
-def on_message(ws_session: WebSocketSession, body: str):
-    logging.info("on_message %s", body)
-    try:
-        data = json.loads(body)
-        event = dict_to_event(data=data)
-    except (json.JSONDecodeError, exceptions.InvalidEventFormat) as e:
-        logging.error("Invalid event format: %s", e)
-        return
-    logging.info("on_message parsed event %s", event)
+    def on_message(self, ws_session: WebSocketSession, message: str):
+        print("on_message %s", message)
+        try:
+            data = json.loads(message)
+            event = dict_to_event(data=data)
+        except (json.JSONDecodeError, exceptions.InvalidEventFormat) as e:
+            logging.error("Invalid event format: %s", e)
+            return
+        logging.info("on_message parsed event %s", event)
 
-    player = game_session.get_player(player_id=ws_session.player_id)
-    game_session.handle_event(player, event)
+        player = game_session.get_player(player_id=ws_session.player_id)
+        game_session.handle_event(player, event)
 
 
 @app.websocket("/ws/")
 async def websocket_endpoint(websocket: WebSocket):
-    server = StarletteWebsocketServer(
-        validate=validate_connection,
-        on_connect=on_connect,
-        on_message=on_message,
-        on_disconnect=on_disconnect,
-    )
+    server = GameWebsocketServer()
     await server.handler(websocket)
 
 

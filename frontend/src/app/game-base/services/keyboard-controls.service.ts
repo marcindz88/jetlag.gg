@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { filter, fromEvent, merge, repeat, Subject, switchMap, take, takeUntil, tap, timer } from 'rxjs';
+import { filter, fromEvent, merge, repeat, Subject, switchMap, take, takeUntil, timer } from 'rxjs';
 
 import { KeyEventEnum } from '../models/keyboard.types';
 
@@ -9,7 +9,7 @@ import { KeyEventEnum } from '../models/keyboard.types';
 export class KeyboardControlsService {
   keyEvent$ = new Subject<KeyEventEnum>();
 
-  private windowBlurEvent$ = fromEvent(window, 'blur').pipe(untilDestroyed(this)).pipe(tap(console.log));
+  private windowBlurEvent$ = fromEvent(window, 'blur').pipe(untilDestroyed(this));
   private keyDownEvent$ = fromEvent<KeyboardEvent>(document, 'keydown').pipe(untilDestroyed(this));
   private keyUpEvent$ = fromEvent<KeyboardEvent>(document, 'keyup').pipe(untilDestroyed(this));
 
@@ -17,8 +17,8 @@ export class KeyboardControlsService {
     // Quick events
     this.handleKeyEvent(KeyEventEnum.FORWARD, ['w', 'W', 'ArrowUp', 'Up'], 200);
     this.handleKeyEvent(KeyEventEnum.BACKWARD, ['s', 'S', 'ArrowDown', 'Down'], 200);
-    this.handleKeyEvent(KeyEventEnum.TURN_LEFT, ['a', 'A', 'ArrowLeft', 'Left'], 100);
-    this.handleKeyEvent(KeyEventEnum.TURN_RIGHT, ['d', 'D', 'ArrowRight', 'Right'], 100);
+    this.handleKeyEvent(KeyEventEnum.TURN_LEFT, ['a', 'A', 'ArrowLeft', 'Left'], 200);
+    this.handleKeyEvent(KeyEventEnum.TURN_RIGHT, ['d', 'D', 'ArrowRight', 'Right'], 200);
 
     // Ordinary slow events
     this.handleKeyEvent(KeyEventEnum.PLAYER_FOCUS_PREV, ['<', ',']);

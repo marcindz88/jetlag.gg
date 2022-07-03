@@ -1,39 +1,32 @@
-<div class="player-cockpit" *ngIf="player && position">
-  <ng-container *ngIf="!player.isGrounded; else airportMainPanel">
-    <pg-nearby-airports
-      class="player-cockpit__airports"
-      [airportList]="airportList"
-      [updateTrigger$]="airportsUpdateTrigger$"></pg-nearby-airports>
-    <p class="player-cockpit__velocity">{{ position.velocity | number: '7.0-0' }} km/h</p>
-    <pg-card class="player-cockpit__stats">
-      <table>
-        <tr>
-          <td>Bearing:</td>
-          <td>{{ position.bearing | number: '2.2-2' }} deg</td>
-        </tr>
-        <tr>
-          <td>Latitude:</td>
-          <td>{{ position.coordinates.lat | number: '2.3-3' }} deg</td>
-        </tr>
-        <tr>
-          <td>Longitude:</td>
-          <td>{{ position.coordinates.lon | number: '2.3-3' }} deg</td>
-        </tr>
-      </table>
-    </pg-card>
-    <pg-compass class="player-cockpit__compass" [bearing]="position.bearing"></pg-compass>
-    <pg-shipment-details
-      class="player-cockpit__shipment"
-      *ngIf="player.shipment"
-      [shipment]="player.shipment"
-      [isSelectable]="false"></pg-shipment-details>
-  </ng-container>
-  <ng-template #airportMainPanel>
-    <pg-airport-main-panel
-      *ngIf="!showHelp"
-      class="player-cockpit__airport_panel"
-      [airport]="airportList[0]"
-      [playerShipment]="player.shipment"></pg-airport-main-panel>
-  </ng-template>
-</div>
-<pg-help class="help-container" *ngIf="showHelp"></pg-help>
+<ng-container *ngIf="!player.isCrashed; else gameOverScreen">
+  <div class="player-cockpit" *ngIf="player && lastPosition && !player.isCrashing">
+    <ng-container *ngIf="!player.isGrounded; else airportMainPanel">
+      <pg-nearby-airports
+        class="player-cockpit__airports"
+        [airportList]="airportList"
+        [updateTrigger$]="airportsUpdateTrigger$"></pg-nearby-airports>
+      <p class="player-cockpit__velocity">{{ lastPosition.velocity | number: '7.0-0' }} km/h</p>
+      <pg-player-cockpit-stats class="player-cockpit__stats" [position]="lastPosition"></pg-player-cockpit-stats>
+      <pg-compass class="player-cockpit__compass" [bearing]="lastPosition.bearing"></pg-compass>
+      <pg-shipment-details
+        class="player-cockpit__shipment"
+        *ngIf="player.shipment"
+        [shipment]="player.shipment"
+        [isSelectable]="false"></pg-shipment-details>
+    </ng-container>
+    <ng-template #airportMainPanel>
+      <pg-airport-main-panel
+        *ngIf="!showHelp"
+        class="player-cockpit__airport_panel"
+        [airport]="airportList[0]"
+        [playerShipment]="player.shipment"
+        [playerTankLevel]="player.lastPosition.tank_level"
+        [playerScore]="player.score"></pg-airport-main-panel>
+    </ng-template>
+  </div>
+  <pg-help class="help-container" *ngIf="showHelp"></pg-help>
+</ng-container>
+
+<ng-template #gameOverScreen>
+  <pg-game-over class="game-over-container" [player]="player"></pg-game-over>
+</ng-template>

@@ -17,11 +17,14 @@ It kills all existing containers, rebuilds images and starts new containers
 ### Get game config
 > GET /api/game/config/
 
-### Get player list
-> GET /api/game/players/
-
-### Register a player in the game
+### Register a player in the game (persistent)
 > POST /api/game/players/
+
+### Join a game session
+required before creating ws connection
+
+"token" header is expected to be present in the request
+> POST /api/game/join/
 
 ### Establish a websocket connection 
 only 1 connection per user at a time is allowed
@@ -48,6 +51,7 @@ only 1 connection per user at a time is allowed
 * 'player.updated'
 * 'player_position.updated'
 * 'airport.shipment_delivered'
+* 'airport.refueling_stopped'
 * 'airport.list'
 * 'airport.updated'
 
@@ -81,6 +85,16 @@ sample:
 > ws.send(JSON.stringify({type: 'airport.shipment_delivery_request', created: new Date().getTime(), data: {}}))
 
 player has to carry a shipment and be grounded on the destination airport of the shipment.
+
+
+* 'airport.refueling_start_request'<br>
+sample:
+> ws.send(JSON.stringify({type: 'airport.refueling_start_request', created: new Date().getTime(), data: {}}))
+
+
+* 'airport.refueling_end_request'<br>
+sample:
+> ws.send(JSON.stringify({type: 'airport.refueling_end_request', created: new Date().getTime(), data: {}}))
 
 
 ### Clock synchronisation

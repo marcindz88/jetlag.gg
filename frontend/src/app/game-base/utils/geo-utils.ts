@@ -1,5 +1,6 @@
 import { GeoLocationPoint } from '@pg/game-base/models/game.types';
 import { PlanePosition } from '@pg/game-base/players/models/player.types';
+import { updateTankLevel } from '@pg/game-base/utils/fuel-utils';
 import { CONFIG } from '@shared/services/config.service';
 import { Euler, Spherical, Vector3 } from 'three';
 import { degToRad, radToDeg } from 'three/src/math/MathUtils';
@@ -14,7 +15,8 @@ export const arePointsEqual = (start: GeoLocationPoint, end: GeoLocationPoint) =
 };
 
 export const normalizeBearing = (bearing: number) => {
-  return bearing < 0 ? bearing + 360 : bearing;
+  const normalizedBearing = bearing < 0 ? bearing + 360 : bearing;
+  return normalizedBearing > 360 ? normalizedBearing - 360 : normalizedBearing;
 };
 
 export const transformPointIntoCoordinates = (vector: Vector3): GeoLocationPoint => {
@@ -63,11 +65,12 @@ export const calculatePositionAfterTimeInterval = (
   altitude: number,
   currentTimestamp: number
 ): PlanePosition => {
-  if (currentTimestamp === position.timestamp) {
+  if (currentTimestamp === position.timestamp || !position.velocity) {
     return position;
   }
+  const timeDifferenceS = (currentTimestamp - position.timestamp) / 1000;
 
-  const distance = (position.velocity * CONFIG.MAP_SCALE * (currentTimestamp - position.timestamp)) / 3600000;
+  const distance = (position.velocity * CONFIG.MAP_SCALE * timeDifferenceS) / 3600;
 
   const r = CONFIG.EARTH_RADIUS_SCALED + altitude;
   const bearing = degToRad(position.bearing);
@@ -92,10 +95,11 @@ export const calculatePositionAfterTimeInterval = (
   );
 
   return {
+    ...position,
     coordinates: newPosition,
     bearing: newBearing,
-    velocity: position.velocity,
     timestamp: currentTimestamp,
+    tank_level: updateTankLevel(currentTimestamp, position.timestamp, position.tank_level, position.fuel_consumption),
   };
 };
 
@@ -113,4 +117,10 @@ export const calculateDistanceBetweenPoints = (point1: GeoLocationPoint, point2:
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return CONFIG.EARTH_RADIUS * c; // km
+};
+
+export const calculateAltitudeFromPosition = (position: Vector3): number => {
+  return (
+    Math.sqrt(Math.pow(position.x, 2) + Math.pow(position.y, 2) + Math.pow(position.z, 2)) - CONFIG.EARTH_RADIUS_SCALED
+  );
 };

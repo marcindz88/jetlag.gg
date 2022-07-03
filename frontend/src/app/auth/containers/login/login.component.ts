@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ROUTES } from '@shared/constants/routes';
 import { LoaderService } from '@shared/services/loader.service';
@@ -14,7 +14,7 @@ import { UserService } from '../../services/user.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {
-  form: FormGroup;
+  form = this.createForm();
   serverError: 'lobby_full' | 'unknown_error' | null = null;
 
   constructor(
@@ -22,20 +22,16 @@ export class LoginComponent {
     private myPlayerService: UserService,
     private router: Router,
     private cdr: ChangeDetectorRef
-  ) {
-    this.form = this.formBuilder.group({
-      nickname: [null, [Validators.required, Validators.maxLength(15), Validators.minLength(3)]],
-    });
-  }
+  ) {}
 
   get nicknameControl() {
-    return this.form.get('nickname');
+    return this.form.controls.nickname;
   }
 
   registerAndStartGame() {
-    if (this.form.valid) {
+    if (this.form.valid && this.nicknameControl?.value) {
       this.serverError = null;
-      this.myPlayerService.createUser(this.nicknameControl?.value as string).subscribe({
+      this.myPlayerService.createUser(this.nicknameControl.value).subscribe({
         next: () => {
           LoaderService.addLoader(); // start additional loader until earth finishes rendering
           void this.router.navigate([ROUTES.root, ROUTES.game]);
@@ -58,5 +54,11 @@ export class LoginComponent {
         },
       });
     }
+  }
+
+  private createForm() {
+    return this.formBuilder.group({
+      nickname: ['', [Validators.required, Validators.maxLength(15), Validators.minLength(3)]],
+    });
   }
 }

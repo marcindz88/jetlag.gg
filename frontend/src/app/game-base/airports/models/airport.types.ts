@@ -17,6 +17,7 @@ export interface AirportType {
   elevation: number;
   coordinates: GeoLocationPoint;
   occupying_player: string;
+  fuel_price: number;
   shipments: Shipment[];
 }
 
