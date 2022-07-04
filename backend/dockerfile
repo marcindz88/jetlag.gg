@@ -57,7 +57,4 @@ RUN pip install --no-cache-dir --no-index --find-links=/wheels/ /wheels/* \
 COPY . ${APP_HOME}
 
 
-ENTRYPOINT echo "REBUILDING REDIS INDEX"; \
-    python -c 'import scripts; scripts.rebuild_index()'; \
-    echo "REDIS INDEX REBUILT..."; \
-    python run.py
+ENTRYPOINT python run.py
