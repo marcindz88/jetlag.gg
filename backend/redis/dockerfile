@@ -1,3 +1,3 @@
-FROM redislabs/rejson
+FROM redis:7.0.2
 COPY redis/redis.conf /usr/local/etc/redis/redis.conf
-CMD redis-server /usr/local/etc/redis/redis.conf --loadmodule /usr/lib/redis/modules/rejson.so
+CMD redis-server /usr/local/etc/redis/redis.conf

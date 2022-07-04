@@ -2,7 +2,6 @@ import uuid
 from typing import Optional
 
 import redis
-from redis.commands.json.path import Path
 
 from app.game.persistence.base import BasePersistentStorage, Player, PlayerList
 
@@ -19,10 +18,10 @@ class RedisPersistentStorage(BasePersistentStorage):
             full_nickname=nickname,
             token=player['token'],
             position=position,
-            best_score=player['best_score'],
-            best_shipment_num=player['best_shipment_num'],
-            best_time_alive=player['best_time_alive'],
-            best_timestamp=player['best_timestamp'],
+            best_score=int(player['best_score']),
+            best_shipment_num=int(player['best_shipment_num']),
+            best_time_alive=int(player['best_time_alive']),
+            best_timestamp=int(player['best_timestamp']),
         )
 
     def add_new_player(self, nickname: str) -> Player:
@@ -40,9 +39,9 @@ class RedisPersistentStorage(BasePersistentStorage):
             'best_time_alive': -1,
             'best_timestamp': -1,
         }
-        nickname_number = self.client.incr(f"pnum:{nickname}")
+        nickname_number = self.client.hincrby("nickname_frequencies", nickname, 1)
         full_nickname = f"{nickname}:{nickname_number}"
-        self.client.json().set(f'player:{full_nickname}', Path.root_path(), player)
+        self.client.hset(f'player:{full_nickname}', mapping=player)
         self.client.hset("tokens", token, full_nickname)
         self.client.zadd("player_score_index", {full_nickname: player['best_score']})
 
@@ -53,7 +52,7 @@ class RedisPersistentStorage(BasePersistentStorage):
         if not full_nickname:
             return None
 
-        player = self.client.json().get(f"player:{full_nickname}")
+        player = self.client.hgetall(f"player:{full_nickname}")
         return self._parse_player(nickname=full_nickname, player=player)
 
     def get_player_list(self, limit: int, offset: int) -> PlayerList:
@@ -69,7 +68,9 @@ class RedisPersistentStorage(BasePersistentStorage):
 
         full_names = self.client.zrevrange("player_score_index", offset, offset + limit)
         keys = [f"player:{name}" for name in full_names]
-        players = self.client.json().mget(path=Path.root_path(), keys=keys)
+        players = []
+        for key in keys:
+            players.append(self.client.hgetall(key))
 
         return PlayerList(
             total=total,
@@ -84,7 +85,7 @@ class RedisPersistentStorage(BasePersistentStorage):
 
     def get_player(self, full_nickname: str) -> Optional[Player]:
         # for leaderboard needs, so return with a position
-        player = self.client.json().get(f"player:{full_nickname}")
+        player = self.client.hgetall(f"player:{full_nickname}")
         if not player:
             return None
 
@@ -113,15 +114,17 @@ class RedisPersistentStorage(BasePersistentStorage):
         player_key = f'player:{full_nickname}'
 
         def _add_game_record(pipe):
-            player = pipe.json().get(player_key)
+            player = pipe.hgetall(player_key)
             pipe.multi()
-            pipe.json().set(f"game:{full_nickname}:{timestamp}", Path.root_path(), game)
-            if score <= player['best_score']:
+            pipe.hset(f"game:{full_nickname}:{timestamp}", mapping=game)
+            if score <= int(player['best_score']):
                 return
-            pipe.json().set(player_key, Path("best_score"), score)
-            pipe.json().set(player_key, Path("best_shipment_num"), shipments_delivered)
-            pipe.json().set(player_key, Path("best_time_alive"), time_alive)
-            pipe.json().set(player_key, Path("best_timestamp"), timestamp)
+            pipe.hset(player_key, mapping={
+                "best_score": score,
+                "best_shipment_num": shipments_delivered,
+                "best_time_alive": time_alive,
+                "best_timestamp": timestamp,
+            })
             pipe.zadd("player_score_index", {full_nickname: score})
 
         self.client.transaction(_add_game_record, player_key)
