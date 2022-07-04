@@ -83,6 +83,17 @@ def leaderboard(
     return player_list.serialized
 
 
+@app.get("/api/game/leaderboard/{player_nickname}")
+def leaderboard_player(player_nickname: str):
+    storage = RedisPersistentStorage()
+    player = storage.get_player(full_nickname=player_nickname)
+
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    return player.serialized
+
+
 class GameWebsocketServer(StarletteWebsocketServer):
     def validate_session(self, ws_session: WebSocketSession):
         token = ws_session.connection.headers.get("sec-websocket-protocol", "")

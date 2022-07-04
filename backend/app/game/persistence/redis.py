@@ -14,10 +14,11 @@ class RedisPersistentStorage(BasePersistentStorage):
         self.client = redis.Redis(host=host, port=port, db=0, decode_responses=True)
 
     @staticmethod
-    def _parse_player(nickname: str, player: dict) -> Player:
+    def _parse_player(nickname: str, player: dict, position: int = None) -> Player:
         return Player(
             full_nickname=nickname,
             token=player['token'],
+            position=position,
             best_score=player['best_score'],
             best_shipment_num=player['best_shipment_num'],
             best_time_alive=player['best_time_alive'],
@@ -73,8 +74,26 @@ class RedisPersistentStorage(BasePersistentStorage):
         return PlayerList(
             total=total,
             results=[
-                self._parse_player(nickname=full_names[i], player=players[i]) for i in range(len(keys))
+                self._parse_player(
+                    nickname=full_names[i],
+                    player=players[i],
+                    position=offset+i,
+                ) for i in range(len(full_names))
             ],
+        )
+
+    def get_player(self, full_nickname: str) -> Optional[Player]:
+        # for leaderboard needs, so return with a position
+        player = self.client.json().get(f"player:{full_nickname}")
+        if not player:
+            return None
+
+        position = self.client.zrevrank("player_score_index", full_nickname)
+
+        return self._parse_player(
+            nickname=full_nickname,
+            player=player,
+            position=position,
         )
 
     def add_game_record(

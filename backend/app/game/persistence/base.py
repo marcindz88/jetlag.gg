@@ -7,10 +7,24 @@ from typing import Optional, List
 class Player:
     full_nickname: str
     token: str
+    position: Optional[int]  # player always has a position, but not always it is necessary to retrieve it
     best_score: Optional[int]
     best_shipment_num: Optional[int]
     best_time_alive: Optional[int]
     best_timestamp: Optional[int]
+
+    @property
+    def serialized(self):
+        return {
+            "nickname": self.full_nickname,
+            "position": self.position,
+            "best_game": {
+                "score": self.best_score,
+                "delivered_shipments": self.best_shipment_num,
+                "time_alive": self.best_time_alive,
+                "timestamp": self.best_timestamp,
+            } if self.best_score >= 0 else None
+        }
 
 
 @dataclasses.dataclass
@@ -22,17 +36,7 @@ class PlayerList:
     def serialized(self):
         return {
             "total": self.total,
-            "results": [
-                {
-                    "nickname": p.full_nickname,
-                    "best_game": {
-                        "score": p.best_score,
-                        "delivered_shipments": p.best_shipment_num,
-                        "time_alive": p.best_time_alive,
-                        "timestamp": p.best_timestamp,
-                    } if p.best_score >= 0 else None
-                } for p in self.results
-            ]
+            "results": [p.serialized for p in self.results]
         }
 
 
@@ -48,6 +52,11 @@ class BasePersistentStorage(ABC):
 
     @abstractmethod
     def get_player_list(self, limit: int, offset: int) -> PlayerList:
+        raise NotImplemented
+
+    @abstractmethod
+    def get_player(self, full_nickname: str) -> Optional[Player]:
+        # for leaderboard needs, so return with a position
         raise NotImplemented
 
     @abstractmethod
