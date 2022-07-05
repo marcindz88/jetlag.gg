@@ -1,4 +1,4 @@
-import { BasePlayer } from '@pg/game-base/players/models/player.types';
+import { BasePlayer } from '@pg/game/models/player.types';
 
 export type User = {
   token: string;

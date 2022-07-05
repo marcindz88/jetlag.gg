@@ -1,6 +1,6 @@
-import { AirportList, AirportRequest, AirportUpdate, Shipment } from '@pg/game-base/airports/models/airport.types';
-import { PlaneStateUpdateRequest } from '@pg/game-base/models/game.types';
-import { OtherPlayer, PlayerList, PlayerPositionUpdate } from '@pg/game-base/players/models/player.types';
+import { AirportList, AirportRequest, AirportUpdate, Shipment } from '@pg/game/models/airport.types';
+import { PlaneStateUpdateRequest } from '@pg/game/models/game.types';
+import { OtherPlayer, PlayerList, PlayerPositionUpdate } from '@pg/game/models/player.types';
 
 export type MessageDataType =
   | OtherPlayer

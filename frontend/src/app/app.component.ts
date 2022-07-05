@@ -3,7 +3,7 @@ import { ClockService } from '@shared/services/clock.service';
 import { ConfigService } from '@shared/services/config.service';
 import { LoaderService } from '@shared/services/loader.service';
 
-import { TextureModelsService } from './game-base/services/texture-models.service';
+import { TextureModelsService } from './game/services/texture-models.service';
 
 @Component({
   selector: 'pg-root',
