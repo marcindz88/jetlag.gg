@@ -1,5 +1,4 @@
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { NgtRepeatModule } from '@angular-three/core';
@@ -25,7 +24,7 @@ const EXPORTED_DECLARATIONS = [
 ];
 
 @NgModule({
-  imports: [CommonModule, HttpClientModule, NgtRepeatModule, NgtSobaText3dModule, MatSnackBarModule],
+  imports: [CommonModule, NgtRepeatModule, NgtSobaText3dModule, MatSnackBarModule],
   declarations: [EXPORTED_DECLARATIONS],
   exports: [EXPORTED_DECLARATIONS, MatSnackBarModule],
   providers: [materialConfigProviders],

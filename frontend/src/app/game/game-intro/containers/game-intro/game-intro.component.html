@@ -1,0 +1,10 @@
+<pg-card class="intro">
+  <h3 class="start__label">Welcome in the game {{ user.nickname }}</h3>
+  <div>
+    <p class="error" *ngIf="serverError === 'lobby_full'">Lobby is full, please try again later</p>
+    <p class="error" *ngIf="serverError === 'unknown_error'">Unknown error occurred, please try again later</p>
+  </div>
+  <div class="intro__button-wrapper button-wrapper">
+    <button type="submit" class="button-wrapper__button" (click)="joinTheGame()">Enter the game</button>
+  </div>
+</pg-card>

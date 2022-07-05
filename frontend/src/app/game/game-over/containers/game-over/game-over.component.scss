@@ -1,0 +1,28 @@
+:host {
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 15;
+}
+
+.game-over {
+  background: var(--card-background-darker-color);
+  display: flex;
+  flex-direction: column;
+  height: min(495px, 80vh);
+  padding: 20px;
+  width: min(650px, 85vw);
+
+  & &__leaderboard {
+    flex-grow: 1;
+  }
+
+  & &__actions {
+    column-gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

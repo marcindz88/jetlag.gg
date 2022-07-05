@@ -1,0 +1,29 @@
+<pg-card class="game-over">
+  <h1>Game Over</h1>
+  <ng-container *ngIf="player?.deathCause as deathCause">
+    <h2 [ngSwitch]="deathCause">
+      <span *ngSwitchCase="DeathCauseEnum.RUN_OUT_OF_FUEL">Your plane have crashed because of empty fuel tank</span>
+      <span *ngSwitchCase="DeathCauseEnum.SPEED_TOO_LOW">Your plane have crashed because of too low velocity</span>
+    </h2>
+    <h3>You scored {{ player!.score }}$</h3>
+    <!--  <h4>Your place on the all time high leaderboard is {{ crashData.leaderboardPlace }}</h4>-->
+  </ng-container>
+  <div class="game-over__leaderboard">
+    <!--    <pg-table-->
+    <!--      *ngIf="playersLeaderboard"-->
+    <!--      [array]="playersLeaderboard"-->
+    <!--      [noRecordsText]="'No game-cockpit have been added to the leaderboard yet.'"-->
+    <!--      [rowTemplate]="player_row">-->
+    <!--      <ng-template #player_row let-player="data">-->
+    <!--        <tr>-->
+    <!--          <td class="nickname">{{ player.nickname }}</td>-->
+    <!--          <td class="score">{{ player.score }}$</td>-->
+    <!--        </tr>-->
+    <!--      </ng-template>-->
+    <!--    </pg-table>-->
+  </div>
+  <div class="game-over__actions">
+    <button>Share your result</button>
+    <button (click)="restart()">Restart the game</button>
+  </div>
+</pg-card>
