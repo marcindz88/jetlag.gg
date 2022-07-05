@@ -1,12 +1,7 @@
-import json
 import uuid
 from typing import Optional
 
 import redis
-from redis.commands.json.path import Path
-from redis.commands.search.field import TagField, NumericField
-from redis.commands.search.indexDefinition import IndexDefinition, IndexType
-from redis.commands.search.query import Query
 
 from app.game.persistence.base import BasePersistentStorage, Player, PlayerList
 
@@ -18,14 +13,15 @@ class RedisPersistentStorage(BasePersistentStorage):
         self.client = redis.Redis(host=host, port=port, db=0, decode_responses=True)
 
     @staticmethod
-    def _parse_player(nickname: str, player: dict) -> Player:
+    def _parse_player(nickname: str, player: dict, position: int = None) -> Player:
         return Player(
             full_nickname=nickname,
             token=player['token'],
-            best_score=player['best_score'],
-            best_shipment_num=player['best_shipment_num'],
-            best_time_alive=player['best_time_alive'],
-            best_timestamp=player['best_timestamp'],
+            position=position,
+            best_score=int(player['best_score']),
+            best_shipment_num=int(player['best_shipment_num']),
+            best_time_alive=int(player['best_time_alive']),
+            best_timestamp=int(player['best_timestamp']),
         )
 
     def add_new_player(self, nickname: str) -> Player:
@@ -43,48 +39,62 @@ class RedisPersistentStorage(BasePersistentStorage):
             'best_time_alive': -1,
             'best_timestamp': -1,
         }
-        nickname_number = self.client.incr(f"pnum:{nickname}")
+        nickname_number = self.client.hincrby("nickname_frequencies", nickname, 1)
         full_nickname = f"{nickname}:{nickname_number}"
-        self.client.json().set(f'player:{full_nickname}', Path.root_path(), player)
+        self.client.hset(f'player:{full_nickname}', mapping=player)
+        self.client.hset("tokens", token, full_nickname)
+        self.client.zadd("player_score_index", {full_nickname: player['best_score']})
 
         return self._parse_player(nickname=full_nickname, player=player)
 
     def get_player_by_token(self, token: str) -> Optional[Player]:
-        try:
-            result = self.client.ft("idx:players_json").search("@token:{ %s }" % token)
-        except redis.ResponseError:
+        full_nickname = self.client.hget("tokens", token)
+        if not full_nickname:
             return None
 
-        if result.total != 1:
-            return None
-
-        document = result.docs[0]
-
-        nickname = document.id.split(":", 1)[1]
-        player = json.loads(document.json)
-
-        if player['token'] != token:
-            # lets make sure nobody did i.e. "8a*"
-            return None
-
-        return self._parse_player(nickname=nickname, player=player)
+        player = self.client.hgetall(f"player:{full_nickname}")
+        return self._parse_player(nickname=full_nickname, player=player)
 
     def get_player_list(self, limit: int, offset: int) -> PlayerList:
         if limit <= 0 or offset < 0:
             raise ValueError
 
-        print("get_player_list")
+        total = self.client.zcard("player_score_index")
+        if total == 0:
+            return PlayerList(
+                total=total,
+                results=[],
+            )
 
-        query = Query(query_string="*").sort_by("best_score", asc=False).paging(offset=offset, num=limit)
-        results = self.client.ft("idx:players_json").search(query)
-
-        print("get_player_list 2")
+        full_names = self.client.zrevrange("player_score_index", offset, offset + limit)
+        keys = [f"player:{name}" for name in full_names]
+        players = []
+        for key in keys:
+            players.append(self.client.hgetall(key))
 
         return PlayerList(
-            total=results.total,
+            total=total,
             results=[
-                self._parse_player(nickname=d.id.split(":", 1)[1], player=json.loads(d.json)) for d in results.docs
+                self._parse_player(
+                    nickname=full_names[i],
+                    player=players[i],
+                    position=offset+i,
+                ) for i in range(len(full_names))
             ],
+        )
+
+    def get_player(self, full_nickname: str) -> Optional[Player]:
+        # for leaderboard needs, so return with a position
+        player = self.client.hgetall(f"player:{full_nickname}")
+        if not player:
+            return None
+
+        position = self.client.zrevrank("player_score_index", full_nickname)
+
+        return self._parse_player(
+            nickname=full_nickname,
+            player=player,
+            position=position,
         )
 
     def add_game_record(
@@ -103,43 +113,21 @@ class RedisPersistentStorage(BasePersistentStorage):
 
         player_key = f'player:{full_nickname}'
 
-        def _update_best_score(pipe):
-            player = pipe.json().get(player_key)
-            if score <= player['best_score']:
-                return
+        def _add_game_record(pipe):
+            player = pipe.hgetall(player_key)
             pipe.multi()
-            pipe.json().set(player_key, Path("best_score"), score)
-            pipe.json().set(player_key, Path("best_shipment_num"), shipments_delivered)
-            pipe.json().set(player_key, Path("best_time_alive"), time_alive)
-            pipe.json().set(player_key, Path("best_timestamp"), timestamp)
-            pipe.json().set(f"game:{full_nickname}:{timestamp}", Path.root_path(), game)
+            pipe.hset(f"game:{full_nickname}:{timestamp}", mapping=game)
+            if score <= int(player['best_score']):
+                return
+            pipe.hset(player_key, mapping={
+                "best_score": score,
+                "best_shipment_num": shipments_delivered,
+                "best_time_alive": time_alive,
+                "best_timestamp": timestamp,
+            })
+            pipe.zadd("player_score_index", {full_nickname: score})
 
-        self.client.transaction(_update_best_score, player_key)
+        self.client.transaction(_add_game_record, player_key)
 
     def clear_db(self):
         self.client.flushdb()
-        self.rebuild_index()
-
-    def rebuild_index(self):
-        index_name = "idx:players_json"
-        try:
-            self.client.ft(index_name).dropindex()
-        except redis.ResponseError:
-            pass
-
-        index_schema = (
-            TagField(
-                '$.token',
-                as_name='token',
-            ),
-            NumericField(
-                '$.best_score',
-                as_name='best_score',
-                sortable=True,
-            ),
-        )
-
-        self.client.ft(index_name).create_index(
-            index_schema,
-            definition=IndexDefinition(index_type=IndexType.JSON, prefix=["player:"])
-        )

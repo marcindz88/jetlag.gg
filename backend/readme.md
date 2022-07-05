@@ -25,6 +25,11 @@ with pagination
 
 where limit is the size of one page
 
+### Get player in the leaderboard
+
+useful for determining player's position after the game
+> GET /api/game/leaderboard/john:1/
+
 ### Register a player in the game (persistent)
 > POST /api/game/players/
 
