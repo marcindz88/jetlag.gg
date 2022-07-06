@@ -2,6 +2,8 @@ import dataclasses
 from abc import abstractmethod, ABC
 from typing import Optional, List
 
+from app.game.enums import DeathCause
+
 
 @dataclasses.dataclass
 class Player:
@@ -12,6 +14,7 @@ class Player:
     best_shipment_num: Optional[int]
     best_time_alive: Optional[int]
     best_timestamp: Optional[int]
+    best_death_cause: Optional[DeathCause]
 
     @property
     def serialized(self):
@@ -23,6 +26,7 @@ class Player:
                 "delivered_shipments": self.best_shipment_num,
                 "time_alive": self.best_time_alive,
                 "timestamp": self.best_timestamp,
+                "death_cause": self.best_death_cause,
             } if self.best_score >= 0 else None
         }
 
@@ -67,6 +71,7 @@ class BasePersistentStorage(ABC):
         score: int,
         shipments_delivered: int,
         time_alive: int,
+        death_cause: DeathCause,
     ) -> None:
         raise NotImplemented
 

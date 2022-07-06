@@ -3,6 +3,7 @@ from typing import Optional
 
 import redis
 
+from app.game.enums import DeathCause
 from app.game.persistence.base import BasePersistentStorage, Player, PlayerList
 
 
@@ -22,6 +23,7 @@ class RedisPersistentStorage(BasePersistentStorage):
             best_shipment_num=int(player['best_shipment_num']),
             best_time_alive=int(player['best_time_alive']),
             best_timestamp=int(player['best_timestamp']),
+            best_death_cause=DeathCause(player['best_death_cause']),
         )
 
     def add_new_player(self, nickname: str) -> Player:
@@ -38,12 +40,12 @@ class RedisPersistentStorage(BasePersistentStorage):
             'best_shipment_num': -1,
             'best_time_alive': -1,
             'best_timestamp': -1,
+            'best_death_cause': "",
         }
         nickname_number = self.client.hincrby("nickname_frequencies", nickname, 1)
         full_nickname = f"{nickname}:{nickname_number}"
         self.client.hset(f'player:{full_nickname}', mapping=player)
         self.client.hset("tokens", token, full_nickname)
-        self.client.zadd("player_score_index", {full_nickname: player['best_score']})
 
         return self._parse_player(nickname=full_nickname, player=player)
 
@@ -104,13 +106,13 @@ class RedisPersistentStorage(BasePersistentStorage):
         score: int,
         shipments_delivered: int,
         time_alive: int,
+        death_cause: DeathCause,
     ) -> None:
         game = {
             "score": score,
             "shipment_num": shipments_delivered,
             "time_alive": time_alive,
         }
-
         player_key = f'player:{full_nickname}'
 
         def _add_game_record(pipe):
@@ -124,6 +126,7 @@ class RedisPersistentStorage(BasePersistentStorage):
                 "best_shipment_num": shipments_delivered,
                 "best_time_alive": time_alive,
                 "best_timestamp": timestamp,
+                "best_death_cause": death_cause,
             })
             pipe.zadd("player_score_index", {full_nickname: score})
 

@@ -390,6 +390,7 @@ class GameSession:
             score=player.score,
             shipments_delivered=player.shipments_delivered,
             time_alive=now-player.joined,
+            death_cause=cause,
         )
         self.remove_player(player=player)
 
