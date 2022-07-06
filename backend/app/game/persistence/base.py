@@ -44,6 +44,25 @@ class PlayerList:
         }
 
 
+@dataclasses.dataclass
+class Game:
+    score: int
+    shipment_num: int
+    time_alive: int
+    timestamp: int
+    death_cause: DeathCause
+
+    @property
+    def serialized(self):
+        return {
+            "score": self.score,
+            "delivered_shipments": self.shipment_num,
+            "time_alive": self.time_alive,
+            "timestamp": self.timestamp,
+            "death_cause": self.death_cause,
+        }
+
+
 class BasePersistentStorage(ABC):
 
     @abstractmethod
@@ -61,6 +80,10 @@ class BasePersistentStorage(ABC):
     @abstractmethod
     def get_player(self, full_nickname: str) -> Optional[Player]:
         # for leaderboard needs, so return with a position
+        raise NotImplemented
+
+    @abstractmethod
+    def get_players_last_games(self, full_nickname: str, amount=10) -> List[Game]:
         raise NotImplemented
 
     @abstractmethod

@@ -1,10 +1,10 @@
 import uuid
-from typing import Optional
+from typing import Optional, List
 
 import redis
 
 from app.game.enums import DeathCause
-from app.game.persistence.base import BasePersistentStorage, Player, PlayerList
+from app.game.persistence.base import BasePersistentStorage, Player, PlayerList, Game
 
 
 class RedisPersistentStorage(BasePersistentStorage):
@@ -99,6 +99,27 @@ class RedisPersistentStorage(BasePersistentStorage):
             position=position,
         )
 
+    def get_players_last_games(self, full_nickname: str, amount=10) -> List[Game]:
+        if amount > 10:
+            raise ValueError
+
+        timestamps = self.client.lrange(f"last_games:{full_nickname}", 0, amount-1)
+        games = []
+        for timestamp in timestamps:
+            game = self.client.hgetall(f"game:{full_nickname}:{timestamp}")
+            game['timestamp'] = timestamp
+            games.append(game)
+
+        return [
+            Game(
+                score=g['score'],
+                shipment_num=g['shipment_num'],
+                time_alive=g['time_alive'],
+                timestamp=g['timestamp'],
+                death_cause=DeathCause(g['death_cause']),
+            ) for g in games
+        ]
+
     def add_game_record(
         self,
         full_nickname: str,
@@ -112,6 +133,7 @@ class RedisPersistentStorage(BasePersistentStorage):
             "score": score,
             "shipment_num": shipments_delivered,
             "time_alive": time_alive,
+            "death_cause": death_cause,
         }
         player_key = f'player:{full_nickname}'
 
@@ -119,6 +141,8 @@ class RedisPersistentStorage(BasePersistentStorage):
             player = pipe.hgetall(player_key)
             pipe.multi()
             pipe.hset(f"game:{full_nickname}:{timestamp}", mapping=game)
+            pipe.lpush(f"last_games:{full_nickname}", timestamp)
+            pipe.ltrim(f"last_games:{full_nickname}", 0, 9)
             if score <= int(player['best_score']):
                 return
             pipe.hset(player_key, mapping={

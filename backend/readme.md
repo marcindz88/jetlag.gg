@@ -30,6 +30,11 @@ where limit is the size of one page
 useful for determining player's position after the game
 > GET /api/game/leaderboard/john:1/
 
+### Player's last games
+
+returns last 10 games of a player
+> GET /api/game/leaderboard/john:1/last_games/
+
 ### Register a player in the game (persistent)
 > POST /api/game/players/
 

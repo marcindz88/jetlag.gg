@@ -94,6 +94,14 @@ def leaderboard_player(player_nickname: str):
     return player.serialized
 
 
+@app.get("/api/game/leaderboard/{player_nickname}/last_games/")
+def leaderboard_player_last_games(player_nickname: str):
+    storage = RedisPersistentStorage()
+    games = storage.get_players_last_games(full_nickname=player_nickname)
+
+    return [g.serialized for g in games]
+
+
 class GameWebsocketServer(StarletteWebsocketServer):
     def validate_session(self, ws_session: WebSocketSession):
         token = ws_session.connection.headers.get("sec-websocket-protocol", "")
