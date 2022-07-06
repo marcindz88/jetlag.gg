@@ -23,7 +23,7 @@ class RedisPersistentStorage(BasePersistentStorage):
             best_shipment_num=int(player['best_shipment_num']),
             best_time_alive=int(player['best_time_alive']),
             best_timestamp=int(player['best_timestamp']),
-            best_death_cause=DeathCause(player['best_death_cause']),
+            best_death_cause=DeathCause(player['best_death_cause']) if player['best_death_cause'] else None,
         )
 
     def add_new_player(self, nickname: str) -> Player:
