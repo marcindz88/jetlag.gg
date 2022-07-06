@@ -20,7 +20,6 @@ from app.game.exceptions import (
     ShipmentExpired,
     PlayerNotFound,
     PlayerLimitExceeded,
-    PlayerInvalidNickname,
     PlayerAlreadyConnected,
     CantFlyWhenGrounded,
     ChangingPastPosition,
@@ -281,7 +280,7 @@ class GameSession:
             if player.is_connected:
                 continue
             if now - player.disconnected_since > self.config.PLAYER_TIME_TO_CONNECT:
-                self.remove_player(player)
+                self.pronounce_player_dead(player=player, cause=DeathCause.DISCONNECTED)
 
     def check_playing_conditions(self):
         logging.debug(f"check_playing_conditions")
