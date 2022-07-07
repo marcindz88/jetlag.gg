@@ -61,7 +61,7 @@ class RedisPersistentStorage(BasePersistentStorage):
         if limit <= 0 or offset < 0:
             raise ValueError
 
-        full_names = self.client.zrevrange("player_score_index", offset, offset + limit)
+        full_names = self.client.zrevrange("player_score_index", offset, offset + limit - 1)
 
         pipe = self.client.pipeline()
         pipe.zcard("player_score_index")
