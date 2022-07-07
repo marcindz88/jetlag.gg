@@ -5,6 +5,7 @@
     <p class="error" *ngIf="serverError === 'unknown_error'">Unknown error occurred, please try again later</p>
   </div>
   <div class="intro__button-wrapper button-wrapper">
+    <button type="submit" class="button-wrapper__button" (click)="logout()">Logout</button>
     <button type="submit" class="button-wrapper__button" (click)="joinTheGame()">Enter the game</button>
   </div>
 </pg-card>

@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, TemplateRef } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  TemplateRef,
+} from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ReplaySubject } from 'rxjs';
 
@@ -16,11 +25,17 @@ export class TableComponent<T> implements OnInit {
   @Input() rowTemplate: TemplateRef<{ data: T }> | null = null;
   @Input() headerTemplate: TemplateRef<Record<string, never>> | null = null;
 
+  @Output() tableScroll: EventEmitter<HTMLTableElement> = new EventEmitter<HTMLTableElement>();
+
   constructor(private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.updateTrigger$?.pipe(untilDestroyed(this)).subscribe(() => {
       this.cdr.markForCheck();
     });
+  }
+
+  emitScrollEvent(event: Event) {
+    this.tableScroll.emit(event.target as HTMLTableElement);
   }
 }

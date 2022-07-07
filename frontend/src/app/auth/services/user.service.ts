@@ -36,4 +36,9 @@ export class UserService {
       LoaderService.addLoader(); // start additional loader until earth finishes rendering
     }
   }
+
+  resetUser() {
+    localStorage.removeItem(this.playerLSKey);
+    this.user$.next(null);
+  }
 }

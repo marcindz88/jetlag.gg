@@ -16,4 +16,10 @@
   justify-content: center;
   padding: 30px;
   width: min(90vw, 250px);
+
+  & &__button-wrapper {
+    column-gap: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
 }

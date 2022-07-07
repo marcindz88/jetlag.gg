@@ -80,6 +80,12 @@ export class GameSceneComponent {
       this.setupCameraControls();
       this.cdr.markForCheck();
     });
+
+    this.playersService.reset$.pipe(untilDestroyed(this)).subscribe(() => {
+      this.myPlayer = undefined;
+      this.focusedPlayerId = null;
+      this.cameraMode = CameraModesEnum.FOLLOW;
+    });
   }
 
   private setupCameraControls() {

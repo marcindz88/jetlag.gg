@@ -28,8 +28,8 @@ export class EndpointsService {
 
   private getUrlWithReplacedId(url: string, config?: Config): string {
     if (config?.id) {
-      return `${url.replace('<id>', `${config.id}`)}`;
+      return url.replace('<id>', `${config.id}`);
     }
-    return url.replace('/<id>', '');
+    return url.replace('<id>', '');
   }
 }

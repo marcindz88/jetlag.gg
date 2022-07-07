@@ -1,0 +1,32 @@
+<pg-table
+  *ngIf="leaderboard"
+  [array]="leaderboard.results"
+  [noRecordsText]="'No players have been added to the leaderboard yet.'"
+  [rowTemplate]="player_row"
+  [headerTemplate]="header_row"
+  (tableScroll)="tableScrolled($event)">
+  <ng-template #header_row>
+    <tr class="header-row">
+      <th>No.</th>
+      <th>Date</th>
+      <th>Nickname</th>
+      <th>Score</th>
+      <th>Shipments</th>
+      <th>Time of game</th>
+    </tr>
+  </ng-template>
+  <ng-template #player_row let-player="data">
+    <tr [class.my-player-row]="player.nickname === myNickname" *ngIf="player.best_game">
+      <td class="position">{{ player.position + 1 }}</td>
+      <td class="date">{{ player.best_game.timestamp | date }}</td>
+      <td class="nickname">{{ player.nickname | nickname }}</td>
+      <td class="score">{{ player.best_game.score }}$</td>
+      <td class="shipments">{{ player.best_game.delivered_shipments }}</td>
+      <td class="time">{{ player.best_game.time_alive / 1000 | number: '1.0-0' }} s</td>
+    </tr>
+  </ng-template>
+
+  <ng-container *ngIf="!isMyPlayerVisibleInTheList">
+    <ng-container *ngTemplateOutlet="player_row; context: { data: myBestGame }"></ng-container>
+  </ng-container>
+</pg-table>

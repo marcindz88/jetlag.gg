@@ -63,4 +63,9 @@ export class GameIntroComponent {
         },
       });
   }
+
+  logout() {
+    this.userService.resetUser();
+    void this.router.navigateByUrl(ROUTES_URLS.login);
+  }
 }

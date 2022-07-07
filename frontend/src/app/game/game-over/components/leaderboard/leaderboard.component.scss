@@ -1,0 +1,28 @@
+:host {
+  max-height: 100%;
+
+  ::ng-deep table {
+    display: block;
+    max-height: 100%;
+    overflow-y: auto;
+    text-align: center;
+    width: 100%;
+  }
+}
+
+.header-row {
+  background-color: var(--card-background-darkest-color) !important;
+  position: sticky;
+  top: 0;
+}
+
+.my-player-row {
+  background-color: var(--card-background-darkest-color) !important;
+  bottom: 0;
+  font-weight: bold;
+  position: sticky;
+}
+
+.nickname {
+  min-width: 120px;
+}

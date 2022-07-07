@@ -27,6 +27,7 @@ const routes: Routes = [
       {
         path: GAME_ROUTES.over,
         loadChildren: () => import('./game-over/game-over.module').then(m => m.GameOverModule),
+        canLoad: [PlayerInGameGuard],
       },
     ],
   },

@@ -23,11 +23,9 @@ export class PlayersService {
   ) {}
 
   resetAll() {
-    this.players = new Map<string, Player>();
-    this.playersSorted$ = new BehaviorSubject<Player[]>([]);
+    this.players.clear();
+    this.playersSorted$.next([]);
     this.myPlayer = null;
-    this.changed$.complete();
-    this.changed$ = new ReplaySubject<void>();
     this.reset$.next();
   }
 
