@@ -30,7 +30,7 @@ from app.game.exceptions import (
     RefuelingWhenFlying,
 )
 from app.game.models import PlayerPositionUpdateRequest, AirportRequest, ShipmentRequest
-from app.game.persistence.redis import RedisPersistentStorage
+from app.game.persistence.base import BasePersistentStorage
 from app.tools.encoder import encode
 from app.tools.misc import random_with_probability
 from app.tools.timestamp import timestamp_now
@@ -45,12 +45,13 @@ class GameSession:
     FILL_GAME_WITH_BOTS_TILL = 10
     SPAWN_BOTS_WHEN_NO_PLAYERS = False
 
-    def __init__(self):
+    def __init__(self, storage: BasePersistentStorage):
         self._players = {}
         self._sessions = {}
         self._airports = {}
         self._shipments = {}
         self._bots = {}
+        self._storage = storage
 
         for airport_data in AIRPORTS:
             airport = Airport(
@@ -382,9 +383,8 @@ class GameSession:
         if player.is_bot:
             self._bots.pop(player.id)
             return
-        storage = RedisPersistentStorage()
         now = timestamp_now()
-        storage.add_game_record(
+        self._storage.add_game_record(
             full_nickname=player.nickname,
             timestamp=now,
             score=player.score,

@@ -18,7 +18,8 @@ from app.tools.websocket_server import StarletteWebsocketServer, WebSocketSessio
 logging.getLogger().setLevel(logging.INFO)
 
 
-game_session = GameSession()
+storage = RedisPersistentStorage()
+game_session = GameSession(storage=storage)
 app = FastAPI()
 
 origins = ["*"]  # todo
@@ -47,7 +48,6 @@ def register_player(body: RegisterPlayerRequestBody):
     if ":" in nickname:
         raise HTTPException(status_code=400, detail="Invalid nickname")
 
-    storage = RedisPersistentStorage()
     player = storage.add_new_player(nickname=body.nickname)
 
     return {
@@ -58,7 +58,6 @@ def register_player(body: RegisterPlayerRequestBody):
 
 @app.post("/api/game/join/")
 def join_game_session(token: str = Header(default="")):
-    storage = RedisPersistentStorage()
     persistent_player = storage.get_player_by_token(token=token)
 
     if not persistent_player:
@@ -77,7 +76,6 @@ def leaderboard(
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
 ):
-    storage = RedisPersistentStorage()
     player_list = storage.get_player_list(limit=limit, offset=offset)
 
     return player_list.serialized
@@ -85,7 +83,6 @@ def leaderboard(
 
 @app.get("/api/game/leaderboard/{player_nickname}")
 def leaderboard_player(player_nickname: str):
-    storage = RedisPersistentStorage()
     player = storage.get_player(full_nickname=player_nickname)
 
     if not player:
@@ -96,7 +93,6 @@ def leaderboard_player(player_nickname: str):
 
 @app.get("/api/game/leaderboard/{player_nickname}/last_games/")
 def leaderboard_player_last_games(player_nickname: str):
-    storage = RedisPersistentStorage()
     games = storage.get_players_last_games(full_nickname=player_nickname)
 
     return [g.serialized for g in games]
