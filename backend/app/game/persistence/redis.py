@@ -61,18 +61,16 @@ class RedisPersistentStorage(BasePersistentStorage):
         if limit <= 0 or offset < 0:
             raise ValueError
 
-        total = self.client.zcard("player_score_index")
-        if total == 0:
-            return PlayerList(
-                total=total,
-                results=[],
-            )
-
         full_names = self.client.zrevrange("player_score_index", offset, offset + limit)
+
+        pipe = self.client.pipeline()
+        pipe.zcard("player_score_index")
         keys = [f"player:{name}" for name in full_names]
-        players = []
         for key in keys:
-            players.append(self.client.hgetall(key))
+            pipe.hgetall(key)
+        pipe_result = pipe.execute()
+        total = pipe_result.pop(0)
+        players = pipe_result
 
         return PlayerList(
             total=total,
@@ -104,11 +102,13 @@ class RedisPersistentStorage(BasePersistentStorage):
             raise ValueError
 
         timestamps = self.client.lrange(f"last_games:{full_nickname}", 0, amount-1)
-        games = []
+
+        pipe = self.client.pipeline()
         for timestamp in timestamps:
-            game = self.client.hgetall(f"game:{full_nickname}:{timestamp}")
+            pipe.hgetall(f"game:{full_nickname}:{timestamp}")
+        games = pipe.execute()
+        for game, timestamp in zip(games, timestamps):
             game['timestamp'] = timestamp
-            games.append(game)
 
         return [
             Game(
