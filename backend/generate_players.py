@@ -10,8 +10,8 @@ def random_string(length):
     return ''.join(random.choice(string.ascii_lowercase) for _ in range(length))
 
 
-PLAYERS_AMOUNT = 5_000
-GAMES_AMOUNT = 10_000
+PLAYERS_AMOUNT = 500
+GAMES_AMOUNT = 1_000
 
 
 storage = RedisPersistentStorage(host='localhost')

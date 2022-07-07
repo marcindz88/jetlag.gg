@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ComponentStore, tapResponse } from '@ngrx/component-store';
-import { LeaderboardPlayerResult, LeaderboardResponse } from '@pg/game/game-over/models/game-over.models';
+import { GameStats, LeaderboardPlayerResult, LeaderboardResponse } from '@pg/game/game-over/models/game-over.models';
 import { GameOverHttpService } from '@pg/game/game-over/services/game-over-http.service';
 import { enableLoader } from '@shared/operators/operators';
 import { CONFIG } from '@shared/services/config.service';
@@ -11,8 +11,8 @@ import { Observable, of, switchMap } from 'rxjs';
 export interface GameOverState {
   currentPage: number;
   leaderboard: LeaderboardResponse | null;
-  myPlayerBestResult: LeaderboardPlayerResult | null;
-  myPlayerLastResult: LeaderboardPlayerResult | null;
+  myPlayerBestGame: LeaderboardPlayerResult | null;
+  myPlayerLastGames: GameStats[] | null;
   allFetched: boolean;
   isListLoading: boolean;
 }
@@ -21,8 +21,8 @@ export interface GameOverState {
 export class GameOverStore extends ComponentStore<GameOverState> {
   // SELECTORS
   readonly leaderboard$ = this.select(state => state.leaderboard);
-  readonly myPlayerBestGame$ = this.select(state => state.myPlayerBestResult);
-  readonly myPlayerLastGame$ = this.select(state => state.myPlayerLastResult);
+  readonly myPlayerBestGame$ = this.select(state => state.myPlayerBestGame);
+  readonly myPlayerLastGame$ = this.select(state => state.myPlayerLastGames?.[0] || null);
   readonly allFetched$ = this.select(state => state.allFetched);
   readonly isListLoading$ = this.select(state => state.isListLoading);
 
@@ -35,43 +35,44 @@ export class GameOverStore extends ComponentStore<GameOverState> {
     ...state,
     isListLoading: isLoading,
   }));
-  private readonly incrementPage = this.updater(state => ({
-    ...state,
-    currentPage: state.currentPage + 1,
-  }));
 
   private readonly addMyPlayerBestResult = this.updater((state, myPlayerBestResult: LeaderboardPlayerResult) => ({
     ...state,
-    myPlayerBestResult,
+    myPlayerBestGame: myPlayerBestResult,
   }));
 
-  private readonly addMyPlayerLastResult = this.updater((state, myPlayerLastResult: LeaderboardPlayerResult) => ({
+  private readonly addMyPlayerLastGames = this.updater((state, myPlayerLastGames: GameStats[]) => ({
     ...state,
-    myPlayerLastResult,
+    myPlayerLastGames,
   }));
 
   private readonly addLeaderboardRows = this.updater((state, leaderboard: LeaderboardResponse) => ({
     ...state,
     leaderboard: {
-      results: [...(state.leaderboard?.results || []), ...leaderboard.results],
+      results: (state.leaderboard?.results || []).concat(leaderboard.results),
       total: leaderboard.total,
     },
-    currentPage: state.currentPage++,
+    currentPage: state.currentPage + 1,
   }));
 
   // EFFECTS
   readonly getLeaderboardNextPage = this.effect(trigger$ => {
-    const total = this.get().leaderboard?.total;
-    if (total && this.get().currentPage * CONFIG.LEADERBOARD_TABLE_LENGTH >= total) {
-      this.setAllFetched();
-      return of(undefined);
-    }
-
-    this.setLoading(true);
-
     return trigger$.pipe(
-      switchMap(() =>
-        this.gameOverHttpService
+      switchMap(() => {
+        if (this.get().allFetched) {
+          return of(undefined);
+        }
+
+        const leaderboard = this.get().leaderboard;
+
+        if (leaderboard && leaderboard.results.length >= leaderboard.total) {
+          this.setAllFetched();
+          return of(undefined);
+        }
+
+        this.setLoading(true);
+
+        return this.gameOverHttpService
           .fetchLeaderboard(
             CONFIG.LEADERBOARD_TABLE_LENGTH,
             (this.get().currentPage + 1) * CONFIG.LEADERBOARD_TABLE_LENGTH
@@ -80,13 +81,12 @@ export class GameOverStore extends ComponentStore<GameOverState> {
             tapResponse(
               (response: LeaderboardResponse) => {
                 this.addLeaderboardRows(response);
-                this.incrementPage();
                 this.setLoading(false);
               },
               (error: HttpErrorResponse) => Logger.error(GameOverStore, error) // TODO error handling
             )
-          )
-      )
+          );
+      })
     );
   });
 
@@ -109,7 +109,7 @@ export class GameOverStore extends ComponentStore<GameOverState> {
         this.gameOverHttpService.fetchPlayerLastGames(nickname).pipe(
           enableLoader,
           tapResponse(
-            playerResult => this.addMyPlayerLastResult(playerResult),
+            lastGames => this.addMyPlayerLastGames(lastGames),
             (error: HttpErrorResponse) => Logger.error(GameOverStore, error) // TODO error handling
           )
         )
@@ -120,8 +120,8 @@ export class GameOverStore extends ComponentStore<GameOverState> {
   constructor(private gameOverHttpService: GameOverHttpService) {
     super({
       leaderboard: null,
-      myPlayerBestResult: null,
-      myPlayerLastResult: null,
+      myPlayerBestGame: null,
+      myPlayerLastGames: null,
       currentPage: -1,
       allFetched: false,
       isListLoading: false,

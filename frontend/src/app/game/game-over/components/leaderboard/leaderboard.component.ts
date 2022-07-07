@@ -17,7 +17,7 @@ export class LeaderboardComponent {
   @ViewChild(TableComponent, { read: ElementRef }) tableComponent?: ElementRef;
 
   leaderboard: LeaderboardResponse | null = null;
-  myBestGame: LeaderboardPlayerResult | null = null;
+  myBestGameResult: LeaderboardPlayerResult | null = null;
   isMyPlayerVisibleInTheList = false;
   allFetched = false;
   isListLoading = true;
@@ -47,7 +47,7 @@ export class LeaderboardComponent {
       .pipe(untilDestroyed(this))
       .subscribe(([allFetched, myBestGame, leaderboard, isListLoading]) => {
         this.allFetched = allFetched;
-        this.myBestGame = myBestGame;
+        this.myBestGameResult = myBestGame;
         this.leaderboard = leaderboard;
         this.isListLoading = isListLoading;
 
@@ -57,10 +57,10 @@ export class LeaderboardComponent {
   }
 
   private getUpdatedIsMyPlayerVisibleInTheList(): boolean {
-    if (!this.myBestGame || !this.leaderboard) {
+    if (!this.myBestGameResult || !this.leaderboard) {
       return false;
     }
 
-    return this.myBestGame.position <= this.leaderboard.results.length - 1;
+    return this.myBestGameResult.position <= this.leaderboard.results.length - 1;
   }
 }

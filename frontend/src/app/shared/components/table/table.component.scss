@@ -10,6 +10,10 @@
     border-spacing: 0;
 
     tr {
+      th {
+        text-align: center;
+      }
+
       th,
       td {
         padding-left: 6px;

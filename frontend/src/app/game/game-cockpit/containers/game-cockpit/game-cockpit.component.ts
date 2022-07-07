@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, NgZone, OnInit } from '@angular/core';
 import { MatSnackBarRef } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -46,7 +46,8 @@ export class GameCockpitComponent implements OnInit {
     private airportsService: AirportsService,
     private playersService: PlayersService,
     private notificationService: NotificationService,
-    private clockService: ClockService
+    private clockService: ClockService,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit() {
@@ -110,7 +111,9 @@ export class GameCockpitComponent implements OnInit {
 
   private setPlayerDeathChanges() {
     this.player.changeNotifiers.destroy$.pipe(untilDestroyed(this)).subscribe(() => {
-      void this.router.navigateByUrl(ROUTES_URLS.game_over);
+      this.ngZone.run(() => {
+        void this.router.navigateByUrl(ROUTES_URLS.game_over);
+      });
     });
   }
 

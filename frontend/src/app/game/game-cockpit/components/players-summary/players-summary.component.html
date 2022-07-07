@@ -15,7 +15,7 @@
       <ng-template #notInFocus><span class="icon"> crop_free </span></ng-template>
     </td>
     <td class="nickname">
-      <span> {{ player.nickname }}</span>
+      <span> {{ player.nickname | nickname }}</span>
       <span *ngIf="player.isBot" class="icon icon--ml"> smart_toy </span>
       <span *ngIf="player.shipment" class="icon icon--ml"> inventory_2 </span>
     </td>

@@ -43,6 +43,7 @@ export type PlayerPositionUpdate = {
 export enum DeathCauseEnum {
   RUN_OUT_OF_FUEL = 'run_out_of_fuel',
   SPEED_TOO_LOW = 'speed_too_low',
+  DISCONNECTED = 'disconnected',
 }
 
 export enum PlayerUpdateType {

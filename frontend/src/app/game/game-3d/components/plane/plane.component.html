@@ -2,7 +2,7 @@
   <ngt-group *ngIf="!player.isCrashed" (beforeRender)="updatePlane($event)">
     <ngt-group [rotation]="[0, 1 | pi, 0]" *ngIf="!player.isMyPlayer">
       <pg-elevated-text
-        [text]="player.nickname"
+        [text]="player.nickname | nickname"
         [position]="[0, -0.8, 0]"
         [colors]="[getMaterial(textures.model), materials.textMaterialLight]"></pg-elevated-text>
     </ngt-group>

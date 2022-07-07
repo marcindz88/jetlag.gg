@@ -13,6 +13,7 @@ import { AirportComponent } from '@pg/game/game-3d/components/airport/airport.co
 import { EarthComponent } from '@pg/game/game-3d/components/earth/earth.component';
 import { PlaneComponent } from '@pg/game/game-3d/components/plane/plane.component';
 import { GameSceneComponent } from '@pg/game/game-3d/containers/game-scene/game-scene.component';
+import { GameSharedModule } from '@pg/game/game-shared/game-shared.module';
 import { SharedModule } from '@shared/shared.module';
 
 const EXPORTED_DECLARATIONS = [PlaneComponent, AirportComponent, EarthComponent, GameSceneComponent];
@@ -36,6 +37,7 @@ const EXPORTED_DECLARATIONS = [PlaneComponent, AirportComponent, EarthComponent,
     NgtPiPipeModule,
     NgtMeshBasicMaterialModule,
     NgtCircleGeometryModule,
+    GameSharedModule,
   ],
   exports: [EXPORTED_DECLARATIONS],
 })

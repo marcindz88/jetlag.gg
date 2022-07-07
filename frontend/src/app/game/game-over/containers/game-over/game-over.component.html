@@ -1,10 +1,24 @@
 <pg-card class="game-over">
   <h1>Game Over</h1>
-  <h2 [ngSwitch]="myPlayer.deathCause">
-    <span *ngSwitchCase="DeathCauseEnum.RUN_OUT_OF_FUEL">Your plane have crashed because of empty fuel tank</span>
-    <span *ngSwitchCase="DeathCauseEnum.SPEED_TOO_LOW">Your plane have crashed because of too low velocity</span>
-  </h2>
-  <h3>You scored {{ myPlayer.score }}$</h3>
+  <h2>Your plane have crashed because of {{ myPlayer.deathCause! | deathCause: 'long' }}</h2>
+  <ng-container *ngIf="myPlayerLastGame$ | async as myLastGame; else shortInfo">
+    <h3 *ngIf="myPlayerLastGame$ | async as myLastGame; else shortInfo">
+      You scored {{ myLastGame.score }} $ by delivering {{ myLastGame.delivered_shipments }} shipments in
+      {{ myLastGame.time_alive / 1000 | number: '1.0-0' }} seconds
+    </h3>
+    <ng-container *ngIf="myPlayerBestGame$ | async as myBestGameResult">
+      <h4>
+        <ng-container *ngIf="myBestGameResult.best_game.timestamp === myLastGame.timestamp; else notBest">
+          It's your new personal best score !!! You now take {{ myBestGameResult.position }} in the leaderboard
+        </ng-container>
+        <ng-template #notBest
+          >It's not your best game... Your best game can be seen in the leaderboard below</ng-template
+        >
+      </h4>
+    </ng-container>
+  </ng-container>
+  <ng-template #shortInfo>You scored {{ myPlayer.score }}$</ng-template>
+
   <div class="game-over__leaderboard">
     <pg-leaderboard [myNickname]="myPlayer.nickname"></pg-leaderboard>
   </div>

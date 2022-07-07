@@ -5,6 +5,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
 import { AuthModule } from '@auth/auth.module';
 import { authInterceptorProvider } from '@auth/services/auth-interceptor.service';
+import { preflightInterceptorProvider } from '@shared/services/preflight-interceptor.service';
 import { SharedModule } from '@shared/shared.module';
 
 import { AppComponent } from './app.component';
@@ -22,6 +23,6 @@ import { AppRoutingModule } from './app-routing.module';
     AuthModule,
   ],
   bootstrap: [AppComponent],
-  providers: [authInterceptorProvider],
+  providers: [authInterceptorProvider, preflightInterceptorProvider],
 })
 export class AppModule {}

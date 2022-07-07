@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { LeaderboardPlayerResult, LeaderboardResponse } from '@pg/game/game-over/models/game-over.models';
+import { GameStats, LeaderboardPlayerResult, LeaderboardResponse } from '@pg/game/game-over/models/game-over.models';
 import { EndpointsService } from '@shared/services/endpoints.service';
 import { Observable } from 'rxjs';
 
@@ -24,8 +24,8 @@ export class GameOverHttpService {
     );
   }
 
-  fetchPlayerLastGames(nickname: string): Observable<LeaderboardPlayerResult> {
-    return this.httpClient.get<LeaderboardPlayerResult>(
+  fetchPlayerLastGames(nickname: string): Observable<GameStats[]> {
+    return this.httpClient.get<GameStats[]>(
       this.endpointsService.getEndpoint('leaderboard_last_games', { id: nickname }),
       {}
     );

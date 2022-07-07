@@ -12,6 +12,7 @@ import { GameCockpitComponent } from '@pg/game/game-cockpit/containers/game-cock
 import { GameCockpitRoutingModule } from '@pg/game/game-cockpit/game-cockpit-routing.module';
 import { SharedModule } from '@shared/shared.module';
 
+import { GameSharedModule } from '../game-shared/game-shared.module';
 import { PlayersSummaryComponent } from './components/players-summary/players-summary.component';
 
 @NgModule({
@@ -25,6 +26,6 @@ import { PlayersSummaryComponent } from './components/players-summary/players-su
     ShipmentDetailsComponent,
     GameAirportPanelComponent,
   ],
-  imports: [CommonModule, SharedModule, GameCockpitRoutingModule, NgtRepeatModule, MatTooltipModule],
+  imports: [CommonModule, SharedModule, GameCockpitRoutingModule, NgtRepeatModule, MatTooltipModule, GameSharedModule],
 })
 export class GameCockpitModule {}

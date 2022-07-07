@@ -19,6 +19,8 @@ import { PlayersService } from '../../../services/players.service';
 export class GameOverComponent {
   readonly myPlayer = this.playersService.myPlayer!;
   readonly DeathCauseEnum = DeathCauseEnum;
+  readonly myPlayerLastGame$ = this.gameOverStore.myPlayerLastGame$;
+  readonly myPlayerBestGame$ = this.gameOverStore.myPlayerBestGame$;
 
   constructor(
     private mainGameService: MainGameService,
@@ -28,6 +30,7 @@ export class GameOverComponent {
   ) {
     this.mainGameService.endGame();
     this.gameOverStore.getMyPlayerBest(this.myPlayer.nickname);
+    this.gameOverStore.getMyPlayerLast(this.myPlayer.nickname);
     this.gameOverStore.getLeaderboardNextPage();
   }
 
