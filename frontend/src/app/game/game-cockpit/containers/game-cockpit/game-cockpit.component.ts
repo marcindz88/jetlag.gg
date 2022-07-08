@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, NgZone, OnInit } from '@angular/core';
-import { MatSnackBarRef } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { NearAirportsList } from '@pg/game/models/airport.types';
@@ -17,6 +16,7 @@ import { ROUTES_URLS } from '@shared/constants/routes';
 import { ClockService } from '@shared/services/clock.service';
 import { CONFIG } from '@shared/services/config.service';
 import { NotificationService } from '@shared/services/notification.service';
+import { QueueBarRef } from 'ngx-mat-queue-bar/lib/queue-bar-ref';
 import { ReplaySubject, take, throttleTime } from 'rxjs';
 
 @UntilDestroy()
@@ -35,8 +35,8 @@ export class GameCockpitComponent implements OnInit {
   showHelp = false;
   lastPosition!: PlanePosition;
 
-  private fuelSnackBarRef?: MatSnackBarRef<NotificationComponent>;
-  private velocitySnackBarRef?: MatSnackBarRef<NotificationComponent>;
+  private fuelSnackBarRef?: QueueBarRef<NotificationComponent>;
+  private velocitySnackBarRef?: QueueBarRef<NotificationComponent>;
   private shipmentTimeoutHandler?: number;
 
   constructor(

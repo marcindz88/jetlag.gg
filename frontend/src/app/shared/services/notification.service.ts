@@ -1,18 +1,20 @@
 import { Injectable } from '@angular/core';
-import { MatSnackBar, MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
+import { MatSnackBarConfig } from '@angular/material/snack-bar';
 import { NotificationComponent, NotificationData } from '@shared/components/notification/notification.component';
+import { QueueBarService } from 'ngx-mat-queue-bar';
+import { QueueBarRef } from 'ngx-mat-queue-bar/lib/queue-bar-ref';
 
 @Injectable({
   providedIn: 'root',
 })
 export class NotificationService {
-  constructor(private matSnackbar: MatSnackBar) {}
+  constructor(private queueBarService: QueueBarService) {}
 
   openNotification(
     data: NotificationData,
     config: Partial<MatSnackBarConfig> = {}
-  ): MatSnackBarRef<NotificationComponent> {
-    return this.matSnackbar.openFromComponent(NotificationComponent, {
+  ): QueueBarRef<NotificationComponent> {
+    return this.queueBarService.openFromComponent(NotificationComponent, {
       ...config,
       data,
     });
