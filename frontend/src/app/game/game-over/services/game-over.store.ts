@@ -3,7 +3,6 @@ import { Injectable } from '@angular/core';
 import { ComponentStore, tapResponse } from '@ngrx/component-store';
 import { GameStats, LeaderboardPlayerResult, LeaderboardResponse } from '@pg/game/game-over/models/game-over.models';
 import { GameOverHttpService } from '@pg/game/game-over/services/game-over-http.service';
-import { enableLoader } from '@shared/operators/operators';
 import { CONFIG } from '@shared/services/config.service';
 import { Logger } from '@shared/services/logger.service';
 import { Observable, of, switchMap } from 'rxjs';
@@ -83,7 +82,7 @@ export class GameOverStore extends ComponentStore<GameOverState> {
                 this.addLeaderboardRows(response);
                 this.setLoading(false);
               },
-              (error: HttpErrorResponse) => Logger.error(GameOverStore, error) // TODO error handling
+              (error: HttpErrorResponse) => Logger.error(GameOverStore, error)
             )
           );
       })
@@ -96,7 +95,7 @@ export class GameOverStore extends ComponentStore<GameOverState> {
         this.gameOverHttpService.fetchPlayerBest(nickname).pipe(
           tapResponse(
             playerResult => this.addMyPlayerBestResult(playerResult),
-            (error: HttpErrorResponse) => Logger.error(GameOverStore, error) // TODO error handling
+            (error: HttpErrorResponse) => Logger.error(GameOverStore, error)
           )
         )
       )
@@ -107,10 +106,9 @@ export class GameOverStore extends ComponentStore<GameOverState> {
     return nickname$.pipe(
       switchMap(nickname =>
         this.gameOverHttpService.fetchPlayerLastGames(nickname).pipe(
-          enableLoader,
           tapResponse(
             lastGames => this.addMyPlayerLastGames(lastGames),
-            (error: HttpErrorResponse) => Logger.error(GameOverStore, error) // TODO error handling
+            (error: HttpErrorResponse) => Logger.error(GameOverStore, error)
           )
         )
       )

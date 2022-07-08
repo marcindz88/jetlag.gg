@@ -1,3 +1,4 @@
+@use 'node_modules/ngx-sharebuttons/themes/default';
 @use './variables';
 @use './icons';
 @use './snackbar';
@@ -5,6 +6,7 @@
 @use './tooltip';
 @use './forms';
 @use './scrollbar';
+@use './share-buttons';
 
 html,
 body {

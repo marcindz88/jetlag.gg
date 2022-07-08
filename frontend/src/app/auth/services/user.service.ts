@@ -25,7 +25,7 @@ export class UserService {
   setUser(user: User) {
     this.user$.next(user);
     localStorage.setItem(this.playerLSKey, JSON.stringify(user));
-    LoaderService.addLoader(); // start additional loader until earth finishes rendering
+    LoaderService.addLoader(); // start additional full-screen-loader until earth finishes rendering
   }
 
   restoreUser() {
@@ -33,7 +33,7 @@ export class UserService {
     if (userFromStorage) {
       const user = JSON.parse(userFromStorage) as User;
       this.user$.next(user);
-      LoaderService.addLoader(); // start additional loader until earth finishes rendering
+      LoaderService.addLoader(); // start additional full-screen-loader until earth finishes rendering
     }
   }
 

@@ -45,7 +45,7 @@ export class GameIntroComponent {
               filter(() => !!this.playersService.myPlayer)
             )
             .subscribe(() => {
-              void this.router.navigateByUrl(ROUTES_URLS.game_cockpit);
+              void this.router.navigateByUrl(ROUTES_URLS.game_cockpit, { replaceUrl: true });
             });
         },
         error: err => {
@@ -66,6 +66,6 @@ export class GameIntroComponent {
 
   logout() {
     this.userService.resetUser();
-    void this.router.navigateByUrl(ROUTES_URLS.login);
+    void this.router.navigateByUrl(ROUTES_URLS.login, { replaceUrl: true });
   }
 }

@@ -1,24 +1,6 @@
 :host {
+  height: 100%;
   max-height: 100%;
-
-  ::ng-deep table {
-    display: block;
-    max-height: 100%;
-    overflow-y: auto;
-    text-align: right;
-    width: 100%;
-
-    tbody tr:nth-of-type(2n + 1) {
-      background-color: rgb(255 255 255 / 6%) !important;
-    }
-  }
-}
-
-.header-row {
-  background-color: var(--card-background-darkest-color) !important;
-  height: 31px;
-  position: sticky;
-  top: 0;
 }
 
 .my-player-row {
@@ -41,6 +23,7 @@
   }
 
   & &__date {
+    min-width: 110px;
     width: 120px;
   }
 
@@ -49,18 +32,20 @@
   }
 
   & &__score {
-    width: 80px;
+    width: 120px;
   }
 
   & &__shipments {
-    width: 20px;
+    width: 80px;
   }
 
   & &__time {
-    width: 70px;
+    min-width: 60px;
+    width: 80px;
   }
 
   & &__death-cause {
-    width: 90px;
+    min-width: 100px;
+    width: 120px;
   }
 }

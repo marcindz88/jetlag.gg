@@ -24,6 +24,9 @@ export class TableComponent<T> implements OnInit {
   @Input() noRecordsText = '';
   @Input() rowTemplate: TemplateRef<{ data: T }> | null = null;
   @Input() headerTemplate: TemplateRef<Record<string, never>> | null = null;
+  @Input() scrollable = false;
+  @Input() large = false;
+  @Input() background = false;
 
   @Output() tableScroll: EventEmitter<HTMLTableElement> = new EventEmitter<HTMLTableElement>();
 
@@ -36,6 +39,8 @@ export class TableComponent<T> implements OnInit {
   }
 
   emitScrollEvent(event: Event) {
-    this.tableScroll.emit(event.target as HTMLTableElement);
+    if (this.scrollable) {
+      this.tableScroll.emit(event.target as HTMLTableElement);
+    }
   }
 }

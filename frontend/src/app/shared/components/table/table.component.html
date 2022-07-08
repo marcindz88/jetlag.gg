@@ -1,7 +1,10 @@
 <pg-card class="table-wrapper">
   <h5 class="table-wrapper__no-results" *ngIf="!array?.length; else playersInfo">{{ noRecordsText }}</h5>
   <ng-template #playersInfo>
-    <table (scroll)="emitScrollEvent($event)">
+    <table
+      class="table"
+      [ngClass]="{ 'table--scrollable': scrollable, 'table--large': large, 'table--background': background }"
+      (scroll)="emitScrollEvent($event)">
       <thead>
         <ng-container *ngTemplateOutlet="headerTemplate"></ng-container>
       </thead>

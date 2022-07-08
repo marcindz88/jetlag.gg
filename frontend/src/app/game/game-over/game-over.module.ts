@@ -5,12 +5,14 @@ import { GameOverComponent } from '@pg/game/game-over/containers/game-over/game-
 import { GameOverRoutingModule } from '@pg/game/game-over/game-over-routing.module';
 import { GameOverHttpService } from '@pg/game/game-over/services/game-over-http.service';
 import { SharedModule } from '@shared/shared.module';
+import { ShareButtonsModule } from 'ngx-sharebuttons/buttons';
+import { ShareIconsModule } from 'ngx-sharebuttons/icons';
 
 import { GameSharedModule } from '../game-shared/game-shared.module';
 
 @NgModule({
   declarations: [GameOverComponent, LeaderboardComponent],
-  imports: [CommonModule, SharedModule, GameOverRoutingModule, GameSharedModule],
+  imports: [CommonModule, SharedModule, GameOverRoutingModule, GameSharedModule, ShareButtonsModule, ShareIconsModule],
   providers: [GameOverHttpService],
 })
 export class GameOverModule {}

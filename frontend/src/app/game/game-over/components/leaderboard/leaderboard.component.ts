@@ -1,29 +1,26 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, ViewChild } from '@angular/core';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
 import { LeaderboardPlayerResult, LeaderboardResponse } from '@pg/game/game-over/models/game-over.models';
 import { GameOverStore } from '@pg/game/game-over/services/game-over.store';
-import { TableComponent } from '@shared/components/table/table.component';
-import { combineLatest } from 'rxjs';
 
-@UntilDestroy()
 @Component({
   selector: 'pg-leaderboard',
   templateUrl: './leaderboard.component.html',
   styleUrls: ['leaderboard.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LeaderboardComponent {
+export class LeaderboardComponent implements OnChanges {
   @Input() myNickname!: string;
-  @ViewChild(TableComponent, { read: ElementRef }) tableComponent?: ElementRef;
+  @Input() leaderboard: LeaderboardResponse | null = null;
+  @Input() myBestGameResult: LeaderboardPlayerResult | null = null;
+  @Input() allFetched = false;
+  @Input() isListLoading = true;
 
-  leaderboard: LeaderboardResponse | null = null;
-  myBestGameResult: LeaderboardPlayerResult | null = null;
   isMyPlayerVisibleInTheList = false;
-  allFetched = false;
-  isListLoading = true;
 
-  constructor(private cdr: ChangeDetectorRef, private gameOverStore: GameOverStore, private _elementRef: ElementRef) {
-    this.getDataFromStore();
+  constructor(private gameOverStore: GameOverStore) {}
+
+  ngOnChanges(): void {
+    this.isMyPlayerVisibleInTheList = this.getUpdatedIsMyPlayerVisibleInTheList();
   }
 
   tableScrolled(element: HTMLTableElement) {
@@ -35,25 +32,6 @@ export class LeaderboardComponent {
       this.isListLoading = true;
       this.gameOverStore.getLeaderboardNextPage();
     }
-  }
-
-  private getDataFromStore() {
-    combineLatest([
-      this.gameOverStore.allFetched$,
-      this.gameOverStore.myPlayerBestGame$,
-      this.gameOverStore.leaderboard$,
-      this.gameOverStore.isListLoading$,
-    ])
-      .pipe(untilDestroyed(this))
-      .subscribe(([allFetched, myBestGame, leaderboard, isListLoading]) => {
-        this.allFetched = allFetched;
-        this.myBestGameResult = myBestGame;
-        this.leaderboard = leaderboard;
-        this.isListLoading = isListLoading;
-
-        this.isMyPlayerVisibleInTheList = this.getUpdatedIsMyPlayerVisibleInTheList();
-        this.cdr.markForCheck();
-      });
   }
 
   private getUpdatedIsMyPlayerVisibleInTheList(): boolean {

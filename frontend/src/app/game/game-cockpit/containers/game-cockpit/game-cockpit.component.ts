@@ -112,7 +112,7 @@ export class GameCockpitComponent implements OnInit {
   private setPlayerDeathChanges() {
     this.player.changeNotifiers.destroy$.pipe(untilDestroyed(this)).subscribe(() => {
       this.ngZone.run(() => {
-        void this.router.navigateByUrl(ROUTES_URLS.game_over);
+        void this.router.navigateByUrl(ROUTES_URLS.game_over, { replaceUrl: true });
       });
     });
   }

@@ -32,7 +32,7 @@ export class LoginComponent {
       this.serverError = null;
       this.myPlayerService.createUser(this.nicknameControl.value).subscribe({
         next: () => {
-          void this.router.navigateByUrl(ROUTES_URLS.game);
+          void this.router.navigateByUrl(ROUTES_URLS.game, { replaceUrl: true });
         },
         error: err => {
           if (err instanceof HttpErrorResponse) {

@@ -1,0 +1,30 @@
+$button-width: 55px;
+
+.sb-game.sb-group {
+  align-items: stretch !important;
+  display: grid !important;
+  grid-gap: 10px;
+  grid-template-columns: repeat(auto-fill, $button-width);
+  justify-content: center;
+
+  .sb-button {
+    width: $button-width;
+  }
+
+  .sb-wrapper {
+    border-radius: 0;
+    height: 100%;
+    margin: 0;
+
+    .sb-icon {
+      background-color: var(--button-color);
+      color: var(--sb-color);
+      width: $button-width;
+
+      &:hover {
+        filter: brightness(0.85);
+        width: $button-width;
+      }
+    }
+  }
+}
