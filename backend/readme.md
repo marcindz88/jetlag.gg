@@ -9,6 +9,12 @@
 >
 It kills all existing containers, rebuilds images and starts new containers
 
+## Production
+
+### Running redis
+
+>docker rm -f redis; docker run --rm -d -p 6379:6379 -v redis_data:/data --name redis redis:7.0.2
+
 ## Ports
 * 9999 - websockets & http
 
