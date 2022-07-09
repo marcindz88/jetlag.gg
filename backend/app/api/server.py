@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 from fastapi import FastAPI, WebSocket, HTTPException, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,7 +19,9 @@ from app.tools.websocket_server import StarletteWebsocketServer, WebSocketSessio
 logging.getLogger().setLevel(logging.INFO)
 
 
-storage = RedisPersistentStorage()
+redis_host = os.environ.get('GAME_REDIS_HOST') or "game_redis"
+storage = RedisPersistentStorage(host=redis_host)
+
 game_session = GameSession(storage=storage)
 app = FastAPI()
 
