@@ -9,5 +9,6 @@ const EXPORTED_DECLARATIONS = [NicknamePipe, DeathCausePipe, ControlsInfoCompone
 @NgModule({
   declarations: [EXPORTED_DECLARATIONS],
   exports: [EXPORTED_DECLARATIONS],
+  providers: [DeathCausePipe, NicknamePipe],
 })
 export class GameSharedModule {}

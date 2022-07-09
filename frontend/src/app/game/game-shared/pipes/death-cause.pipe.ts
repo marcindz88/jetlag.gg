@@ -3,7 +3,21 @@ import { DeathCauseEnum } from '@pg/game/models/player.types';
 
 @Pipe({ name: 'deathCause' })
 export class DeathCausePipe implements PipeTransform {
-  transform(deathCause: DeathCauseEnum, type: 'long' | 'short' | 'message1stperson'| 'message3rdperson' = 'short'): string {
+  transform(
+    deathCause: DeathCauseEnum | null | undefined,
+    type: 'long' | 'short' | 'message1stperson' | 'message3rdperson' = 'short'
+  ): string {
+    if (!deathCause) {
+      switch (type) {
+        case 'message1stperson':
+          return 'You died';
+        case 'message3rdperson':
+          return 'died for unknown reasons';
+        default:
+          return '';
+      }
+    }
+
     switch (type) {
       case 'long':
         switch (deathCause) {
@@ -24,6 +38,7 @@ export class DeathCausePipe implements PipeTransform {
           case DeathCauseEnum.DISCONNECTED:
             return 'disconnected';
         }
+        break;
       case 'message1stperson':
         switch (deathCause) {
           case DeathCauseEnum.RUN_OUT_OF_FUEL:
@@ -33,15 +48,17 @@ export class DeathCausePipe implements PipeTransform {
           case DeathCauseEnum.DISCONNECTED:
             return 'This plane had no autopilot!';
         }
-        case 'message3rdperson':
-          switch (deathCause) {
-            case DeathCauseEnum.RUN_OUT_OF_FUEL:
-              return 'run out of fuel';
-            case DeathCauseEnum.SPEED_TOO_LOW:
-              return 'tried to land with no landing gear';
-            case DeathCauseEnum.DISCONNECTED:
-              return 'forgot his plane has no autopilot';
-          }
+        break;
+      case 'message3rdperson':
+        switch (deathCause) {
+          case DeathCauseEnum.RUN_OUT_OF_FUEL:
+            return 'run out of fuel';
+          case DeathCauseEnum.SPEED_TOO_LOW:
+            return 'tried to land with no landing gear';
+          case DeathCauseEnum.DISCONNECTED:
+            return 'forgot his plane has no autopilot';
+        }
+        break;
     }
   }
 }

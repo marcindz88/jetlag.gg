@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import { DeathCausePipe } from '@pg/game/game-shared/pipes/death-cause.pipe';
+import { NicknamePipe } from '@pg/game/game-shared/pipes/nickname.pipe';
 import { GameWebsocketService } from '@pg/game/services/game-websocket.service';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { ClockService } from '@shared/services/clock.service';
@@ -19,7 +21,9 @@ export class PlayersService {
   constructor(
     private mainWebsocketService: GameWebsocketService,
     private clockService: ClockService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private deathCausePipe: DeathCausePipe,
+    private nicknamePipe: NicknamePipe
   ) {}
 
   resetAll() {
@@ -92,7 +96,9 @@ export class PlayersService {
       } else if (!isInitial) {
         this.notificationService.openNotification(
           {
-            text: `${newPlayer.isBot ? 'Bot' : 'Player'} ${newPlayer.nickname} has just joined the game`,
+            text: `${newPlayer.isBot ? 'Bot' : 'Player'} ${this.nicknamePipe.transform(
+              newPlayer.nickname
+            )} has just joined the game`,
             icon: 'person_add',
           },
           { duration: 3000 }
@@ -129,7 +135,9 @@ export class PlayersService {
     if (!player.isMyPlayer) {
       this.notificationService.openNotification(
         {
-          text: `${player.isBot ? 'Bot' : 'Player'} ${player.nickname} has left the game`,
+          text: `${player.isBot ? 'Bot' : 'Player'} ${this.nicknamePipe.transform(
+            player.nickname
+          )} ${this.deathCausePipe.transform(player.deathCause, 'message3rdperson')}`,
           icon: 'person_off',
         },
         { duration: 3000 }
