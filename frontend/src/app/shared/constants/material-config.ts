@@ -1,7 +1,7 @@
 import { Provider } from '@angular/core';
 import { MatSnackBarConfig } from '@angular/material/snack-bar';
 import { MAT_TOOLTIP_DEFAULT_OPTIONS, MatTooltipDefaultOptions } from '@angular/material/tooltip';
-import { QUEUE_BAR_DEFAULT_OPTIONS } from 'ngx-mat-queue-bar';
+import { QUEUE_BAR_CONFIG, QUEUE_BAR_DEFAULT_OPTIONS, QueueBarConfig } from 'ngx-mat-queue-bar';
 
 export const notificationSnackbarConfig: MatSnackBarConfig = {
   duration: 10000,
@@ -17,7 +17,13 @@ const tooltipConfig: MatTooltipDefaultOptions = {
   hideDelay: 5000,
 };
 
+const queueBarConfig: QueueBarConfig = { maxOpenedSnackbars: 4 };
+
 export const materialConfigProviders: Provider[] = [
+  {
+    provide: QUEUE_BAR_CONFIG,
+    useValue: queueBarConfig,
+  },
   {
     provide: MAT_TOOLTIP_DEFAULT_OPTIONS,
     useValue: tooltipConfig,
