@@ -92,8 +92,11 @@ def leaderboard_player(player_nickname: str):
 
 
 @app.get("/api/game/leaderboard/{player_nickname}/last_games/")
-def leaderboard_player_last_games(player_nickname: str):
-    games = storage.get_players_last_games(full_nickname=player_nickname)
+def leaderboard_player_last_games(
+    player_nickname: str,
+    limit: int = Query(default=10, ge=1, le=10),
+):
+    games = storage.get_players_last_games(full_nickname=player_nickname, amount=limit)
 
     return [g.serialized for g in games]
 

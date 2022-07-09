@@ -112,10 +112,10 @@ class RedisPersistentStorage(BasePersistentStorage):
 
         return [
             Game(
-                score=g['score'],
-                shipment_num=g['shipment_num'],
-                time_alive=g['time_alive'],
-                timestamp=g['timestamp'],
+                score=int(g['score']),
+                shipment_num=int(g['shipment_num']),
+                time_alive=int(g['time_alive']),
+                timestamp=int(g['timestamp']),
                 death_cause=DeathCause(g['death_cause']),
             ) for g in games
         ]
