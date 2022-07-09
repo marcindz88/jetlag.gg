@@ -6,9 +6,15 @@
 
 .help {
   background: var(--card-background-darker-color);
-  min-height: min(495px, 80vh);
+  display: flex;
+  flex-direction: column;
+  height: min(550px, 80vh);
   padding: 20px;
   width: min(650px, 85vw);
+
+  & &__content {
+    overflow-y: auto;
+  }
 
   & &__controls-container {
     column-gap: 10px;

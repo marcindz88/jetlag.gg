@@ -1,8 +1,15 @@
 .shipment-details {
   border: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
   height: auto;
   margin: 0;
   padding: 10px;
+
+  &__content {
+    flex-grow: 1;
+    font-size: 12px;
+  }
 
   &--selected {
     border-color: var(--accent-color);

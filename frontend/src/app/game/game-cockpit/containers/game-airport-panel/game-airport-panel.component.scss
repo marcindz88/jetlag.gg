@@ -1,4 +1,4 @@
-@import '../../../../../styles/variables';
+@import 'src/styles/variables';
 
 :host {
   display: block;
@@ -10,7 +10,7 @@
   background: var(--card-background-darker-color);
   display: flex;
   flex-direction: column;
-  min-height: min(495px, 80vh);
+  height: min(550px, 80vh);
   padding: 20px;
   width: min(650px, 85vw);
 
@@ -19,10 +19,16 @@
     line-height: 20px;
   }
 
+  & &__content {
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+
   & &__actions {
     column-gap: 10px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    margin-top: 20px;
   }
 }
 
@@ -50,5 +56,9 @@
     column-gap: 10px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+
+    pg-shipment-details {
+      height: 100%;
+    }
   }
 }

@@ -5,12 +5,12 @@
   </div>
   <div class="game-intro__content">
     <ng-container *ngIf="lastGames$ | async as lastgames">
-      <div *ngIf="!lastgames.length; else lastGamesTable">
+      <ng-container *ngIf="!lastgames.length; else lastGamesTable">
         <h4>Hello newcomer :) As this is your first game here is the most important info about the game</h4>
         <p>You can view the info below anytime in the game by pressing [H]</p>
         <pg-game-description></pg-game-description>
         <pg-controls-info></pg-controls-info>
-      </div>
+      </ng-container>
       <ng-template #lastGamesTable>
         <h4>Welcome back! Here is a summary of your last games</h4>
         <pg-last-games [lastGames]="lastgames"></pg-last-games>

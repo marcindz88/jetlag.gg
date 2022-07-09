@@ -19,10 +19,12 @@
 
   & &__content {
     flex-grow: 1;
+    overflow: auto;
   }
 
   & &__button-wrapper {
     margin: auto;
+    padding-top: 10px;
     text-align: center;
     width: min(400px, 100%);
   }

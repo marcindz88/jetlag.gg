@@ -76,7 +76,10 @@ export class GameCockpitComponent implements OnInit {
       this,
       this.startLandingProcedure.bind(this)
     );
-    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.HELP, this, () => (this.showHelp = !this.showHelp));
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.HELP, this, () => {
+      this.showHelp = !this.showHelp;
+      this.cdr.markForCheck();
+    });
   }
 
   private startLandingProcedure() {
