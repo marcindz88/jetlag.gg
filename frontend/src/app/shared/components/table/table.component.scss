@@ -1,6 +1,7 @@
 .table-wrapper {
   height: calc(100% - 40px);
   margin: 20px;
+  max-width: fit-content;
 
   & &__no-results {
     padding: 0 10px;

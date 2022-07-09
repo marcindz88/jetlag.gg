@@ -1,4 +1,5 @@
 :host {
+  align-items: center;
   display: flex;
   height: 100%;
   justify-content: center;
@@ -8,18 +9,30 @@
   z-index: 15;
 }
 
-.intro {
-  background-color: var(--card-background-darker-color);
+.game-intro {
+  background: var(--card-background-darkest-color);
   display: flex;
   flex-direction: column;
-  height: min(90vh, 70px);
-  justify-content: center;
-  padding: 30px;
-  width: min(90vw, 250px);
+  height: min(650px, 80vh);
+  padding: 20px;
+  width: min(800px, 85vw);
+
+  & &__content {
+    flex-grow: 1;
+  }
 
   & &__button-wrapper {
-    column-gap: 10px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    margin: auto;
+    width: min(400px, 100%);
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  & &__button {
+    width: 150px;
   }
 }

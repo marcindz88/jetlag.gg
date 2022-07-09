@@ -1,0 +1,9 @@
+.controls-container {
+  column-gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+
+  p {
+    font-size: 12px;
+  }
+}

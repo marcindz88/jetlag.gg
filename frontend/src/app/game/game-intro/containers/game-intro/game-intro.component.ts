@@ -1,9 +1,11 @@
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { UserService } from '@auth/services/user.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { GameHttpService } from '@pg/game/services/game-http.service';
+import { ConfirmLogoutDialogComponent } from '@pg/game/game-intro/components/confirm-logout-dialog/confirm-logout-dialog/confirm-logout-dialog.component';
+import { GameIntroHttpService } from '@pg/game/game-intro/services/game-intro-http.service';
 import { MainGameService } from '@pg/game/services/main-game.service';
 import { PlayersService } from '@pg/game/services/players.service';
 import { ROUTES_URLS } from '@shared/constants/routes';
@@ -18,20 +20,22 @@ import { filter } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameIntroComponent {
-  user = this.userService.user$.value!;
+  user = this.userService.user$.value!; // guarded
   serverError: 'lobby_full' | 'unknown_error' | null = null;
+  lastGames$ = this.gameIntroHttpService.fetchPlayerLastGames(this.user.nickname);
 
   constructor(
-    private gameHttpService: GameHttpService,
+    private gameIntroHttpService: GameIntroHttpService,
     private mainGameService: MainGameService,
     private playersService: PlayersService,
     private userService: UserService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private matDialog: MatDialog
   ) {}
 
   joinTheGame() {
-    this.gameHttpService
+    this.gameIntroHttpService
       .join()
       .pipe(enableLoader)
       .subscribe({
@@ -65,7 +69,15 @@ export class GameIntroComponent {
   }
 
   logout() {
-    this.userService.resetUser();
-    void this.router.navigateByUrl(ROUTES_URLS.login, { replaceUrl: true });
+    this.matDialog
+      .open(ConfirmLogoutDialogComponent)
+      .afterClosed()
+      .pipe(untilDestroyed(this))
+      .subscribe(result => {
+        if (result) {
+          this.userService.resetUser();
+          void this.router.navigateByUrl(ROUTES_URLS.login, { replaceUrl: true });
+        }
+      });
   }
 }

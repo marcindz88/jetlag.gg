@@ -15,4 +15,10 @@ button {
   &:hover:not(:disabled) {
     background-color: var(--accent-lighter-color);
   }
+
+  &.button--small {
+    font-size: 12px;
+    height: 28px;
+    padding: 2px;
+  }
 }

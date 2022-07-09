@@ -1,11 +1,27 @@
-<pg-card class="intro">
-  <h3 class="start__label">Welcome in the game {{ user.nickname | nickname }}</h3>
-  <div>
-    <p class="error" *ngIf="serverError === 'lobby_full'">Lobby is full, please try again later</p>
-    <p class="error" *ngIf="serverError === 'unknown_error'">Unknown error occurred, please try again later</p>
+<pg-card class="game-intro">
+  <div class="game-intro__header header">
+    <h3 class="header__welcome">Welcome to the game {{ user.nickname | nickname }}</h3>
+    <button class="header__button button--small" (click)="logout()">Logout</button>
   </div>
-  <div class="intro__button-wrapper button-wrapper">
-    <button type="submit" class="button-wrapper__button" (click)="logout()">Logout</button>
-    <button type="submit" class="button-wrapper__button" (click)="joinTheGame()">Enter the game</button>
+  <div class="game-intro__content">
+    <ng-container *ngIf="lastGames$ | async as lastgames">
+      <div *ngIf="!lastgames.length; else lastGamesTable">
+        <h4>Hello newcomer :) As this is your first game here is the most important info about the game</h4>
+        <p>You can view the info below anytime in the game by pressing [H]</p>
+        <pg-game-description></pg-game-description>
+        <pg-controls-info></pg-controls-info>
+      </div>
+      <ng-template #lastGamesTable>
+        <h4>Welcome back! Here is a summary of your last games</h4>
+        <pg-last-games [lastGames]="lastgames"></pg-last-games>
+      </ng-template>
+    </ng-container>
+  </div>
+  <div class="game-intro__button-wrapper button-wrapper">
+    <div>
+      <p class="error" *ngIf="serverError === 'lobby_full'">Lobby is full, please try again later</p>
+      <p class="error" *ngIf="serverError === 'unknown_error'">Unknown error occurred, please try again later</p>
+    </div>
+    <button class="button-wrapper__button" (click)="joinTheGame()">Enter the game</button>
   </div>
 </pg-card>

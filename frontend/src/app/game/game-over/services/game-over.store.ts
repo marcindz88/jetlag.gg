@@ -11,7 +11,7 @@ export interface GameOverState {
   currentPage: number;
   leaderboard: LeaderboardResponse | null;
   myPlayerBestGame: LeaderboardPlayerResult | null;
-  myPlayerLastGames: GameStats[] | null;
+  myPlayerLastGame: GameStats | null;
   allFetched: boolean;
   isListLoading: boolean;
 }
@@ -21,7 +21,7 @@ export class GameOverStore extends ComponentStore<GameOverState> {
   // SELECTORS
   readonly leaderboard$ = this.select(state => state.leaderboard);
   readonly myPlayerBestGame$ = this.select(state => state.myPlayerBestGame);
-  readonly myPlayerLastGame$ = this.select(state => state.myPlayerLastGames?.[0] || null);
+  readonly myPlayerLastGame$ = this.select(state => state.myPlayerLastGame);
   readonly allFetched$ = this.select(state => state.allFetched);
   readonly isListLoading$ = this.select(state => state.isListLoading);
 
@@ -40,9 +40,9 @@ export class GameOverStore extends ComponentStore<GameOverState> {
     myPlayerBestGame: myPlayerBestResult,
   }));
 
-  private readonly addMyPlayerLastGames = this.updater((state, myPlayerLastGames: GameStats[]) => ({
+  private readonly addMyPlayerLastGame = this.updater((state, myPlayerLastGame: GameStats | null) => ({
     ...state,
-    myPlayerLastGames,
+    myPlayerLastGame,
   }));
 
   private readonly addLeaderboardRows = this.updater((state, leaderboard: LeaderboardResponse) => ({
@@ -105,9 +105,9 @@ export class GameOverStore extends ComponentStore<GameOverState> {
   readonly getMyPlayerLast = this.effect((nickname$: Observable<string>) => {
     return nickname$.pipe(
       switchMap(nickname =>
-        this.gameOverHttpService.fetchPlayerLastGames(nickname).pipe(
+        this.gameOverHttpService.fetchPlayerLastGame(nickname).pipe(
           tapResponse(
-            lastGames => this.addMyPlayerLastGames(lastGames),
+            lastGame => this.addMyPlayerLastGame(lastGame),
             (error: HttpErrorResponse) => Logger.error(GameOverStore, error)
           )
         )
@@ -119,7 +119,7 @@ export class GameOverStore extends ComponentStore<GameOverState> {
     super({
       leaderboard: null,
       myPlayerBestGame: null,
-      myPlayerLastGames: null,
+      myPlayerLastGame: null,
       currentPage: -1,
       allFetched: false,
       isListLoading: false,

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { GameStats, LeaderboardPlayerResult, LeaderboardResponse } from '@pg/game/game-over/models/game-over.models';
 import { EndpointsService } from '@shared/services/endpoints.service';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 @Injectable()
 export class GameOverHttpService {
@@ -24,10 +24,11 @@ export class GameOverHttpService {
     );
   }
 
-  fetchPlayerLastGames(nickname: string): Observable<GameStats[]> {
-    return this.httpClient.get<GameStats[]>(
-      this.endpointsService.getEndpoint('leaderboard_last_games', { id: nickname }),
-      {}
-    );
+  fetchPlayerLastGame(nickname: string): Observable<GameStats | null> {
+    return this.httpClient
+      .get<GameStats[]>(this.endpointsService.getEndpoint('leaderboard_last_games', { id: nickname }), {
+        params: { limit: 1 },
+      })
+      .pipe(map(games => games[0] || null));
   }
 }

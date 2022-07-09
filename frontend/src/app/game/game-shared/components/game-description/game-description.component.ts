@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
-  selector: 'pg-help',
-  templateUrl: './help.component.html',
-  styleUrls: ['help.component.scss'],
+  selector: 'pg-game-description',
+  templateUrl: './game-description.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HelpComponent {}
+export class GameDescriptionComponent {}
