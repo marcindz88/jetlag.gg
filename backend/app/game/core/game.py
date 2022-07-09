@@ -111,7 +111,7 @@ class GameSession:
     def increase_bot_count(self):
         nickname_set = set(BOT_NAMES) - set([self._players[p].nickname for p in self._bots.keys()])
         nickname = random.choice(list(nickname_set))
-        player = Player(nickname=nickname, color=self._generate_player_color(), bot=True)
+        player = Player(nickname=nickname, color=self._generate_player_color(), bot=True, token=uuid.uuid4().hex)
         self._players[player.id] = player
         self.broadcast_event(event=EventFactory.player_registered_event(player=player))
 
