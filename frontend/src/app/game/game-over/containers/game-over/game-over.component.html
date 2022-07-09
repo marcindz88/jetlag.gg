@@ -1,18 +1,18 @@
 <pg-card class="game-over">
   <h1>Game Over</h1>
-  <h2>Your plane have crashed because of {{ myPlayer.deathCause! | deathCause: 'long' }}</h2>
+  <h2>{{ myPlayer.deathCause! | deathCause: 'message1stperson' }}</h2>
 
   <ng-container *ngIf="myPlayerLastGame$ | async as myLastGame; else shortInfo">
     <h3 *ngIf="myPlayerLastGame$ | async as myLastGame; else shortInfo">
-      You scored {{ myLastGame.score }} $ by delivering {{ myLastGame.delivered_shipments }} shipments in
+      You scored {{ myLastGame.score }}$ by delivering {{ myLastGame.delivered_shipments }} shipments in
       {{ myLastGame.time_alive / 1000 | number: '1.0-0' }} seconds
     </h3>
     <ng-container *ngIf="myPlayerBestGame$ | async as myBestGameResult">
       <h4>
         <ng-container *ngIf="myBestGameResult.best_game.timestamp === myLastGame.timestamp; else notBest">
-          It's your new personal best score !!! You now take {{ myBestGameResult.position }} in the leaderboard:
+          It's your new PR! You now take {{ myBestGameResult.position }} in the leaderboard:
         </ng-container>
-        <ng-template #notBest>It's not your best game... Your best game can be seen in the leaderboard:</ng-template>
+        <ng-template #notBest>You have done better in the past, check out your leaderboard position:</ng-template>
       </h4>
     </ng-container>
   </ng-container>
@@ -37,10 +37,10 @@
       ><share-buttons
         [include]="includedShareButtons"
         [url]="'https://jetlag.gg'"
-        [description]="'My result in the Jetlag.gg was ' + myPlayer.score + '$ Try it out yourself!!!'"
+        [description]="'My result on the Jetlag.gg was ' + myPlayer.score + '$ Try to beat me!'"
         [title]="'Jetlag.gg'"
         [theme]="'game'"></share-buttons
     ></ng-template>
-    <button (click)="restart()">Restart the game</button>
+    <button (click)="restart()">Play again</button>
   </div>
 </pg-card>

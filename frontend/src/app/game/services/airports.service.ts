@@ -99,7 +99,7 @@ export class AirportsService {
 
   private handlePackageDeliveredSnackbar(shipment: Shipment) {
     this.notificationService.openNotification({
-      text: `You have successfully delivered ${shipment.name} for ${shipment.award}$`,
+      text: `Successfully delivered ${shipment.name} for ${shipment.award}$`,
       icon: 'redeem',
     });
   }

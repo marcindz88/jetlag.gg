@@ -151,7 +151,7 @@ export class GameCockpitComponent implements OnInit {
     if (!this.player.isGrounded && isLowVelocity(this.player.lastPosition.velocity) && !this.velocitySnackBarRef) {
       this.velocitySnackBarRef = this.notificationService.openNotification(
         {
-          text: 'You are travelling at extremely low velocity, accelerate to avoid crashing',
+          text: 'Speed too low, accelerate!',
           icon: 'warning',
           style: 'warn',
         },
@@ -175,7 +175,7 @@ export class GameCockpitComponent implements OnInit {
     if (!this.player.isGrounded && isTankLevelLow(this.player.lastPosition.tank_level) && !this.fuelSnackBarRef) {
       this.fuelSnackBarRef = this.notificationService.openNotification(
         {
-          text: 'You are running out of fuel, get to the nearest airport to refuel!!!',
+          text: 'Running out of fuel, refuel at the nearest airport!',
           icon: 'warning',
           style: 'warn',
         },
@@ -207,7 +207,7 @@ export class GameCockpitComponent implements OnInit {
 
   private showShipmentExpiredMessage() {
     this.notificationService.openNotification({
-      text: `Your shipment containing ${this.player.shipment!.name} has expired`,
+      text: `Shipment containing ${this.player.shipment!.name} has expired`,
       icon: 'running_with_errors',
       style: 'error',
     });

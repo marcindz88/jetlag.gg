@@ -3,7 +3,7 @@ import { DeathCauseEnum } from '@pg/game/models/player.types';
 
 @Pipe({ name: 'deathCause' })
 export class DeathCausePipe implements PipeTransform {
-  transform(deathCause: DeathCauseEnum, type: 'long' | 'short' = 'short'): string {
+  transform(deathCause: DeathCauseEnum, type: 'long' | 'short' | 'message1stperson'| 'message3rdperson' = 'short'): string {
     switch (type) {
       case 'long':
         switch (deathCause) {
@@ -24,6 +24,24 @@ export class DeathCausePipe implements PipeTransform {
           case DeathCauseEnum.DISCONNECTED:
             return 'disconnected';
         }
+      case 'message1stperson':
+        switch (deathCause) {
+          case DeathCauseEnum.RUN_OUT_OF_FUEL:
+            return 'You run out of fuel!';
+          case DeathCauseEnum.SPEED_TOO_LOW:
+            return 'Next time better accelerate!';
+          case DeathCauseEnum.DISCONNECTED:
+            return 'This plane had no autopilot!';
+        }
+        case 'message3rdperson':
+          switch (deathCause) {
+            case DeathCauseEnum.RUN_OUT_OF_FUEL:
+              return 'run out of fuel';
+            case DeathCauseEnum.SPEED_TOO_LOW:
+              return 'tried to land with no landing gear';
+            case DeathCauseEnum.DISCONNECTED:
+              return 'forgot his plane has no autopilot';
+          }
     }
   }
 }
