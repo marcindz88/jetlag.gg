@@ -2,6 +2,10 @@ class PlayerLimitExceeded(Exception):
     pass
 
 
+class DuplicatedGameSession(Exception):
+    pass
+
+
 class PlayerNotFound(Exception):
     pass
 

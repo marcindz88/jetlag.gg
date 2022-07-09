@@ -21,7 +21,7 @@ import { filter } from 'rxjs';
 })
 export class GameIntroComponent {
   user = this.userService.user$.value!; // guarded
-  serverError: 'lobby_full' | 'unknown_error' | null = null;
+  serverError: 'lobby_full' | 'already_in_game' | 'unknown_error' | null = null;
   lastGames$ = this.gameIntroHttpService.fetchPlayerLastGames(this.user.nickname);
 
   constructor(
@@ -57,6 +57,9 @@ export class GameIntroComponent {
             switch (err.status) {
               case HttpStatusCode.Conflict:
                 this.serverError = 'lobby_full';
+                break;
+              case HttpStatusCode.Forbidden:
+                this.serverError = 'already_in_game';
                 break;
               default:
                 this.serverError = 'unknown_error';

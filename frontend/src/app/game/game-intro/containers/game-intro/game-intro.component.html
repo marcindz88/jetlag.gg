@@ -20,6 +20,7 @@
   <div class="game-intro__button-wrapper button-wrapper">
     <div>
       <p class="error" *ngIf="serverError === 'lobby_full'">Lobby is full, please try again later</p>
+      <p class="error" *ngIf="serverError === 'already_in_game'">You have a session opened in another tab!</p>
       <p class="error" *ngIf="serverError === 'unknown_error'">Unknown error occurred, please try again later</p>
     </div>
     <button class="button-wrapper__button" (click)="joinTheGame()">Enter the game</button>

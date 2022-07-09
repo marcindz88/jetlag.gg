@@ -28,6 +28,7 @@ from app.game.exceptions import (
     InvalidAirport,
     ShipmentOperationWhenFlying,
     RefuelingWhenFlying,
+    DuplicatedGameSession,
 )
 from app.game.models import PlayerPositionUpdateRequest, AirportRequest, ShipmentRequest
 from app.game.persistence.base import BasePersistentStorage
@@ -328,6 +329,13 @@ class GameSession:
         logging.info(f"add_player {nickname}")
         if len(self._players) >= self.config.MAX_PLAYERS:
             raise PlayerLimitExceeded
+
+        for player in self._players.values():
+            if player.is_bot:
+                continue
+
+            if player.token == token:
+                raise DuplicatedGameSession
 
         player = Player(nickname=nickname, token=token, color=self._generate_player_color())
         self._players[player.id] = player

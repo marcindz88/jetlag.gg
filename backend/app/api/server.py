@@ -67,6 +67,8 @@ def join_game_session(token: str = Header(default="")):
         player = game_session.add_player(nickname=persistent_player.full_nickname, token=token)
     except exceptions.PlayerLimitExceeded:
         raise HTTPException(status_code=409, detail="Lobby is full")
+    except exceptions.DuplicatedGameSession:
+        raise HTTPException(status_code=403, detail="Already in the game")
 
     return {**player.serialized, "token": player.token}
 
