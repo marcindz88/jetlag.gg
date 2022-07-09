@@ -1,5 +1,4 @@
 <pg-card class="game-over">
-  <h1>Game Over</h1>
   <h2>{{ myPlayer.deathCause! | deathCause: 'message1stperson' }}</h2>
 
   <ng-container *ngIf="myPlayerLastGame$ | async as myLastGame; else shortInfo">
@@ -10,7 +9,7 @@
     <ng-container *ngIf="myPlayerBestGame$ | async as myBestGameResult">
       <h4>
         <ng-container *ngIf="myBestGameResult.best_game.timestamp === myLastGame.timestamp; else notBest">
-          It's your new PR! You now take {{ myBestGameResult.position }} in the leaderboard:
+          It's your new PR! You now take {{ myBestGameResult.position }} position in the leaderboard:
         </ng-container>
         <ng-template #notBest>You have done better in the past, check out your leaderboard position:</ng-template>
       </h4>

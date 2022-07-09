@@ -2,7 +2,6 @@
   background-color: var(--card-background-medium-color);
   height: calc(100% - 40px);
   margin: 20px;
-  max-width: fit-content;
 
   & &__no-results {
     padding: 0 10px;
@@ -10,6 +9,7 @@
 
   ::ng-deep .table {
     border-spacing: 0;
+    width: 100%;
 
     thead tr {
       background-color: var(--accent-darkest-color);
@@ -27,15 +27,13 @@
       th,
       td {
         padding-left: 6px;
+        text-align: center;
 
         &:last-of-type {
           padding-right: 6px;
         }
       }
 
-      td:last-of-type {
-        text-align: right;
-      }
     }
 
     tbody tr:nth-of-type(2n + 1) {

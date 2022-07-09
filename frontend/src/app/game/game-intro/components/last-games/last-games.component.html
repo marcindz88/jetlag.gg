@@ -1,20 +1,20 @@
-<pg-table [array]="lastGames" [rowTemplate]="player_row" [headerTemplate]="header_row" [large]="true">
+<pg-table [array]="lastGames" [rowTemplate]="player_row" [headerTemplate]="header_row" [large]="true" [background]="true">
   <ng-template #header_row>
     <tr class="header-row">
-      <th class="header-row__date">Date</th>
       <th class="header-row__score">Score</th>
       <th class="header-row__shipments">Shipments</th>
       <th class="header-row__time">Alive for</th>
       <th class="header-row__death-cause">Death cause</th>
+      <th class="header-row__date">Date</th>
     </tr>
   </ng-template>
   <ng-template #player_row let-game="data">
     <tr class="player-row">
-      <td class="player-row__date">{{ game.timestamp | date: 'short' }}</td>
       <td class="player-row__score">{{ game.score }}$</td>
       <td class="player-row__shipments">{{ game.delivered_shipments }}</td>
       <td class="player-row__time">{{ game.time_alive / 1000 | number: '1.0-0' }} s</td>
       <td class="player-row__death-cause">{{ game.death_cause | deathCause }}</td>
+      <td class="player-row__date">{{ game.timestamp | date: 'short' }}</td>
     </tr>
   </ng-template>
 </pg-table>
