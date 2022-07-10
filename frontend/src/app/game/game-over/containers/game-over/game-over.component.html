@@ -1,0 +1,45 @@
+<pg-card class="game-over">
+  <h2>{{ myPlayer.deathCause! | deathCause: 'message1stperson' }}</h2>
+
+  <ng-container *ngIf="myPlayerLastGame$ | async as myLastGame; else shortInfo">
+    <h3 *ngIf="myPlayerLastGame$ | async as myLastGame; else shortInfo">
+      You scored {{ myLastGame.score }}$ by delivering {{ myLastGame.delivered_shipments }} shipments in
+      {{ myLastGame.time_alive / 1000 | number: '1.0-0' }} seconds
+    </h3>
+    <ng-container *ngIf="myPlayerBestGame$ | async as myBestGameResult">
+      <h4>
+        <ng-container *ngIf="myBestGameResult.best_game.timestamp === myLastGame.timestamp; else notBest">
+          It's your new PR! You now take {{ myBestGameResult.position }} position in the leaderboard:
+        </ng-container>
+        <ng-template #notBest>You have done better in the past, check out your leaderboard position:</ng-template>
+      </h4>
+    </ng-container>
+  </ng-container>
+  <ng-template #shortInfo>You scored {{ myPlayer.score }}$</ng-template>
+
+  <div class="game-over__leaderboard">
+    <ng-container *ngIf="leaderboard$ | async as leaderboard; else loader">
+      <pg-leaderboard
+        *ngIf="myPlayerBestGame$ | async as myPlayerBestGame; else loader"
+        [myNickname]="myPlayer.nickname"
+        [leaderboard]="leaderboard"
+        [myBestGameResult]="myPlayerBestGame"
+        [allFetched]="(allFetched$ | async) === true"
+        [isListLoading]="(isListLoading$ | async) === true"></pg-leaderboard>
+    </ng-container>
+    <ng-template #loader><pg-loader></pg-loader></ng-template>
+  </div>
+
+  <div class="game-over__actions">
+    <button *ngIf="!isShareOn; else shareButtons" (click)="share()">Share your result</button>
+    <ng-template #shareButtons
+      ><share-buttons
+        [include]="includedShareButtons"
+        [url]="'https://jetlag.gg'"
+        [description]="'My result on the Jetlag.gg was ' + myPlayer.score + '$ Try to beat me!'"
+        [title]="'Jetlag.gg'"
+        [theme]="'game'"></share-buttons
+    ></ng-template>
+    <button (click)="restart()">Play again</button>
+  </div>
+</pg-card>

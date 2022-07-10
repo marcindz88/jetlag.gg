@@ -1,0 +1,42 @@
+:host {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 15;
+}
+
+.game-intro {
+  background: var(--card-background-darkest-color);
+  display: flex;
+  flex-direction: column;
+  height: min(650px, 80vh);
+  padding: 20px;
+  width: min(800px, 85vw);
+
+  & &__content {
+    flex-grow: 1;
+    overflow: auto;
+    padding: 10px 20px 20px 20px;
+  }
+
+  & &__button-wrapper {
+    margin: auto;
+    padding-top: 10px;
+    text-align: center;
+    width: min(400px, 100%);
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  & &__button {
+    width: 53.5px;
+  }
+}

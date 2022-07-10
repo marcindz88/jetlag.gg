@@ -1,0 +1,16 @@
+<pg-card class="shipment-details" [class.shipment-details--selected]="isFocused">
+  <h4>{{ shipment.name }}</h4>
+  <div class="shipment-details__content">
+    <p>To: {{ destination }}</p>
+    <p>Cash award: {{ shipment.award }}$</p>
+    <p>
+      <span *ngIf="shipment.valid_till | remainingTime | async as remaining_seconds; else expired"
+        >Deliver in {{ remaining_seconds }}s</span
+      >
+      <ng-template #expired><span>Expired</span></ng-template>
+    </p>
+  </div>
+  <button *ngIf="isSelectable" (click)="selected.emit()" [disabled]="!isFocused" class="button--small">
+    {{ isSelected ? 'Deselect [↩]' : 'Select [↩]' }}
+  </button>
+</pg-card>

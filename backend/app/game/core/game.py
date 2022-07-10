@@ -20,7 +20,6 @@ from app.game.exceptions import (
     ShipmentExpired,
     PlayerNotFound,
     PlayerLimitExceeded,
-    PlayerInvalidNickname,
     PlayerAlreadyConnected,
     CantFlyWhenGrounded,
     ChangingPastPosition,
@@ -29,8 +28,10 @@ from app.game.exceptions import (
     InvalidAirport,
     ShipmentOperationWhenFlying,
     RefuelingWhenFlying,
+    DuplicatedGameSession,
 )
 from app.game.models import PlayerPositionUpdateRequest, AirportRequest, ShipmentRequest
+from app.game.persistence.base import BasePersistentStorage
 from app.tools.encoder import encode
 from app.tools.misc import random_with_probability
 from app.tools.timestamp import timestamp_now
@@ -45,12 +46,13 @@ class GameSession:
     FILL_GAME_WITH_BOTS_TILL = 10
     SPAWN_BOTS_WHEN_NO_PLAYERS = False
 
-    def __init__(self):
+    def __init__(self, storage: BasePersistentStorage):
         self._players = {}
         self._sessions = {}
         self._airports = {}
         self._shipments = {}
         self._bots = {}
+        self._storage = storage
 
         for airport_data in AIRPORTS:
             airport = Airport(
@@ -110,7 +112,7 @@ class GameSession:
     def increase_bot_count(self):
         nickname_set = set(BOT_NAMES) - set([self._players[p].nickname for p in self._bots.keys()])
         nickname = random.choice(list(nickname_set))
-        player = Player(nickname=nickname, color=self._generate_player_color(), bot=True)
+        player = Player(nickname=nickname, color=self._generate_player_color(), bot=True, token=uuid.uuid4().hex)
         self._players[player.id] = player
         self.broadcast_event(event=EventFactory.player_registered_event(player=player))
 
@@ -280,7 +282,7 @@ class GameSession:
             if player.is_connected:
                 continue
             if now - player.disconnected_since > self.config.PLAYER_TIME_TO_CONNECT:
-                self.remove_player(player)
+                self.pronounce_player_dead(player=player, cause=DeathCause.DISCONNECTED)
 
     def check_playing_conditions(self):
         logging.debug(f"check_playing_conditions")
@@ -323,15 +325,19 @@ class GameSession:
         available_colors = list(set(COLORS) - set([p.color for p in self._players.values()]))
         return random.choice(available_colors)
 
-    def add_player(self, nickname: str) -> Player:
+    def add_player(self, nickname: str, token: str) -> Player:
         logging.info(f"add_player {nickname}")
         if len(self._players) >= self.config.MAX_PLAYERS:
             raise PlayerLimitExceeded
-        for player in self._players.values():
-            if player.nickname.lower().strip() == nickname.lower().strip():
-                raise PlayerInvalidNickname
 
-        player = Player(nickname=nickname, color=self._generate_player_color())
+        for player in self._players.values():
+            if player.is_bot:
+                continue
+
+            if player.token == token:
+                raise DuplicatedGameSession
+
+        player = Player(nickname=nickname, token=token, color=self._generate_player_color())
         self._players[player.id] = player
         self.broadcast_event(event=EventFactory.player_registered_event(player=player), everyone_except=[player])
         logging.info(f"add_player {nickname} added {player.id}")
@@ -385,6 +391,15 @@ class GameSession:
         if player.is_bot:
             self._bots.pop(player.id)
             return
+        now = timestamp_now()
+        self._storage.add_game_record(
+            full_nickname=player.nickname,
+            timestamp=now,
+            score=player.score,
+            shipments_delivered=player.shipments_delivered,
+            time_alive=now-player.joined,
+            death_cause=cause,
+        )
         self.remove_player(player=player)
 
     def update_player_position(self, player: Player, timestamp: int, velocity: int, bearing: float):

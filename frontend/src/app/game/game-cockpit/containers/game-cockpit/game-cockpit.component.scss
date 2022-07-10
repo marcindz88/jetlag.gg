@@ -1,0 +1,71 @@
+.player-cockpit {
+  & &__velocity {
+    color: var(--card-text-color);
+    font-family: Orbitron, sans-serif;
+    font-size: 20px;
+    font-weight: bold;
+    height: min-content;
+    left: 0;
+    margin: auto;
+    padding: 15px;
+    position: absolute;
+    right: 0;
+    text-align: right;
+    top: 60px;
+    width: fit-content;
+  }
+
+  & &__stats {
+    bottom: 0;
+    left: 0;
+    position: absolute;
+  }
+
+  & &__compass {
+    bottom: 0;
+    position: absolute;
+    right: 0;
+  }
+
+  & &__airports {
+    left: 0;
+    position: absolute;
+    top: 0;
+  }
+
+  & &__shipment {
+    bottom: 0;
+    left: 0;
+    margin: 20px auto;
+    position: absolute;
+    right: 0;
+    width: 180px;
+  }
+
+  & &__airport_panel {
+    bottom: 0;
+    left: 0;
+    margin: auto;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 10;
+  }
+
+  & &__players-summary {
+    display: block;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 10;
+  }
+}
+
+.help-container {
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+}

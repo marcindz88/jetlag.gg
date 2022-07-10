@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
+import { QUEUE_BAR_DATA } from 'ngx-mat-queue-bar';
 
 export type NotificationData = { text: string; icon?: string; style?: 'warn' | 'error' };
 
@@ -9,5 +9,5 @@ export type NotificationData = { text: string; icon?: string; style?: 'warn' | '
   styleUrls: ['./notification.component.scss'],
 })
 export class NotificationComponent {
-  constructor(@Inject(MAT_SNACK_BAR_DATA) public data: NotificationData) {}
+  constructor(@Inject(QUEUE_BAR_DATA) public data: NotificationData) {}
 }

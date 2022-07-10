@@ -1,26 +1,71 @@
 .table-wrapper {
+  background-color: var(--card-background-medium-color);
+  height: calc(100% - 40px);
   margin: 20px;
 
   & &__no-results {
     padding: 0 10px;
   }
 
-  ::ng-deep table {
+  ::ng-deep .table {
     border-spacing: 0;
+    width: 100%;
 
+    thead tr {
+      background-color: var(--accent-darkest-color);
+      height: 31px;
+      position: sticky;
+      top: 0;
+    }
+
+    /* stylelint-disable-next-line no-descending-specificity */
     tr {
-      td {
-        padding-left: 6px;
+      th {
+        text-align: center;
       }
 
-      td:last-of-type {
-        padding-right: 6px;
-        text-align: right;
+      th,
+      td {
+        padding-left: 6px;
+        text-align: center;
+
+        &:last-of-type {
+          padding-right: 6px;
+        }
+      }
+
+    }
+
+    tbody tr:nth-of-type(2n + 1) {
+      background-color: var(--card-background-color);
+    }
+
+    &--scrollable {
+      display: block;
+      max-height: 100%;
+      overflow-y: auto;
+      width: 100%;
+    }
+
+    &--large {
+      /* stylelint-disable-next-line no-descending-specificity */
+      tr {
+        /* stylelint-disable-next-line no-descending-specificity */
+        th,
+        td {
+          padding-left: 12px;
+
+          &:last-of-type {
+            padding-right: 12px;
+          }
+        }
       }
     }
 
-    tr:nth-of-type(2n + 1) {
-      background-color: rgb(0 0 0 / 40%);
+    &--background {
+      tbody tr:nth-of-type(2n + 1) {
+        background-color: var(--card-background-light-color);
+      }
     }
   }
 }

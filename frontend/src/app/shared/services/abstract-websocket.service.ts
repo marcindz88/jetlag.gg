@@ -15,7 +15,7 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
   private closedCounter = 0;
   private isClosed = false;
 
-  protected constructor(protected es: EndpointsService) {}
+  constructor(protected es: EndpointsService) {}
 
   sendWSSMessage(message: C): void {
     if (this.webSocket) {

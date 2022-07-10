@@ -9,6 +9,22 @@
 >
 It kills all existing containers, rebuilds images and starts new containers
 
+## Production
+
+### Running redis
+
+copy redis folder (with dockerfile) to the server, and then:
+
+1. create volume
+> docker volume create redis_data
+
+2. build the image
+> docker build -t redis_with_persistency redis/
+
+3. remove any existing redis containers and run a new one
+> docker rm -f redis;docker run --rm -d -p 6379:6379 -v redis_data:/data --name redis redis_with_persistency
+
+
 ## Ports
 * 9999 - websockets & http
 
@@ -17,11 +33,32 @@ It kills all existing containers, rebuilds images and starts new containers
 ### Get game config
 > GET /api/game/config/
 
-### Get player list
-> GET /api/game/players/
+### Get leaderboard
+> GET /api/game/leaderboard/
 
-### Register a player in the game
+with pagination
+> GET /api/game/leaderboard/?limit=10&offset=30
+
+where limit is the size of one page
+
+### Get player in the leaderboard
+
+useful for determining player's position after the game
+> GET /api/game/leaderboard/john:1/
+
+### Player's last games
+
+returns last 10 games of a player
+> GET /api/game/leaderboard/john:1/last_games/
+
+### Register a player in the game (persistent)
 > POST /api/game/players/
+
+### Join a game session
+required before creating ws connection
+
+"token" header is expected to be present in the request
+> POST /api/game/join/
 
 ### Establish a websocket connection 
 only 1 connection per user at a time is allowed

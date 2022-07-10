@@ -1,0 +1,62 @@
+<pg-card class="airport-main-panel">
+  <h2>Welcome to {{ airport.full_name }} ({{ airport.elevation * 1000 }} m.a.s.l.)</h2>
+  <div class="airport-main-panel__content">
+    <p class="airport-main-panel__description">{{ airport.description }}</p>
+    <p>Fuel price: {{ airport.fuel_price }}$/l</p>
+    <div class="airport-main-panel__packages-container packages-container">
+      <h3 *ngIf="!airport.shipments.length as length; else shipments">
+        There are no available packages at this airport
+      </h3>
+      <ng-template #shipments>
+        <div class="packages-container__title">
+          <button *ngIf="airport.shipments.length > 3" class="icon icon--big" (click)="goToPreviousPackage()">
+            chevron_left
+          </button>
+          <h3>
+            Available packages
+            <span *ngIf="playerShipment">
+              (You can't pick a package, as you already have {{ playerShipment.name }} on board)</span
+            >
+          </h3>
+          <button *ngIf="airport.shipments.length > 3" class="icon icon--big" (click)="goToNextPackage()">
+            chevron_right
+          </button>
+        </div>
+        <div class="packages-container__packages">
+          <pg-shipment-details
+            *ngFor="
+              let shipment of airport.shipments | slice: firstPackageIndex:firstPackageIndex + 3;
+              trackBy: trackById;
+              index as index
+            "
+            (click)="focusPackage(shipment.id)"
+            (selected)="selectOrDeselectPackage(shipment.id)"
+            [isSelectable]="!playerShipment"
+            [isFocused]="shipment.id === focusedId"
+            [isSelected]="shipment.id === selectedId"
+            [shipment]="shipment"></pg-shipment-details>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+  <div class="airport-main-panel__actions">
+    <div
+      [matTooltip]="isRefuelling ? 'Click to stop refuelling' : 'You can\'t get any more fuel, earn $ to buy fuel'"
+      [matTooltipDisabled]="!isRefuelling && !!playerScore">
+      <pg-loading-button
+        (started)="startFuelingProcedure()"
+        (finished)="finishFuelingProcedure()"
+        [externalToggle$]="toggleRefuelling$"
+        [stop$]="stopRefueling$"
+        [disabled]="!playerScore"
+        [config]="{
+          initialProgress: playerTankLevel / CONFIG.FUEL_TANK_SIZE,
+          totalTime: CONFIG.REFUELLING_FULL_TIME,
+          elapsingText: 'Refuelling in progress... [X]'
+        }"
+        >Refuel [X]</pg-loading-button
+      >
+    </div>
+    <button [disabled]="isRefuelling" (click)="startDepartureProcedure()">Take off [F]</button>
+  </div>
+</pg-card>

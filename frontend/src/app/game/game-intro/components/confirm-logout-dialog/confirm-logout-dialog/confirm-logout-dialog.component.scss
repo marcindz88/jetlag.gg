@@ -1,0 +1,11 @@
+.confirm-logout {
+  background-color: var(--card-background-darkest-color);
+  padding: 20px 40px;
+
+  & &__buttons {
+    display: grid;
+    grid-column-gap: 15px;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 20px;
+  }
+}

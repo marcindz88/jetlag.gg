@@ -1,0 +1,64 @@
+@import 'src/styles/variables';
+
+:host {
+  display: block;
+  height: fit-content;
+  width: fit-content;
+}
+
+.airport-main-panel {
+  background: var(--card-background-darker-color);
+  display: flex;
+  flex-direction: column;
+  height: min(550px, 80vh);
+  padding: 20px;
+  width: min(650px, 85vw);
+
+  & &__description {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  & &__content {
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+
+  & &__actions {
+    column-gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    margin-top: 20px;
+  }
+}
+
+.packages-container {
+  flex-grow: 1;
+  padding: 10px 0 20px;
+
+  & &__title {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+
+    button {
+      padding: 2px;
+      width: min-content;
+    }
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  & &__packages {
+    column-gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+
+    pg-shipment-details {
+      height: 100%;
+    }
+  }
+}

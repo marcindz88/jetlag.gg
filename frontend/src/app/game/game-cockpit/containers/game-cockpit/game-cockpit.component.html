@@ -1,0 +1,27 @@
+<div class="player-cockpit" *ngIf="player && lastPosition && !player.isCrashing">
+  <ng-container *ngIf="!player.isGrounded; else airportMainPanel">
+    <pg-nearby-airports
+      class="player-cockpit__airports"
+      [airportList]="airportList"
+      [updateTrigger$]="airportsUpdateTrigger$"></pg-nearby-airports>
+    <p class="player-cockpit__velocity">{{ lastPosition.velocity | number: '7.0-0' }} km/h</p>
+    <pg-player-stats class="player-cockpit__stats" [position]="lastPosition"></pg-player-stats>
+    <pg-compass class="player-cockpit__compass" [bearing]="lastPosition.bearing"></pg-compass>
+    <pg-shipment-details
+      class="player-cockpit__shipment"
+      *ngIf="player.shipment"
+      [shipment]="player.shipment"
+      [isSelectable]="false"></pg-shipment-details>
+    <pg-players-summary class="player-cockpit__players-summary"></pg-players-summary>
+  </ng-container>
+  <ng-template #airportMainPanel>
+    <pg-game-airport-panel
+      *ngIf="!showHelp"
+      class="player-cockpit__airport_panel"
+      [airport]="airportList[0]"
+      [playerShipment]="player.shipment"
+      [playerTankLevel]="player.lastPosition.tank_level"
+      [playerScore]="player.score"></pg-game-airport-panel>
+  </ng-template>
+  <pg-help class="help-container" *ngIf="showHelp"></pg-help>
+</div>

@@ -2,8 +2,8 @@
 
 @include cdk.overlay();
 
-.notification-snack-bar-container {
+.notification-snack-bar-container .mat-snack-bar-container {
   margin: 0 !important;
   max-width: 70vw !important;
-  padding: 20px !important;
+  padding: 20px 20px 0 !important;
 }

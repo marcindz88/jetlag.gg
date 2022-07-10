@@ -28,6 +28,7 @@ const defaultClientConfig = {
   LOW_VELOCITY_THRESHOLD: 150000,
   PLANE_POSITION_REFRESH_TIME: 1000,
   MY_PLANE_POSITION_REFRESH_TIME: 250,
+  LEADERBOARD_TABLE_LENGTH: 20,
 };
 
 export const getDependentClientConfig = (CONFIG: BaseConfigType) => {

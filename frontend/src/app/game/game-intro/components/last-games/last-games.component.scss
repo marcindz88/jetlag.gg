@@ -1,0 +1,31 @@
+:host {
+  display: block;
+}
+
+.header-row,
+.player-row {
+  width: 100%;
+
+  & &__date {
+    min-width: 110px;
+    width: 120px;
+  }
+
+  & &__score {
+    width: 120px;
+  }
+
+  & &__shipments {
+    width: 120px;
+  }
+
+  & &__time {
+    min-width: 60px;
+    width: 120px;
+  }
+
+  & &__death-cause {
+    min-width: 100px;
+    width: 120px;
+  }
+}

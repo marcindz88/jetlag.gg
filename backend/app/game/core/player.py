@@ -8,10 +8,10 @@ from app.tools.timestamp import timestamp_now
 
 
 class Player:
-    def __init__(self, nickname: str, color: str, bot: bool = False):
+    def __init__(self, nickname: str, token: str, color: str, bot: bool = False):
         self._id: uuid.UUID = uuid.uuid4()
         self._nickname: str = nickname
-        self._token: str = uuid.uuid4().hex
+        self._token: str = token
         self._airport_id: Optional[uuid.UUID] = None
         self.disconnected_since: int = timestamp_now()
         self.session_id: Optional[uuid.UUID] = None
@@ -19,9 +19,11 @@ class Player:
         self.score: int = 0
         self.is_bot: bool = bot
         self.shipment: Optional["Shipment"] = None
+        self.shipments_delivered: int = 0
         self.color: str = color
         self.is_refueling: bool = False
         self.death_cause: Optional[DeathCause] = None
+        self.joined: int = timestamp_now()
 
     @property
     def id(self) -> uuid.UUID:

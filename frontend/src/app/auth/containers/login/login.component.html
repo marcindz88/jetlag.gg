@@ -6,23 +6,23 @@
       formControlName="nickname"
       type="text"
       (keydown.enter)="registerAndStartGame()" />
-    <p class="input-wrapper__error" *ngIf="nicknameControl?.errors?.['username_taken']">
+    <p class="error" *ngIf="nicknameControl?.errors?.['username_taken']">
       Username already taken, please select a different one
     </p>
-    <p class="input-wrapper__error" *ngIf="nicknameControl?.touched && nicknameControl?.errors?.['minlength']">
-      Username has to be minimum 3 characters
+    <p class="error" *ngIf="nicknameControl?.touched && nicknameControl?.errors?.['minlength']">
+      Username has to be at minimum 3 characters
     </p>
-    <p class="input-wrapper__error" *ngIf="nicknameControl?.touched && nicknameControl?.errors?.['maxlength']">
-      Username has to be maximum 15 characters
+    <p class="error" *ngIf="nicknameControl?.touched && nicknameControl?.errors?.['maxlength']">
+      Username cant exceed 15 characters
     </p>
-    <p class="input-wrapper__error" *ngIf="serverError === 'lobby_full'">Lobby is full, please try again later</p>
-    <p class="input-wrapper__error" *ngIf="serverError === 'unknown_error'">
-      Unknown error occurred, please try again later
+    <p class="error" *ngIf="nicknameControl?.touched && nicknameControl?.errors?.['pattern']">
+      Username should include only alphanumeric characters and spaces
     </p>
+    <p class="error" *ngIf="serverError === 'unknown_error'">Unknown error occurred, please try again later</p>
   </div>
   <div class="start__button-wrapper button-wrapper">
     <button type="submit" class="button-wrapper__button" (click)="registerAndStartGame()" [disabled]="!form.valid">
-      Enter the game
+      Join
     </button>
   </div>
 </pg-card>

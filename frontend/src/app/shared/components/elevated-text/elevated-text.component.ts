@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { NgtEuler, NgtVector3 } from '@angular-three/core';
-import { TextureModelsService } from '@pg/game-base/services/texture-models.service';
+import { TextureModelsService } from '@pg/game/services/texture-models.service';
 import { Material } from 'three';
 
 @Component({

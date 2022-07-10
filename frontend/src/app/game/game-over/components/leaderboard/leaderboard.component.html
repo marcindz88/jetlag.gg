@@ -1,0 +1,37 @@
+<pg-table
+  *ngIf="myBestGameResult && leaderboard"
+  [array]="leaderboard.results"
+  [noRecordsText]="'No players have been added to the leaderboard yet.'"
+  [rowTemplate]="player_row"
+  [headerTemplate]="header_row"
+  [scrollable]="true"
+  [large]="true"
+  [background]="true"
+  (tableScroll)="tableScrolled($event)">
+  <ng-template #header_row>
+    <tr class="header-row">
+      <th class="header-row__position">No.</th>
+      <th class="header-row__nickname">Nickname</th>
+      <th class="header-row__score">Score</th>
+      <th class="header-row__shipments">Shipments</th>
+      <th class="header-row__time">Alive for</th>
+      <th class="header-row__death-cause">Death cause</th>
+      <th class="header-row__date">Date</th>
+    </tr>
+  </ng-template>
+  <ng-template #player_row let-player="data">
+    <tr class="player-row" [class.my-player-row]="player.nickname === myNickname">
+      <td class="player-row__position">{{ player.position + 1 }}</td>
+      <td class="player-row__nickname">{{ player.nickname | nickname }}</td>
+      <td class="player-row__score">{{ player.best_game.score }}$</td>
+      <td class="player-row__shipments">{{ player.best_game.delivered_shipments }}</td>
+      <td class="player-row__time">{{ player.best_game.time_alive / 1000 | number: '1.0-0' }} s</td>
+      <td class="player-row__death-cause">{{ player.best_game.death_cause | deathCause }}</td>
+      <td class="player-row__date">{{ player.best_game.timestamp | date: 'short' }}</td>
+    </tr>
+  </ng-template>
+
+  <ng-container *ngIf="!isMyPlayerVisibleInTheList">
+    <ng-container *ngTemplateOutlet="player_row; context: { data: myBestGameResult }"></ng-container>
+  </ng-container>
+</pg-table>

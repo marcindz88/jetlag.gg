@@ -1,0 +1,32 @@
+:host {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 15;
+}
+
+.game-over {
+  background: var(--card-background-darkest-color);
+  display: flex;
+  flex-direction: column;
+  height: min(650px, 80vh);
+  padding: 20px;
+  width: min(800px, 85vw);
+
+  & &__leaderboard {
+    flex-grow: 1;
+    min-height: 50px;
+    padding-bottom: 10px;
+  }
+
+  & &__actions {
+    column-gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    padding-top: 10px;
+  }
+}

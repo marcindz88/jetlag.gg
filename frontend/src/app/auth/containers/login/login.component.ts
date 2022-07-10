@@ -1,9 +1,8 @@
-import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ROUTES } from '@shared/constants/routes';
-import { LoaderService } from '@shared/services/loader.service';
+import { ROUTES_URLS } from '@shared/constants/routes';
 
 import { UserService } from '../../services/user.service';
 
@@ -15,7 +14,7 @@ import { UserService } from '../../services/user.service';
 })
 export class LoginComponent {
   form = this.createForm();
-  serverError: 'lobby_full' | 'unknown_error' | null = null;
+  serverError: 'unknown_error' | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -33,18 +32,11 @@ export class LoginComponent {
       this.serverError = null;
       this.myPlayerService.createUser(this.nicknameControl.value).subscribe({
         next: () => {
-          LoaderService.addLoader(); // start additional loader until earth finishes rendering
-          void this.router.navigate([ROUTES.root, ROUTES.game]);
+          void this.router.navigateByUrl(ROUTES_URLS.game, { replaceUrl: true });
         },
         error: err => {
           if (err instanceof HttpErrorResponse) {
             switch (err.status) {
-              case HttpStatusCode.BadRequest:
-                this.nicknameControl?.setErrors({ username_taken: true });
-                break;
-              case HttpStatusCode.Conflict:
-                this.serverError = 'lobby_full';
-                break;
               default:
                 this.serverError = 'unknown_error';
                 break;
@@ -58,7 +50,10 @@ export class LoginComponent {
 
   private createForm() {
     return this.formBuilder.group({
-      nickname: ['', [Validators.required, Validators.maxLength(15), Validators.minLength(3)]],
+      nickname: [
+        '',
+        [Validators.required, Validators.maxLength(15), Validators.minLength(3), Validators.pattern(/([A-z]\d*|\s)*/)],
+      ],
     });
   }
 }

@@ -133,4 +133,5 @@ class Airport:
 
         player.score += player.shipment.award
         player.shipment = None
+        player.shipments_delivered += 1
         return shipment
