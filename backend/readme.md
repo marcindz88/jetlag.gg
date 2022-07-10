@@ -18,11 +18,14 @@ copy redis folder (with dockerfile) to the server, and then:
 1. create volume
 > docker volume create redis_data
 
-2. build the image
+2. create the network
+> docker network create game_net
+
+3. build the image
 > docker build -t redis_with_persistency redis/
 
-3. remove any existing redis containers and run a new one
-> docker rm -f redis;docker run --rm -d -p 6379:6379 -v redis_data:/data --name redis redis_with_persistency
+4. remove any existing redis containers and run a new one
+> docker rm -f redis;docker run --rm -d -p 6379:6379 -v redis_data:/data --network game_net --name redis redis_with_persistency
 
 
 ## Ports
