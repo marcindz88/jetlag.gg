@@ -21,4 +21,10 @@ button {
     height: 28px;
     padding: 2px;
   }
+
+  &.button--medium {
+    font-size: 12px;
+    height: 40px;
+    padding: 4px;
+  }
 }

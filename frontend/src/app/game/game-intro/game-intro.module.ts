@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { LastGamesComponent } from '@pg/game/game-intro/components/last-games/last-games.component';
 import { GameIntroComponent } from '@pg/game/game-intro/containers/game-intro/game-intro.component';
 import { GameIntroRoutingModule } from '@pg/game/game-intro/game-intro-routing.module';
@@ -12,7 +13,7 @@ import { ConfirmLogoutDialogComponent } from './components/confirm-logout-dialog
 
 @NgModule({
   declarations: [GameIntroComponent, LastGamesComponent, ConfirmLogoutDialogComponent],
-  imports: [CommonModule, SharedModule, GameIntroRoutingModule, GameSharedModule, MatDialogModule],
+  imports: [CommonModule, SharedModule, GameIntroRoutingModule, GameSharedModule, MatDialogModule, MatTooltipModule],
   providers: [GameIntroHttpService],
 })
 export class GameIntroModule {}
