@@ -1,6 +1,6 @@
 import { GeoLocationPoint } from '@pg/game/models/game.types';
-import { PlanePosition } from '@pg/game/models/player.types';
-import { updateTankLevel } from '@pg/game/utils/fuel-utils';
+import { PlaneExtendedPosition, PlanePosition } from '@pg/game/models/player.types';
+import { getPositionWithUpdatedFuel } from '@pg/game/utils/fuel-utils';
 import { CONFIG } from '@shared/services/config.service';
 import { Euler, Spherical, Vector3 } from 'three';
 import { degToRad, radToDeg } from 'three/src/math/MathUtils';
@@ -64,9 +64,9 @@ export const calculatePositionAfterTimeInterval = (
   position: PlanePosition,
   altitude: number,
   currentTimestamp: number
-): PlanePosition => {
+): PlaneExtendedPosition => {
   if (currentTimestamp === position.timestamp || !position.velocity) {
-    return position;
+    return getPositionWithUpdatedFuel(position, currentTimestamp);
   }
   const timeDifferenceS = (currentTimestamp - position.timestamp) / 1000;
 
@@ -94,13 +94,14 @@ export const calculatePositionAfterTimeInterval = (
     position.bearing + calculateBearingDisplacementBetweenCoordinates(position.coordinates, newPosition)
   );
 
-  return {
-    ...position,
-    coordinates: newPosition,
-    bearing: newBearing,
-    timestamp: currentTimestamp,
-    tank_level: updateTankLevel(currentTimestamp, position.timestamp, position.tank_level, position.fuel_consumption),
-  };
+  return getPositionWithUpdatedFuel(
+    {
+      ...position,
+      coordinates: newPosition,
+      bearing: newBearing,
+    },
+    currentTimestamp
+  );
 };
 
 export const calculateDistanceBetweenPoints = (point1: GeoLocationPoint, point2: GeoLocationPoint) => {

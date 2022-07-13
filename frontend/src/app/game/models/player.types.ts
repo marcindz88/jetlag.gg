@@ -34,6 +34,10 @@ export type PlanePosition = {
   fuel_consumption: number;
 };
 
+export type PlaneExtendedPosition = {
+  fuel_efficiency: number;
+} & PlanePosition;
+
 export type PlayerPositionUpdate = {
   id: string;
   position: PlanePosition;

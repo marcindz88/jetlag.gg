@@ -1,4 +1,5 @@
 import { Shipment } from '@pg/game/models/airport.types';
+import { getPositionWithUpdatedFuel } from '@pg/game/utils/fuel-utils';
 import {
   calculateBearingFromDirectionAndRotation,
   calculatePositionAfterTimeInterval,
@@ -12,7 +13,7 @@ import { filter, Subject, takeUntil, timer } from 'rxjs';
 import { Color, Euler, Object3D, Vector3 } from 'three';
 import { degToRad } from 'three/src/math/MathUtils';
 
-import { DeathCauseEnum, OtherPlayer, PartialPlayerData, PlanePosition } from './player.types';
+import { DeathCauseEnum, OtherPlayer, PartialPlayerData, PlaneExtendedPosition, PlanePosition } from './player.types';
 
 export class Player {
   readonly id: string;
@@ -43,9 +44,8 @@ export class Player {
     blocked$: new Subject<void>(),
   };
 
-  lastPosition!: PlanePosition;
+  lastPosition!: PlaneExtendedPosition;
 
-  private fuelConsumption!: number;
   private lastInternalChangeTimestamp: number | null = null;
 
   constructor(player: OtherPlayer, isMyPlayer: boolean, private clockService: ClockService) {
@@ -64,7 +64,7 @@ export class Player {
     this.setPositionUpdater();
   }
 
-  get currentPosition(): PlanePosition {
+  get currentPosition(): PlaneExtendedPosition {
     return calculatePositionAfterTimeInterval(
       this.lastPosition,
       CONFIG.FLIGHT_ALTITUDE_SCALED,
@@ -163,12 +163,12 @@ export class Player {
   private setPositionFromEvent(position: PlanePosition) {
     if (this.lastInternalChangeTimestamp && this.lastInternalChangeTimestamp > position.timestamp && !this.isGrounded) {
       // Ignore position update if locally was updated before or messages came out of order
+      this.lastPosition = getPositionWithUpdatedFuel(this.lastPosition, this.clockService.getCurrentTime(), position);
       return;
     }
 
     this.updateLastPosition(position);
     this.lastInternalChangeTimestamp = this.lastPosition.timestamp;
-    this.fuelConsumption = this.lastPosition.fuel_consumption;
   }
 
   private setPositionUpdater() {

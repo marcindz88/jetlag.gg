@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { NearAirportsList } from '@pg/game/models/airport.types';
 import { KeyEventEnum } from '@pg/game/models/keyboard.types';
-import { PlanePosition } from '@pg/game/models/player.types';
+import { PlaneExtendedPosition } from '@pg/game/models/player.types';
 import { AirportsService } from '@pg/game/services/airports.service';
 import { KeyboardControlsService } from '@pg/game/services/keyboard-controls.service';
 import { PlayersService } from '@pg/game/services/players.service';
@@ -33,7 +33,7 @@ export class GameCockpitComponent implements OnInit {
   airportList: NearAirportsList = [];
   airportsUpdateTrigger$ = new ReplaySubject<void>();
   showHelp = false;
-  lastPosition!: PlanePosition;
+  lastPosition!: PlaneExtendedPosition;
 
   private fuelSnackBarRef?: QueueBarRef<NotificationComponent>;
   private velocitySnackBarRef?: QueueBarRef<NotificationComponent>;
@@ -127,7 +127,7 @@ export class GameCockpitComponent implements OnInit {
     });
   }
 
-  private updateNearbyAirports(position: PlanePosition) {
+  private updateNearbyAirports(position: PlaneExtendedPosition) {
     if (
       (!this.lastPosition || !arePointsEqual(this.lastPosition?.coordinates, position.coordinates)) &&
       position?.velocity !== 0

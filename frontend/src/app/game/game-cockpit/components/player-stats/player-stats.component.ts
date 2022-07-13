@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { PlanePosition } from '@pg/game/models/player.types';
+import { PlaneExtendedPosition } from '@pg/game/models/player.types';
 
 @UntilDestroy()
 @Component({
@@ -10,5 +10,5 @@ import { PlanePosition } from '@pg/game/models/player.types';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayerStatsComponent {
-  @Input() position!: PlanePosition;
+  @Input() position!: PlaneExtendedPosition;
 }

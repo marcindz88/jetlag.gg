@@ -1,6 +1,7 @@
+import { PlaneExtendedPosition, PlanePosition } from '@pg/game/models/player.types';
 import { CONFIG } from '@shared/services/config.service';
 
-export const updateTankLevel = (
+export const getUpdatedTankLevel = (
   currentTimeStamp: number,
   timestampOfLastLevel: number,
   oldTankLevel: number,
@@ -22,4 +23,25 @@ const getTankLevelPercentage = (tankLevel: number, fullTankCapacity: number) => 
 export const isTankLevelLow = (tanklevel: number, fullTankCapacity: number = CONFIG.FUEL_TANK_SIZE) => {
   const tankLevelPercentage = getTankLevelPercentage(tanklevel, fullTankCapacity);
   return tankLevelPercentage > 0 && tankLevelPercentage < CONFIG.LOW_FUEL_THRESHOLD;
+};
+
+export const getPositionWithUpdatedFuel = (
+  position: PlanePosition | PlaneExtendedPosition,
+  currentTimestamp: number,
+  positionUpdate?: PlanePosition
+): PlaneExtendedPosition => {
+  positionUpdate = positionUpdate || position;
+
+  return {
+    ...position,
+    tank_level: getUpdatedTankLevel(
+      currentTimestamp,
+      positionUpdate.timestamp,
+      positionUpdate.tank_level,
+      positionUpdate.fuel_consumption
+    ),
+    fuel_consumption: positionUpdate.fuel_consumption,
+    fuel_efficiency: positionUpdate.velocity / positionUpdate.fuel_consumption,
+    timestamp: currentTimestamp,
+  };
 };
