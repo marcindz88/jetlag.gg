@@ -13,7 +13,7 @@ from app.game.events import dict_to_event
 from app.game.exceptions import PlayerNotFound
 from app.game.persistence.redis import RedisPersistentStorage
 from app.tools.timestamp import timestamp_now
-from app.tools.websocket_server import StarletteWebsocketServer, WebSocketSession
+from app.tools.websocket_server import StarletteWebsocketConnectionHandler, WebSocketSession
 
 
 logging.getLogger().setLevel(logging.INFO)
@@ -106,7 +106,7 @@ def leaderboard_player_last_games(
     return [g.serialized for g in games]
 
 
-class GameWebsocketServer(StarletteWebsocketServer):
+class GameWebsocketConnectionHandler(StarletteWebsocketConnectionHandler):
     def validate_session(self, ws_session: WebSocketSession):
         token = ws_session.connection.headers.get("sec-websocket-protocol", "")
         try:
@@ -148,8 +148,8 @@ class GameWebsocketServer(StarletteWebsocketServer):
 
 @app.websocket("/ws/")
 async def websocket_endpoint(websocket: WebSocket):
-    server = GameWebsocketServer()
-    await server.handler(websocket)
+    connection = GameWebsocketConnectionHandler()
+    await connection.handler(websocket)
 
 
 @app.websocket("/clock/")
