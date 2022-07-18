@@ -63,7 +63,10 @@ class StarletteWebsocketConnectionHandler:
             if not self.validate_session(ws_session):
                 await ws_session.connection.close(code=400)
                 return
-            await ws_session.connection.accept(subprotocol=ws_session.token)
+            await ws_session.connection.accept(subprotocol=ws_session.token, headers=[
+                (b"ping_interval", str(self.ping_interval).encode()),
+                (b"max_pong_awaiting_time", str(self.max_pong_awaiting_time).encode()),
+            ])
             thread = threading.Thread(target=self.on_connect, args=(ws_session,))
             self._thread_manager.add_thread(str(ws_session.id), thread)
 
