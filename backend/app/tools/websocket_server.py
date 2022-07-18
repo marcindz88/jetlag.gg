@@ -54,14 +54,14 @@ class StarletteWebsocketConnectionHandler:
                 time.sleep(self.max_pong_awaiting_time/1000)
                 delta = self.last_pong - self.last_ping
                 if delta >= self.max_pong_awaiting_time or delta < 0:
-                    session.close_connection(code=1001)
+                    session.close_connection(code=1005)
                     break
                 time.sleep((self.ping_interval - self.max_pong_awaiting_time)/1000)
 
         async def handler(websocket: WebSocket):
             ws_session = WebSocketSession(websocket, loop=asyncio.get_event_loop())
             if not self.validate_session(ws_session):
-                await ws_session.connection.close(code=400)
+                await ws_session.connection.close(code=3000)
                 return
             await ws_session.connection.accept(subprotocol=ws_session.token, headers=[
                 (b"ping_interval", str(self.ping_interval).encode()),
