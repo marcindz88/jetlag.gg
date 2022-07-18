@@ -2,10 +2,12 @@ import { Injectable } from '@angular/core';
 import { DeathCausePipe } from '@pg/game/game-shared/pipes/death-cause.pipe';
 import { NicknamePipe } from '@pg/game/game-shared/pipes/nickname.pipe';
 import { GameWebsocketService } from '@pg/game/services/game-websocket.service';
+import { NotificationComponent } from '@shared/components/notification/notification.component';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { ClockService } from '@shared/services/clock.service';
 import { NotificationService } from '@shared/services/notification.service';
-import { BehaviorSubject, ReplaySubject, Subject, take, takeUntil } from 'rxjs';
+import { QueueBarRef } from 'ngx-mat-queue-bar/lib/queue-bar-ref';
+import { BehaviorSubject, filter, ReplaySubject, Subject, take, takeUntil } from 'rxjs';
 
 import { Player } from '../models/player';
 import { OtherPlayer, PartialPlayerWithId, PlaneExtendedPosition, PlayerList } from '../models/player.types';
@@ -17,6 +19,8 @@ export class PlayersService {
   myPlayer: Player | null = null;
   changed$ = new ReplaySubject<void>();
   reset$ = new Subject<void>();
+
+  private disconnectedNotificationRef?: QueueBarRef<NotificationComponent>;
 
   constructor(
     private mainWebsocketService: GameWebsocketService,
@@ -34,6 +38,8 @@ export class PlayersService {
   }
 
   setPlayersUpdateHandler(userId: string) {
+    this.handleWSSDisconnection();
+
     this.mainWebsocketService.playerMessages$.pipe(takeUntil(this.reset$)).subscribe(playerMessage => {
       switch (playerMessage.type) {
         case ServerMessageTypeEnum.PLAYER_LIST:
@@ -147,5 +153,31 @@ export class PlayersService {
 
   private updateSortedPlayers() {
     this.playersSorted$.next(Array.from(this.players.values()).sort((a, b) => b.score - a.score));
+  }
+
+  private handleWSSDisconnection() {
+    this.mainWebsocketService.isConnected$
+      .pipe(
+        takeUntil(this.changed$.pipe(filter(() => !this.myPlayer || this.myPlayer.isCrashing))),
+        takeUntil(this.reset$)
+      )
+      .subscribe(isConnected => {
+        if (isConnected) {
+          this.disconnectedNotificationRef?.dismiss();
+          this.disconnectedNotificationRef = undefined;
+          return;
+        }
+
+        if (!this.disconnectedNotificationRef) {
+          this.disconnectedNotificationRef = this.notificationService.openNotification(
+            {
+              text: 'Connection lost, check your internet',
+              icon: 'signal_disconnected',
+              style: 'error',
+            },
+            { duration: 0 }
+          );
+        }
+      });
   }
 }

@@ -18,14 +18,6 @@ export class GameWebsocketService extends AbstractWebsocketService<
     return GameWebsocketService;
   }
 
-  setupGameWebsocket(token: string) {
-    this.createWSSConnection(token);
-  }
-
-  closeGameWebsocket() {
-    this.closeWSSConnection();
-  }
-
   messagesHandler(message: MainMessage<MessageDataType, ServerMessageTypeEnum | ClientMessageTypeEnum>): void {
     if (message.type.startsWith('player_position')) {
       this.playerPositionMessages$.next(message as MainMessage<PlayerPositionUpdate>);

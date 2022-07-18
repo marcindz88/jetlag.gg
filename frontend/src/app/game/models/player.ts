@@ -104,7 +104,15 @@ export class Player {
   }
 
   startCrashingPlane() {
-    this.isCrashing = true;
+    if (document.hasFocus()) {
+      this.isCrashing = true;
+      // After 10s if animation did not end crash plane instantly
+      setTimeout(() => {
+        this.endCrashingPlane();
+      }, 10000);
+    } else {
+      this.endCrashingPlane();
+    }
   }
 
   endCrashingPlane() {
