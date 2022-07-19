@@ -4,7 +4,7 @@ import dataclasses
 @dataclasses.dataclass
 class GameConfig:
     MAX_PLAYERS: int = 16
-    PLAYER_TIME_TO_CONNECT: int = 5000  # 5 seconds
+    PLAYER_TIME_TO_CONNECT: int = 10000  # 10 seconds
     MAX_SHIPMENTS_IN_GAME: int = 60
     MIN_VELOCITY: int = 0
     MAX_VELOCITY: int = 2_000_000  # 2M km/h

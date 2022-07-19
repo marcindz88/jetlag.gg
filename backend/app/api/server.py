@@ -108,7 +108,7 @@ def leaderboard_player_last_games(
 
 class GameWebsocketConnectionHandler(StarletteWebsocketConnectionHandler):
     def validate_session(self, ws_session: WebSocketSession):
-        token = ws_session.connection.headers.get("sec-websocket-protocol", "")
+        token = ws_session.get_headers().get("sec-websocket-protocol", "")
         try:
             player = game_session.get_player_by_token(token)
         except exceptions.PlayerNotFound:

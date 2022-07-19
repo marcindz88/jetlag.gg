@@ -39,6 +39,7 @@ from app.tools.websocket_server import WebSocketSession
 
 
 logging.getLogger().setLevel(logging.INFO)
+logging.getLogger().disabled = True
 
 
 class GameSession:
