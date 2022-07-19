@@ -145,7 +145,7 @@ export class Player {
   }
 
   isBlocked() {
-    return this.isCrashed || this.isCrashing || this.isGrounded;
+    return this.isCrashed || this.isCrashing || this.isGrounded || !this.connected;
   }
 
   destroy() {

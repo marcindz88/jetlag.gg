@@ -158,13 +158,22 @@ export class PlayersService {
   private handleWSSDisconnection() {
     this.mainWebsocketService.isConnected$
       .pipe(
-        takeUntil(this.changed$.pipe(filter(() => !this.myPlayer || this.myPlayer.isCrashing))),
+        takeUntil(
+          this.changed$.pipe(filter(() => !this.myPlayer || this.myPlayer.isCrashing || this.myPlayer.isCrashed))
+        ),
         takeUntil(this.reset$)
       )
       .subscribe(isConnected => {
+        if (this.myPlayer && this.myPlayer.connected !== isConnected) {
+          this.myPlayer.connected = isConnected;
+          this.changed$.next();
+        }
+
         if (isConnected) {
-          this.disconnectedNotificationRef?.dismiss();
-          this.disconnectedNotificationRef = undefined;
+          if (this.disconnectedNotificationRef) {
+            this.disconnectedNotificationRef.dismiss();
+            this.disconnectedNotificationRef = undefined;
+          }
           return;
         }
 
