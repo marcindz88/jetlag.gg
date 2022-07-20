@@ -14,6 +14,8 @@ export class GameWebsocketService extends AbstractWebsocketService<
   playerMessages$: Subject<MainMessage<PlayerList | OtherPlayer>> = new Subject();
   playerPositionMessages$: Subject<MainMessage<PlayerPositionUpdate>> = new Subject();
 
+  protected override reconnectTime = 10000;
+
   get class(): { name: string } {
     return GameWebsocketService;
   }

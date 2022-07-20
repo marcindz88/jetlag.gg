@@ -10,7 +10,13 @@ import { QueueBarRef } from 'ngx-mat-queue-bar/lib/queue-bar-ref';
 import { BehaviorSubject, filter, ReplaySubject, Subject, take, takeUntil } from 'rxjs';
 
 import { Player } from '../models/player';
-import { OtherPlayer, PartialPlayerWithId, PlaneExtendedPosition, PlayerList } from '../models/player.types';
+import {
+  DeathCauseEnum,
+  OtherPlayer,
+  PartialPlayerWithId,
+  PlaneExtendedPosition,
+  PlayerList,
+} from '../models/player.types';
 
 @Injectable()
 export class PlayersService {
@@ -171,8 +177,7 @@ export class PlayersService {
 
         if (isConnected) {
           if (this.disconnectedNotificationRef) {
-            this.disconnectedNotificationRef.dismiss();
-            this.disconnectedNotificationRef = undefined;
+            this.dismissDisconnectedNotification();
           }
           return;
         }
@@ -188,5 +193,17 @@ export class PlayersService {
           );
         }
       });
+
+    this.mainWebsocketService.unableToConnect$.subscribe(() => {
+      this.dismissDisconnectedNotification();
+      this.myPlayer?.updatePlayer({ death_cause: DeathCauseEnum.DISCONNECTED });
+    });
+  }
+
+  private dismissDisconnectedNotification() {
+    if (this.disconnectedNotificationRef) {
+      this.disconnectedNotificationRef.dismiss();
+      this.disconnectedNotificationRef = undefined;
+    }
   }
 }

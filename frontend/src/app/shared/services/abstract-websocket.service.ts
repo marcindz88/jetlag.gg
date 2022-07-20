@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { Logger } from '@shared/services/logger.service';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 
 import { ClientMessage, ServerMessage } from '../models/wss.types';
@@ -13,14 +13,23 @@ const MAX_PING_AWAITING_TIME = 4000;
 @Injectable()
 export abstract class AbstractWebsocketService<S extends ServerMessage, C extends ClientMessage> implements OnDestroy {
   isConnected$ = new BehaviorSubject<boolean>(false);
+  unableToConnect$ = new Subject<void>();
+  error$ = new Subject<number>();
 
   protected url = 'ws';
+  protected reconnectTime: number | null = null;
 
   private webSocket: WebSocketSubject<S | C | string> | null = null;
+  private webSocketSubscription: Subscription | null = null;
+  private opened$?: Subject<Event>;
+  private closed$?: Subject<CloseEvent>;
+
   private token?: string;
   private closedCounter = 0;
   private isClosedCleanly = false;
   private pingTimeout?: number;
+  private reconnectTimeout?: number;
+  private maxReconnectTimeout?: number;
 
   constructor(protected es: EndpointsService) {}
 
@@ -38,17 +47,18 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
     this.closedCounter = 0;
     this.isClosedCleanly = false;
 
+    this.handleTabClosed();
     this.createWSSConnection();
   }
 
   public disconnect() {
     this.isClosedCleanly = true;
-    this.clearPingTimeout();
+    this.clearTimeouts();
     this.closeConnection();
   }
 
   ngOnDestroy(): void {
-    this.closeConnection();
+    this.disconnect();
   }
 
   protected abstract get class(): { name: string };
@@ -58,17 +68,30 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
     Logger.log(this.class, 'WSS CONNECTED');
     this.isClosedCleanly = false;
     this.isConnected$.next(true);
+    this.clearTimeouts();
   }
 
   protected closeHandler(event: CloseEvent) {
     this.isConnected$.next(false);
+    this.clearPingTimeout();
 
-    if (event.code === 1000) {
-      Logger.log(this.class, 'WSS CLOSED CORRECTLY');
-      this.isClosedCleanly = true;
-    } else if (!this.isClosedCleanly) {
-      Logger.warn(this.class, 'WSS CLOSED INCORRECTLY');
-      this.tryToReconnect();
+    if (event.code !== 1000) {
+      this.error$.next(event.code);
+    }
+
+    switch (event.code) {
+      case 1000:
+        Logger.log(this.class, 'WSS CLOSED CORRECTLY');
+        this.isClosedCleanly = true;
+        break;
+      case 1006:
+        Logger.error(this.class, 'WSS CLOSED due to 1006', event);
+        this.handleUnableToConnect();
+        break;
+      default:
+        Logger.error(this.class, 'WSS CLOSED INCORRECTLY', event);
+        this.tryToReconnect();
+        break;
     }
   }
 
@@ -77,25 +100,34 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
 
     this.webSocket = this.createWebsocketClient();
 
-    this.webSocket.subscribe({
+    this.webSocketSubscription = this.webSocket.subscribe({
       next: this.nextHandler.bind(this),
       error: this.errorHandler.bind(this),
     });
   }
 
   private createWebsocketClient(): WebSocketSubject<S | C | string> {
+    this.setupObservers();
+
     return webSocket({
       url: this.es.getWebSocketEndpoint(this.url),
       protocol: this.token ? [this.token] : undefined,
       deserializer: this.deserializer.bind(this),
       serializer: this.serializer.bind(this),
-      openObserver: {
-        next: this.openHandler.bind(this),
-      },
-      closeObserver: {
-        next: event => this.closeHandler(event),
-      },
+      openObserver: this.opened$,
+      closeObserver: this.closed$,
     });
+  }
+
+  private setupObservers() {
+    this.opened$?.complete();
+    this.closed$?.complete();
+
+    this.opened$ = new Subject();
+    this.closed$ = new Subject();
+
+    this.opened$.subscribe(this.openHandler.bind(this));
+    this.closed$.subscribe(this.closeHandler.bind(this));
   }
 
   private deserializer(message: MessageEvent<string>): S | C | string {
@@ -112,11 +144,13 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
     return JSON.stringify(message);
   }
 
-  private errorHandler(err: string): void {
-    Logger.error(this.class, `WSS ERROR`, err);
+  private errorHandler(err: ErrorEvent): void {
+    Logger.error(this.class, `WSS ERROR occurred`, err);
   }
 
   private nextHandler(message: S | C | string): void {
+    this.closedCounter = 0; // reset closed counter as message successfully came
+
     if (typeof message === 'string' && message === PING_MESSAGE) {
       this.handlePingMessage();
       return;
@@ -126,12 +160,15 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
   }
 
   private handlePingMessage(): void {
-    this.clearPingTimeout();
+    this.clearTimeouts();
+    this.closedCounter = 0;
     this.sendWSSMessage(PONG_MESSAGE);
 
     this.pingTimeout = setTimeout(() => {
-      this.closeConnection();
-      this.createWSSConnection();
+      Logger.warn(this.class, `WSS PING timeout occurred - disconnecting`);
+
+      this.webSocket?.error({ code: 3005, wasClean: false, reason: 'Disconnected due to lack of ping' });
+      this.isConnected$.next(false);
     }, MAX_PING_AWAITING_TIME);
   }
 
@@ -142,22 +179,59 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
     }
   }
 
-  private closeConnection(): void {
-    if (this.webSocket) {
-      this.webSocket.complete();
-      this.webSocket = null;
+  private clearTimeouts() {
+    this.clearPingTimeout();
+
+    if (this.reconnectTimeout !== undefined) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = undefined;
     }
+
+    if (this.maxReconnectTimeout !== undefined) {
+      clearTimeout(this.maxReconnectTimeout);
+      this.maxReconnectTimeout = undefined;
+    }
+  }
+
+  private closeConnection(): void {
+    this.webSocket?.unsubscribe();
+    this.webSocket?.complete();
+    this.webSocket = null;
+
+    this.webSocketSubscription?.unsubscribe();
+    this.webSocketSubscription = null;
   }
 
   private tryToReconnect(): void {
     if (!this.isClosedCleanly) {
-      setTimeout(() => {
+      this.setMaxReconnectTimeHandler();
+      this.reconnectTimeout = setTimeout(() => {
         if (!this.isClosedCleanly) {
-          this.closedCounter++;
+          Logger.warn(this.class, `WSS Trying to reconnect try no. ${++this.closedCounter}`);
+
           this.closeConnection();
           this.createWSSConnection();
         }
-      }, 5000 * this.closedCounter);
+      }, 2000);
     }
+  }
+
+  private setMaxReconnectTimeHandler() {
+    if (this.reconnectTime && !this.maxReconnectTimeout) {
+      this.maxReconnectTimeout = setTimeout(() => {
+        this.handleUnableToConnect();
+      }, this.reconnectTime);
+    }
+  }
+
+  private handleUnableToConnect() {
+    this.unableToConnect$.next();
+    this.disconnect();
+  }
+
+  private handleTabClosed() {
+    window.onunload = () => {
+      this.disconnect();
+    };
   }
 }

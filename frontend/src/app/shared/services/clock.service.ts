@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AbstractWebsocketService } from '@shared/services/abstract-websocket.service';
 import { Logger } from '@shared/services/logger.service';
-import { merge, Observable, Subscription, takeWhile, timer } from 'rxjs';
+import { filter, merge, Observable, Subscription, takeUntil, takeWhile, timer } from 'rxjs';
 
 import { ClockClientMessage, ClockServerMessage } from '../models/wss.types';
 
@@ -35,18 +35,19 @@ export class ClockService extends AbstractWebsocketService<ClockServerMessage, C
     this.timeSyncerSubscription = this.timeSyncer$.subscribe(() => this.sendWSSMessage(this.getTime()));
   }
 
-  protected override closeHandler(event: CloseEvent) {
-    super.closeHandler(event);
-    this.timeSyncerSubscription?.unsubscribe();
-  }
-
   private get delta(): number {
     return this.timeDelta || 0;
   }
 
   private createTimeSyncer() {
     // 20 quick samples then update every 10 seconds
-    return merge(timer(0, 500).pipe(takeWhile(i => i < 20)), timer(5000, 5000));
+    return merge(
+      timer(0, 500).pipe(
+        takeUntil(this.isConnected$.pipe(filter(isConnected => !isConnected))),
+        takeWhile(i => i < 20)
+      ),
+      timer(5000, 5000)
+    );
   }
 
   private updateDelta(messageTimestamp: number, sentTime: number) {

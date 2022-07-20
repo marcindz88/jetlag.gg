@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, NgZone, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, NgZone, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { NearAirportsList } from '@pg/game/models/airport.types';
@@ -27,6 +27,14 @@ import { ReplaySubject, take, throttleTime } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameCockpitComponent implements OnInit {
+  @HostListener('window:beforeunload', ['$event'])
+  beforeTabClose($event: BeforeUnloadEvent) {
+    $event.preventDefault();
+
+    return ($event.returnValue =
+      'Are you sure you want to exit the game? You will not be able to reconnect to this session');
+  }
+
   readonly player = this.playersService.myPlayer!;
   readonly airports = this.airportsService.airports;
 
