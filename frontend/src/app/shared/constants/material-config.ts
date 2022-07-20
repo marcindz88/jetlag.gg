@@ -5,7 +5,7 @@ import { MAT_TOOLTIP_DEFAULT_OPTIONS, MatTooltipDefaultOptions } from '@angular/
 import { QUEUE_BAR_CONFIG, QUEUE_BAR_DEFAULT_OPTIONS, QueueBarConfig } from 'ngx-mat-queue-bar';
 
 export const notificationSnackbarConfig: MatSnackBarConfig = {
-  duration: 10000,
+  duration: 6000,
   horizontalPosition: 'center',
   verticalPosition: 'top',
   panelClass: 'notification-snack-bar-container',

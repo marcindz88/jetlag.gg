@@ -1,6 +1,12 @@
+:host {
+  max-width: 100%;
+}
+
 .table-wrapper {
   background-color: var(--card-background-medium-color);
   height: calc(100% - 40px);
+  max-width: 100%;
+  overflow-x: auto;
 
   & &__no-results {
     padding: 0 10px;

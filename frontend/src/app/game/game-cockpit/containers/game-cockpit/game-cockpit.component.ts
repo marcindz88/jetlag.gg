@@ -230,9 +230,12 @@ export class GameCockpitComponent implements OnInit {
   }
 
   private showHelpSnackbar() {
-    this.notificationService.openNotification({
-      text: 'You can access help and steering info by pressing [H]',
-      icon: 'info',
-    });
+    this.notificationService.openNotification(
+      {
+        text: 'You can access help and steering info by pressing [H]',
+        icon: 'info',
+      },
+      { duration: 10000 }
+    );
   }
 }
