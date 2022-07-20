@@ -1,9 +1,16 @@
+@import 'src/styles/breakpoints';
+
 .controls-container {
   column-gap: 10px;
   display: grid;
   grid-template-columns: repeat(3, auto);
 
+  @include media-breakpoint-down(md) {
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+  }
+
   p {
-    font-size: 12px;
+    font-size: 0.8rem;
   }
 }

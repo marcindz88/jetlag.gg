@@ -4,7 +4,8 @@
     <table
       class="table"
       [ngClass]="{ 'table--scrollable': scrollable, 'table--large': large, 'table--background': background }"
-      (scroll)="emitScrollEvent($event)">
+      (scroll)="emitScrollEvent($event)"
+      (wheel)="$event.stopPropagation()">
       <thead>
         <ng-container *ngTemplateOutlet="headerTemplate"></ng-container>
       </thead>

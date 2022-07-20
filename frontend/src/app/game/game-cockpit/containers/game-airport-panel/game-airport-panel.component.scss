@@ -1,3 +1,4 @@
+@import 'src/styles/breakpoints';
 @import 'src/styles/variables';
 
 :host {
@@ -12,11 +13,10 @@
   flex-direction: column;
   height: min(550px, 80vh);
   padding: 20px;
-  width: min(650px, 85vw);
+  width: min(650px, calc(85vw - 40px));
 
   & &__description {
-    font-size: 14px;
-    line-height: 20px;
+    line-height: 1.6rem;
   }
 
   & &__content {
@@ -29,6 +29,11 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     margin-top: 20px;
+
+    @include media-breakpoint-down(md) {
+      grid-template-columns: 1fr;
+      row-gap: 10px;
+    }
   }
 }
 
@@ -59,6 +64,11 @@
 
     pg-shipment-details {
       height: 100%;
+    }
+
+    @include media-breakpoint-down(md) {
+      grid-template-columns: 1fr;
+      row-gap: 10px;
     }
   }
 }

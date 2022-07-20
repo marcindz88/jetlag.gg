@@ -41,6 +41,7 @@ export class TableComponent<T> implements OnInit {
   emitScrollEvent(event: Event) {
     if (this.scrollable) {
       this.tableScroll.emit(event.target as HTMLTableElement);
+      event.stopPropagation();
     }
   }
 }

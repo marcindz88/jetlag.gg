@@ -1,3 +1,5 @@
+@import 'src/styles/breakpoints';
+
 :host {
   display: block;
   height: fit-content;
@@ -10,7 +12,7 @@
   flex-direction: column;
   height: min(550px, 80vh);
   padding: 20px;
-  width: min(650px, 85vw);
+  width: min(650px, calc(85vw - 40px));
 
   & &__content {
     overflow-y: auto;
@@ -20,5 +22,9 @@
     column-gap: 10px;
     display: grid;
     grid-template-columns: repeat(3, auto);
+
+    @include media-breakpoint-down(md) {
+      grid-template-columns: repeat(2, auto);
+    }
   }
 }

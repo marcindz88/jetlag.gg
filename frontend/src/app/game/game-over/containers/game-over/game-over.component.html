@@ -30,7 +30,7 @@
     <ng-template #loader><pg-loader></pg-loader></ng-template>
   </div>
 
-  <div class="game-over__actions">
+  <div class="game-over__actions actions">
     <button *ngIf="!isShareOn; else shareButtons" (click)="share()">Share your result</button>
     <ng-template #shareButtons
       ><share-buttons
@@ -40,6 +40,8 @@
         [title]="'Jetlag.gg'"
         [theme]="'game'"></share-buttons
     ></ng-template>
-    <button (click)="restart()">Play again</button>
+    <div class="actions__restart-container">
+      <button (click)="restart()">Play again</button>
+    </div>
   </div>
 </pg-card>

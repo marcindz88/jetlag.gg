@@ -7,7 +7,7 @@
   width: 100%;
 
   & &__date {
-    min-width: 110px;
+    min-width: 7rem;
     width: 120px;
   }
 
@@ -20,12 +20,12 @@
   }
 
   & &__time {
-    min-width: 60px;
+    min-width: 5rem;
     width: 120px;
   }
 
   & &__death-cause {
-    min-width: 100px;
+    min-width: 6rem;
     width: 120px;
   }
 }
