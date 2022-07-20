@@ -40,6 +40,7 @@ export const getPositionWithUpdatedFuel = (
       positionUpdate.tank_level,
       positionUpdate.fuel_consumption
     ),
+    velocity: position.velocity || positionUpdate.velocity,
     fuel_consumption: positionUpdate.fuel_consumption,
     fuel_efficiency: positionUpdate.velocity / positionUpdate.fuel_consumption,
     timestamp: currentTimestamp,
