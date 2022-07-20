@@ -85,7 +85,7 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
         this.isClosedCleanly = true;
         break;
       case 1006:
-        Logger.error(this.class, 'WSS CLOSED due to 1006', event);
+        Logger.error(this.class, 'WSS CLOSED due to internal connection error - UNABLE TO CONNECT', event);
         this.handleUnableToConnect();
         break;
       default:

@@ -41,12 +41,8 @@ export class ClockService extends AbstractWebsocketService<ClockServerMessage, C
 
   private createTimeSyncer() {
     // 20 quick samples then update every 10 seconds
-    return merge(
-      timer(0, 500).pipe(
-        takeUntil(this.isConnected$.pipe(filter(isConnected => !isConnected))),
-        takeWhile(i => i < 20)
-      ),
-      timer(5000, 5000)
+    return merge(timer(0, 500).pipe(takeWhile(i => i < 20)), timer(5000, 5000)).pipe(
+      takeUntil(this.isConnected$.pipe(filter(isConnected => !isConnected)))
     );
   }
 

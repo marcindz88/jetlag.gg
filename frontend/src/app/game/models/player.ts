@@ -116,6 +116,10 @@ export class Player {
   }
 
   endCrashingPlane() {
+    if (this.isCrashed) {
+      return;
+    }
+
     this.isCrashed = true;
     this.isCrashing = false;
     this.destroy();
