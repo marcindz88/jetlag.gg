@@ -76,6 +76,16 @@ def join_game_session(token: str = Header(default="")):
     return {**player.serialized, "token": player.token}
 
 
+@app.post("/api/game/exit/")
+def exit_game_session(token: str = Header(default="")):
+    persistent_player = storage.get_player_by_token(token=token)
+
+    if not persistent_player:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    game_session.exit_player(token=token)
+
+
 @app.get("/api/game/leaderboard/")
 def leaderboard(
     limit: int = Query(default=10, ge=1, le=100),

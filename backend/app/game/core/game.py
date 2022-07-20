@@ -403,6 +403,16 @@ class GameSession:
         )
         self.remove_player(player=player)
 
+    def exit_player(self, token: str):
+        player = None
+        for p in self._players.values():
+            if p.token == token:
+                player = p
+                break
+        if not player:
+            return
+        self.pronounce_player_dead(player=player, cause=DeathCause.EXITED)
+
     def update_player_position(self, player: Player, timestamp: int, velocity: int, bearing: float):
         logging.info(f"update_player_position {player.id} timestamp: {timestamp} V={velocity} bearing={bearing}")
         last_position = player.position

@@ -63,6 +63,10 @@ required before creating ws connection
 "token" header is expected to be present in the request
 > POST /api/game/join/
 
+### Close a game session
+"token" header is expected to be present in the request
+> POST /api/game/exit/
+
 ### Establish a websocket connection 
 only 1 connection per user at a time is allowed
 > GET /ws/
