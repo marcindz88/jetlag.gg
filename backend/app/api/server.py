@@ -13,7 +13,7 @@ from app.game.events import dict_to_event
 from app.game.exceptions import PlayerNotFound
 from app.game.persistence.redis import RedisPersistentStorage
 from app.tools.timestamp import timestamp_now
-from app.tools.websocket_server import StarletteWebsocketServer, WebSocketSession
+from app.tools.websocket_server import StarletteWebsocketConnectionHandler, WebSocketSession
 
 
 logging.getLogger().setLevel(logging.INFO)
@@ -76,6 +76,16 @@ def join_game_session(token: str = Header(default="")):
     return {**player.serialized, "token": player.token}
 
 
+@app.post("/api/game/exit/")
+def exit_game_session(token: str = Header(default="")):
+    persistent_player = storage.get_player_by_token(token=token)
+
+    if not persistent_player:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    game_session.exit_player(token=token)
+
+
 @app.get("/api/game/leaderboard/")
 def leaderboard(
     limit: int = Query(default=10, ge=1, le=100),
@@ -106,9 +116,9 @@ def leaderboard_player_last_games(
     return [g.serialized for g in games]
 
 
-class GameWebsocketServer(StarletteWebsocketServer):
+class GameWebsocketConnectionHandler(StarletteWebsocketConnectionHandler):
     def validate_session(self, ws_session: WebSocketSession):
-        token = ws_session.connection.headers.get("sec-websocket-protocol", "")
+        token = ws_session.get_headers().get("sec-websocket-protocol", "")
         try:
             player = game_session.get_player_by_token(token)
         except exceptions.PlayerNotFound:
@@ -148,8 +158,8 @@ class GameWebsocketServer(StarletteWebsocketServer):
 
 @app.websocket("/ws/")
 async def websocket_endpoint(websocket: WebSocket):
-    server = GameWebsocketServer()
-    await server.handler(websocket)
+    connection = GameWebsocketConnectionHandler()
+    await connection.handler(websocket)
 
 
 @app.websocket("/clock/")

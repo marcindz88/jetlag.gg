@@ -1,6 +1,6 @@
 const defaultServerConfig = {
   MAX_PLAYERS: 16,
-  PLAYER_TIME_TO_CONNECT: 5000, // 5 seconds
+  PLAYER_TIME_TO_CONNECT: 10000, // 10 seconds
   MAX_SHIPMENTS_IN_GAME: 40,
   MIN_VELOCITY: 0,
   MAX_VELOCITY: 2000000, // 2M km/h

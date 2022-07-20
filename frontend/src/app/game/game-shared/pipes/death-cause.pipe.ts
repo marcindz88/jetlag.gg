@@ -27,6 +27,8 @@ export class DeathCausePipe implements PipeTransform {
             return 'to small velocity';
           case DeathCauseEnum.DISCONNECTED:
             return 'lack of connection';
+          case DeathCauseEnum.EXITED:
+            return 'left the game';
         }
         break;
       case 'short':
@@ -37,6 +39,8 @@ export class DeathCausePipe implements PipeTransform {
             return 'low speed';
           case DeathCauseEnum.DISCONNECTED:
             return 'disconnected';
+          case DeathCauseEnum.EXITED:
+            return 'left the game';
         }
         break;
       case 'message1stperson':
@@ -47,6 +51,8 @@ export class DeathCausePipe implements PipeTransform {
             return 'Next time better accelerate!';
           case DeathCauseEnum.DISCONNECTED:
             return 'This plane had no autopilot!';
+          case DeathCauseEnum.EXITED:
+            return 'You left the game';
         }
         break;
       case 'message3rdperson':
@@ -57,6 +63,8 @@ export class DeathCausePipe implements PipeTransform {
             return 'tried to land with no landing gear';
           case DeathCauseEnum.DISCONNECTED:
             return 'forgot his plane has no autopilot';
+          case DeathCauseEnum.EXITED:
+            return 'left the game';
         }
         break;
     }

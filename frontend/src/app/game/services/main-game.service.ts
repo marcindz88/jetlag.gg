@@ -16,11 +16,11 @@ export class MainGameService {
   startGame(playerId: string, playerToken: string) {
     this.playersService.setPlayersUpdateHandler(playerId);
     this.airportService.setAirportsUpdateHandler();
-    this.mainWebsocketService.setupGameWebsocket(playerToken);
+    this.mainWebsocketService.connect(playerToken);
   }
 
   endGame(): void {
-    this.mainWebsocketService.closeGameWebsocket();
+    this.mainWebsocketService.disconnect();
     this.airportService.resetAll();
     this.playersService.resetAll();
   }
