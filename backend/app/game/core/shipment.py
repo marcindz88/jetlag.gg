@@ -43,7 +43,7 @@ class Shipment:
     def shipment_names():
         return [
             "Mail",
-            "Garbage from Aliexpress",
+            "Aliexpress Garbage",
             "Masks & Vaccines",
             "Overpriced GPUs",
             "Futomaki",

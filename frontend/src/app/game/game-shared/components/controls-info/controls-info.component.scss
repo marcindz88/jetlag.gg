@@ -5,7 +5,7 @@
   display: grid;
   grid-template-columns: repeat(3, auto);
 
-  @include media-breakpoint-down(md) {
+  @include media-breakpoint-down(sm) {
     grid-template-columns: 1fr;
     row-gap: 10px;
   }

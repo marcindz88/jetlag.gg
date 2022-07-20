@@ -1,3 +1,5 @@
+@import 'src/styles/breakpoints';
+
 :host {
   align-items: center;
   display: flex;
@@ -29,6 +31,11 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   padding-top: 10px;
+
+  @include media-breakpoint-down(sm) {
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+  }
 
   & &__restart-container {
     align-items: flex-end;

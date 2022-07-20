@@ -30,7 +30,7 @@
     grid-template-columns: repeat(2, 1fr);
     margin-top: 20px;
 
-    @include media-breakpoint-down(md) {
+    @include media-breakpoint-down(sm) {
       grid-template-columns: 1fr;
       row-gap: 10px;
     }
@@ -62,13 +62,13 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
 
-    pg-shipment-details {
-      height: 100%;
-    }
-
-    @include media-breakpoint-down(md) {
+    @include media-breakpoint-down(sm) {
       grid-template-columns: 1fr;
       row-gap: 10px;
+    }
+
+    pg-shipment-details {
+      height: 100%;
     }
   }
 }

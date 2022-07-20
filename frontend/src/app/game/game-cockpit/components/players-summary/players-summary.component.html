@@ -6,7 +6,7 @@
   [updateTrigger$]="playersService.changed$">
 </pg-table>
 <ng-template #player_row let-player="data">
-  <tr>
+  <tr [class.my-player-row]="player.isMyPlayer">
     <td class="status">
       <span class="icon icon--strong" [class.icon--filled]="player.connected">circle</span>
     </td>
