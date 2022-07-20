@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, NgZone, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { GameCockpitHttpService } from '@pg/game/game-cockpit/services/game-cockpit-http.service';
 import { NearAirportsList } from '@pg/game/models/airport.types';
 import { KeyEventEnum } from '@pg/game/models/keyboard.types';
 import { PlaneExtendedPosition } from '@pg/game/models/player.types';
@@ -35,6 +36,11 @@ export class GameCockpitComponent implements OnInit {
       'Are you sure you want to exit the game? You will not be able to reconnect to this session');
   }
 
+  @HostListener('window:unload')
+  tabClose() {
+    this.gameCockpitHttpService.exitGame();
+  }
+
   readonly player = this.playersService.myPlayer!;
   readonly airports = this.airportsService.airports;
 
@@ -54,6 +60,7 @@ export class GameCockpitComponent implements OnInit {
     private airportsService: AirportsService,
     private playersService: PlayersService,
     private notificationService: NotificationService,
+    private gameCockpitHttpService: GameCockpitHttpService,
     private clockService: ClockService,
     private ngZone: NgZone
   ) {}

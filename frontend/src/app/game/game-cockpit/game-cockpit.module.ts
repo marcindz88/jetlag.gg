@@ -14,6 +14,7 @@ import { SharedModule } from '@shared/shared.module';
 
 import { GameSharedModule } from '../game-shared/game-shared.module';
 import { PlayersSummaryComponent } from './components/players-summary/players-summary.component';
+import { GameCockpitHttpService } from './services/game-cockpit-http.service';
 
 @NgModule({
   declarations: [
@@ -27,5 +28,6 @@ import { PlayersSummaryComponent } from './components/players-summary/players-su
     GameAirportPanelComponent,
   ],
   imports: [CommonModule, SharedModule, GameCockpitRoutingModule, NgtRepeatModule, MatTooltipModule, GameSharedModule],
+  providers: [GameCockpitHttpService],
 })
 export class GameCockpitModule {}
