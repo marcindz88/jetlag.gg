@@ -14,3 +14,13 @@
     font-size: 0.8rem;
   }
 }
+
+.controls-header {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+
+  button {
+    width: 10rem;
+  }
+}

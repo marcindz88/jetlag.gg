@@ -1,5 +1,13 @@
-<h3>Controls</h3>
-<div class="controls-container">
+<div class="controls-header">
+  <h3>Controls</h3>
+  <button class="button--small" (click)="isDesktopMode = !isDesktopMode">
+    <ng-container *ngIf="!isDesktopMode; else mobileButton"
+      >Desktop version <span class="icon">computer</span></ng-container
+    >
+    <ng-template #mobileButton>Mobile version <span class="icon">smartphone</span></ng-template>
+  </button>
+</div>
+<div class="controls-container" *ngIf="isDesktopMode; else mobileDescription">
   <div>
     <h4>Plane steering</h4>
     <p>
@@ -30,3 +38,28 @@
     </p>
   </div>
 </div>
+
+<ng-template #mobileDescription>
+  <div class="controls-container">
+    <div>
+      <h4>Plane steering (Touch and hold part of screen)</h4>
+      <p>
+        Accelerate - upper-center part of screen<br />
+        Decelerate - bottom-center part of screen<br />
+        Turn left - left part of screen<br />
+        Turn right - right part of screen
+      </p>
+    </div>
+    <div>
+      <h4>Camera steering</h4>
+      <p>Select focused player by clicking in the players table (top-right corner)</p>
+    </div>
+    <div>
+      <h4>Airport controls</h4>
+      <p>
+        Land on the airport - touch and hold on the center of the screen<br />
+        Other functionalities are easily accessible by buttons
+      </p>
+    </div>
+  </div>
+</ng-template>

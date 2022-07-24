@@ -3,10 +3,10 @@ import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { GameCockpitHttpService } from '@pg/game/game-cockpit/services/game-cockpit-http.service';
 import { NearAirportsList } from '@pg/game/models/airport.types';
-import { KeyEventEnum } from '@pg/game/models/keyboard.types';
+import { KeyEventEnum } from '@pg/game/models/keyboard-events.types';
 import { PlaneExtendedPosition } from '@pg/game/models/player.types';
 import { AirportsService } from '@pg/game/services/airports.service';
-import { KeyboardControlsService } from '@pg/game/services/keyboard-controls.service';
+import { KeyboardAndTouchControlsService } from '@pg/game/services/keyboard-and-touch-controls.service';
 import { PlayersService } from '@pg/game/services/players.service';
 import { determineAirportsInProximity } from '@pg/game/utils/airport-utils';
 import { isTankLevelLow } from '@pg/game/utils/fuel-utils';
@@ -56,7 +56,7 @@ export class GameCockpitComponent implements OnInit {
   constructor(
     private cdr: ChangeDetectorRef,
     private router: Router,
-    private keyboardControlsService: KeyboardControlsService,
+    private keyboardControlsService: KeyboardAndTouchControlsService,
     private airportsService: AirportsService,
     private playersService: PlayersService,
     private notificationService: NotificationService,
@@ -232,8 +232,9 @@ export class GameCockpitComponent implements OnInit {
   private showHelpSnackbar() {
     this.notificationService.openNotification(
       {
-        text: 'You can access help and steering info by pressing [H]',
+        text: 'You can access help and steering info by pressing [H] or clicking here',
         icon: 'info',
+        clickAction: () => this.keyboardControlsService.simulateKeyPress(KeyEventEnum.HELP),
       },
       { duration: 10000 }
     );

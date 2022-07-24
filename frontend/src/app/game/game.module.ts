@@ -10,11 +10,11 @@ import { SharedModule } from '@shared/shared.module';
 
 import { GameComponent } from './game.component';
 import { GameRoutingModule } from './game-routing.module';
-import { KeyboardControlsService } from './services/keyboard-controls.service';
+import { KeyboardAndTouchControlsService } from './services/keyboard-and-touch-controls.service';
 
 @NgModule({
   declarations: [GameComponent],
   imports: [CommonModule, GameRoutingModule, SharedModule, Game3dModule, NgtCanvasModule],
-  providers: [KeyboardControlsService, MainGameService, GameWebsocketService, PlayersService, AirportsService],
+  providers: [KeyboardAndTouchControlsService, MainGameService, GameWebsocketService, PlayersService, AirportsService],
 })
 export class GameModule {}

@@ -6,4 +6,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrls: ['controls-info.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ControlsInfoComponent {}
+export class ControlsInfoComponent {
+  isDesktopMode = true;
+}

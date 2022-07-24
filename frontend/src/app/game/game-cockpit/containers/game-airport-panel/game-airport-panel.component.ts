@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } 
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Airport } from '@pg/game/models/airport';
 import { Shipment } from '@pg/game/models/airport.types';
-import { KeyEventEnum } from '@pg/game/models/keyboard.types';
+import { KeyEventEnum } from '@pg/game/models/keyboard-events.types';
 import { AirportsService } from '@pg/game/services/airports.service';
-import { KeyboardControlsService } from '@pg/game/services/keyboard-controls.service';
+import { KeyboardAndTouchControlsService } from '@pg/game/services/keyboard-and-touch-controls.service';
 import { ClientMessageTypeEnum } from '@shared/models/wss.types';
 import { CONFIG } from '@shared/services/config.service';
 import { Subject } from 'rxjs';
@@ -32,7 +32,7 @@ export class GameAirportPanelComponent implements OnInit {
   readonly toggleRefuelling$ = new Subject<void>();
 
   constructor(
-    private keyboardControlsService: KeyboardControlsService,
+    private keyboardControlsService: KeyboardAndTouchControlsService,
     private airportsService: AirportsService,
     private cdr: ChangeDetectorRef
   ) {}

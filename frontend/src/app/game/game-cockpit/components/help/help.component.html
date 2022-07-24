@@ -1,5 +1,10 @@
 <pg-card class="help">
-  <h2>Help and FAQ</h2>
+  <div class="help__header header">
+    <h2>Help and FAQ</h2>
+    <button class="header__button button--medium" (click)="closed.emit()">
+      <span class="icon">close</span>
+    </button>
+  </div>
   <div class="help__content" (wheel)="$event.stopPropagation()">
     <pg-game-description></pg-game-description>
     <pg-controls-info></pg-controls-info>

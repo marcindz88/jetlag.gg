@@ -103,11 +103,12 @@ class GameSession:
                 target_bot_count = max(self.FILL_GAME_WITH_BOTS_TILL - real_players_count, 0)
 
             delta = target_bot_count - bot_players_count
-            for _ in range(abs(delta)):
-                if delta > 0:
+
+            if delta > 0:
                     self.increase_bot_count()
-                else:
+            if delta < 0:
                     self.decrease_bot_count()
+
             time.sleep(1)
 
     def increase_bot_count(self):

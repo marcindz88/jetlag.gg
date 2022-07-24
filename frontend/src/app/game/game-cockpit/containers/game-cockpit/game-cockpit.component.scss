@@ -15,6 +15,7 @@
     text-align: right;
     top: 35px;
     width: fit-content;
+    z-index: 10;
   }
 
   & &__stats {
@@ -51,7 +52,7 @@
     position: absolute;
     right: 0;
     top: 0;
-    z-index: 10;
+    z-index: 12;
   }
 
   & &__players-summary {
@@ -70,19 +71,32 @@
   position: absolute;
   right: 0;
   top: 0;
+  z-index: 12;
 }
 
 @include media-breakpoint-down(xs) {
   .player-cockpit {
     & &__compass,
-    & &__airports,
-    & &__players-summary {
+    & &__airports {
       display: none;
     }
 
     & &__shipment {
       left: unset;
       margin: 12px;
+    }
+
+    & &__velocity {
+      margin: 0 20px;
+    }
+  }
+}
+
+@media (max-height: 400px) {
+  .player-cockpit {
+    & &__compass,
+    & &__airports {
+      display: none;
     }
   }
 }

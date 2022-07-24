@@ -3,16 +3,15 @@ import { NgtStore } from '@angular-three/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Airport } from '@pg/game/models/airport';
 import { CameraModesEnum } from '@pg/game/models/gane.enums';
+import { KeyEventEnum } from '@pg/game/models/keyboard-events.types';
 import { Player } from '@pg/game/models/player';
 import { AirportsService } from '@pg/game/services/airports.service';
+import { KeyboardAndTouchControlsService } from '@pg/game/services/keyboard-and-touch-controls.service';
 import { PlayersService } from '@pg/game/services/players.service';
 import { CONFIG } from '@shared/services/config.service';
 import { LoaderService } from '@shared/services/loader.service';
 import { filter, fromEvent, take } from 'rxjs';
 import { DirectionalLight, PerspectiveCamera } from 'three';
-
-import { KeyEventEnum } from '../../../models/keyboard.types';
-import { KeyboardControlsService } from '../../../services/keyboard-controls.service';
 
 @UntilDestroy()
 @Component({
@@ -35,7 +34,7 @@ export class GameSceneComponent {
   isEarthRendered = false;
 
   constructor(
-    private keyboardControlsService: KeyboardControlsService,
+    private keyboardControlsService: KeyboardAndTouchControlsService,
     private playersService: PlayersService,
     private airportsService: AirportsService,
     private cdr: ChangeDetectorRef,
@@ -70,17 +69,26 @@ export class GameSceneComponent {
 
   private setupPlayersChanges() {
     this.playersService.changed$.pipe(untilDestroyed(this)).subscribe(() => {
+      // Already initially setup
       if (this.myPlayer || !this.playersService.myPlayer) {
         // Focused player is no longer in the game
         if (this.focusedPlayerId && !this.players.has(this.focusedPlayerId)) {
           this.focusOnMyPlayer();
+          this.cdr.markForCheck();
         }
         return;
       }
+
+      // Only first time
       this.myPlayer = this.playersService.myPlayer;
       this.focusOnMyPlayer();
       this.setupCameraControls();
       this.cdr.markForCheck();
+    });
+
+    this.playersService.playerFocus$.pipe(untilDestroyed(this)).subscribe(playerId => {
+      this.focusedPlayerId = playerId;
+      this.cameraMode = CameraModesEnum.FOLLOW;
     });
 
     this.playersService.reset$.pipe(untilDestroyed(this)).subscribe(() => {

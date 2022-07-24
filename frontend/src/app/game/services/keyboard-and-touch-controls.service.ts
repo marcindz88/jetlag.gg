@@ -1,17 +1,24 @@
 import { Injectable } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { filterByTouchId, mapToTouch } from '@pg/game/utils/touch-utils';
+import { Logger } from '@shared/services/logger.service';
 import { filter, fromEvent, merge, repeat, Subject, switchMap, take, takeUntil, timer } from 'rxjs';
 
-import { KeyEventEnum } from '../models/keyboard.types';
+import { KeyEventEnum, touchEventMapper } from '../models/keyboard-events.types';
 
 @UntilDestroy()
 @Injectable()
-export class KeyboardControlsService {
-  keyEvent$ = new Subject<KeyEventEnum>();
+export class KeyboardAndTouchControlsService {
+  private keyEvent$ = new Subject<KeyEventEnum>();
 
   private windowBlurEvent$ = fromEvent(window, 'blur').pipe(untilDestroyed(this));
   private keyDownEvent$ = fromEvent<KeyboardEvent>(document, 'keydown').pipe(untilDestroyed(this));
   private keyUpEvent$ = fromEvent<KeyboardEvent>(document, 'keyup').pipe(untilDestroyed(this));
+
+  private touchStartEvent$ = fromEvent<TouchEvent>(document, 'touchstart').pipe(untilDestroyed(this));
+  private touchEndEvent$ = fromEvent<TouchEvent>(document, 'touchend').pipe(untilDestroyed(this));
+  private touchCancelEvent$ = fromEvent<TouchEvent>(document, 'touchcancel').pipe(untilDestroyed(this));
+  private touchMoveEvent$ = fromEvent<TouchEvent>(document, 'touchmove').pipe(untilDestroyed(this));
 
   constructor() {
     // Quick events
@@ -31,6 +38,13 @@ export class KeyboardControlsService {
     this.handleKeyEvent(KeyEventEnum.HELP, ['h', 'H']);
     this.handleKeyEvent(KeyEventEnum.LEFT, ['a', 'A', 'ArrowLeft', 'Left']);
     this.handleKeyEvent(KeyEventEnum.RIGHT, ['d', 'D', 'ArrowRight', 'Right']);
+
+    // Touch events
+    this.handleTouchEvents(KeyEventEnum.FORWARD, 200);
+    this.handleTouchEvents(KeyEventEnum.BACKWARD, 200);
+    this.handleTouchEvents(KeyEventEnum.TURN_LEFT, 200);
+    this.handleTouchEvents(KeyEventEnum.TURN_RIGHT, 200);
+    this.handleTouchEvents(KeyEventEnum.LAND_OR_TAKE_OFF);
   }
 
   setupKeyEvent<T>(type: KeyEventEnum, destroyBase: T, handleFunction: () => void) {
@@ -42,6 +56,10 @@ export class KeyboardControlsService {
       .subscribe(handleFunction);
   }
 
+  simulateKeyPress(type: KeyEventEnum) {
+    this.keyEvent$.next(type);
+  }
+
   private handleKeyEvent(type: KeyEventEnum, keyCodes: string[], duration = 500) {
     this.keyDownEvent$
       .pipe(
@@ -51,6 +69,43 @@ export class KeyboardControlsService {
           timer(0, duration).pipe(
             takeUntil(
               merge(this.windowBlurEvent$, this.keyUpEvent$.pipe(filter(event => keyCodes.includes(event.key))))
+            )
+          )
+        ),
+        repeat()
+      )
+      .subscribe(() => this.keyEvent$.next(type));
+  }
+
+  private handleTouchEvents(type: KeyEventEnum, duration = 500) {
+    const location = touchEventMapper[type];
+
+    if (!location) {
+      Logger.error(KeyboardAndTouchControlsService, 'This key event is not supported by touch screens');
+      return;
+    }
+
+    // Allow only touches started correctly
+    merge(this.touchStartEvent$, this.touchMoveEvent$)
+      .pipe(
+        // Continue only if matching touch location
+        mapToTouch(location),
+        filter(Boolean),
+        // Take one (later repeated, when this handler finishes)
+        take(1),
+        switchMap(touch =>
+          timer(0, duration).pipe(
+            takeUntil(
+              merge(
+                this.windowBlurEvent$,
+                this.touchEndEvent$.pipe(filterByTouchId(touch.identifier)),
+                this.touchCancelEvent$.pipe(filterByTouchId(touch.identifier)),
+                // End only if moved so that it is outside of required area
+                this.touchMoveEvent$.pipe(
+                  mapToTouch(location),
+                  filter(touch => !touch)
+                )
+              )
             )
           )
         ),
