@@ -9,10 +9,6 @@ import { degToRad } from 'three/src/math/MathUtils';
 })
 export class CompassComponent {
   @Input() set bearing(bearing: number) {
-    if (!bearing) {
-      return;
-    }
-
     this.currentBearing = bearing;
     // If view rendered but no active animation is happening
     if (this.compassSeparatorsElement && !this.animationFrameId) {
@@ -20,7 +16,8 @@ export class CompassComponent {
       return;
     }
 
-    if (!this.compassSeparatorsElement) {
+    // If view not rendered set initial transformations
+    if (!this.compassSeparatorsElement && bearing !== 0) {
       this.currentCompassAngle = this.currentBearing;
       this.setCurrentAngleSinAndCos();
 
@@ -69,14 +66,15 @@ export class CompassComponent {
 
   private currentBearing = 0;
 
+  private currentCompassAngle = 0;
+  private currentCompassAngleCos = 1;
+  private currentCompassAngleSin = 0;
+
   private compassSeparatorsElement?: HTMLElement;
   private compassDirectionsElements?: HTMLElement[];
   private compassAngleLabelsElements?: HTMLElement[];
 
   private animationFrameId?: number;
-  private currentCompassAngle = 0;
-  private currentCompassAngleCos = 1;
-  private currentCompassAngleSin = 0;
 
   constructor(private ngZone: NgZone) {}
 
