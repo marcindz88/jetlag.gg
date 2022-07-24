@@ -8,8 +8,8 @@
 }
 
 .compass {
-  height: 18rem;
-  width: 18rem;
+  height: calc(13rem + 20px);
+  width: calc(13rem + 20px);
 
   & &__separators {
     backface-visibility: hidden;
