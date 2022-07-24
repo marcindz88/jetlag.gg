@@ -9,6 +9,6 @@
     - > curl -L https://npmjs.org/install.sh | sudo sh
   
 ### Local build
-  - >npm install #(one time after every change of packages)
+  - >npm install --legacy-peer-deps #(one time after every change of packages)
   - >npm start
   - open browser on localhost:4200

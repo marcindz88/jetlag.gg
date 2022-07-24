@@ -8,7 +8,7 @@ import { AirportsService } from '@pg/game/services/airports.service';
 import { PlayersService } from '@pg/game/services/players.service';
 import { CONFIG } from '@shared/services/config.service';
 import { LoaderService } from '@shared/services/loader.service';
-import { take } from 'rxjs';
+import { filter, fromEvent, take } from 'rxjs';
 import { DirectionalLight, PerspectiveCamera } from 'three';
 
 import { KeyEventEnum } from '../../../models/keyboard.types';
@@ -26,6 +26,7 @@ export class GameSceneComponent {
   readonly players = this.playersService.players;
   readonly playersSorted$ = this.playersService.playersSorted$;
   readonly airports = this.airportsService.airports;
+  readonly wheelEvent = fromEvent<WheelEvent>(window, 'wheel');
 
   camera?: PerspectiveCamera;
   myPlayer?: Player;
@@ -52,6 +53,7 @@ export class GameSceneComponent {
     this.setupAirportsChanges();
     this.setupPlayersChanges();
     this.setupCameraLight();
+    this.setupZoomHandler();
   }
 
   private teleportPlaneToCorrectPosition() {
@@ -149,5 +151,26 @@ export class GameSceneComponent {
       this.camera.add(light);
       this.ngtStore.get(s => s.scene).add(this.camera);
     });
+  }
+
+  private setupZoomHandler() {
+    this.wheelEvent
+      .pipe(
+        untilDestroyed(this),
+        filter(() => !!this.camera && this.cameraMode !== CameraModesEnum.FREE)
+      )
+      .subscribe((event: WheelEvent) => {
+        CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER += event.deltaY * CONFIG.CAMERA_SCROLL_ZOOM;
+
+        if (CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER > CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER_MAX) {
+          CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER = CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER_MAX;
+          return;
+        }
+
+        if (CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER < CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER_MIN) {
+          CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER = CONFIG.CAMERA_FOLLOWING_HEIGHT_MULTIPLIER_MIN;
+          return;
+        }
+      });
   }
 }

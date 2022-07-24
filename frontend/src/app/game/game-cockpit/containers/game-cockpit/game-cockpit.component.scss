@@ -1,8 +1,10 @@
+@import 'src/styles/breakpoints';
+
 .player-cockpit {
   & &__velocity {
     color: var(--card-text-color);
     font-family: Orbitron, sans-serif;
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: bold;
     height: min-content;
     left: 0;
@@ -11,7 +13,7 @@
     position: absolute;
     right: 0;
     text-align: right;
-    top: 60px;
+    top: 35px;
     width: fit-content;
   }
 
@@ -68,4 +70,19 @@
   position: absolute;
   right: 0;
   top: 0;
+}
+
+@include media-breakpoint-down(xs) {
+  .player-cockpit {
+    & &__compass,
+    & &__airports,
+    & &__players-summary {
+      display: none;
+    }
+
+    & &__shipment {
+      left: unset;
+      margin: 12px;
+    }
+  }
 }

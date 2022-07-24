@@ -1,9 +1,9 @@
 @use 'src/styles/variables';
 
 :host {
-  background: var(--card-background-color);
+  background-color: var(--card-background-darkest-color);
   color: var(--card-text-color);
   display: block;
   height: 100%;
-  margin: 20px;
+  margin: 1.2rem;
 }

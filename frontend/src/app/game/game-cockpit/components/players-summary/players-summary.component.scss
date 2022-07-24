@@ -1,7 +1,13 @@
 .nickname {
-  min-width: 130px;
+  min-width: 6rem;
 }
 
 .score {
-  min-width: 80px;
+  min-width: 3.5rem;
+}
+
+.my-player-row {
+  background-color: var(--accent-darker-color) !important;
+  color: var(--button-text-color);
+  font-weight: bold;
 }

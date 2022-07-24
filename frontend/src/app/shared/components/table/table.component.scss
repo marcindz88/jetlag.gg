@@ -1,7 +1,12 @@
+:host {
+  max-width: 100%;
+}
+
 .table-wrapper {
   background-color: var(--card-background-medium-color);
   height: calc(100% - 40px);
-  margin: 20px;
+  max-width: 100%;
+  overflow-x: auto;
 
   & &__no-results {
     padding: 0 10px;
@@ -26,18 +31,17 @@
 
       th,
       td {
-        padding-left: 6px;
+        padding-left: 0.3rem;
         text-align: center;
 
         &:last-of-type {
-          padding-right: 6px;
+          padding-right: 0.3rem;
         }
       }
-
     }
 
     tbody tr:nth-of-type(2n + 1) {
-      background-color: var(--card-background-color);
+      background-color: var(--card-background-lighter-color);
     }
 
     &--scrollable {
@@ -53,10 +57,11 @@
         /* stylelint-disable-next-line no-descending-specificity */
         th,
         td {
-          padding-left: 12px;
+          font-size: 1rem;
+          padding-left: 0.7rem;
 
           &:last-of-type {
-            padding-right: 12px;
+            padding-right: 0.7rem;
           }
         }
       }

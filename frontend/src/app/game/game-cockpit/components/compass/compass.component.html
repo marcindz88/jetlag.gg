@@ -1,24 +1,39 @@
-<div class="compass" *ngIf="_bearing">
-  <div class="compass-moving" [style]="'transform: rotate(' + -_bearing + 'deg);'">
-    <img class="compass-moving__separators" src="assets/compass/compass_separators.svg" alt="" />
-    <div class="compass-moving__arrow"></div>
-    <div class="compass-moving__directions directions">
-      <div
-        *ngFor="let direction of directions"
-        [class]="'directions__direction-' + direction"
-        [style]="'transform: rotate(' + _bearing + 'deg);'">
-        {{ direction }}
-      </div>
-    </div>
-    <div class="compass-moving__angle-labels angle-labels">
-      <div *ngFor="let i; repeat: 12">
-        <span [style]="'transform: rotate(' + (_bearing - i * 30 + 270) + 'deg);'">{{ i * 30 }}</span>
-      </div>
-    </div>
-  </div>
-  <div class="compass-not-moving">
-    <div class="compass-not-moving__marker"></div>
-    <div class="compass-not-moving__cross-y"></div>
-    <div class="compass-not-moving__cross-x"></div>
-  </div>
-</div>
+<svg #compass class="compass" viewBox="0 0 350 350">
+  <g class="compass__separators" [attr.transform]="this.initialSeparatorsTransformation" stroke="white">
+    <polygon points="175,26 180,32 170,32 " fill="red" stroke="red" />
+    <path
+      stroke-width="0.7"
+      d="M179.9 35.1l-0.7 20 M184.8 35.3l-1.4 20 M189.6 35.8l-2.1 19.9 M194.5 36.4l-2.8 19.8 M199.3 37.1l-3.5 19.7 M204.1 38.1l-4.2 19.5 M208.9 39.2l-4.9 19.4 M213.6 40.4l-5.5 19.2 M218.3 41.9l-6.2 19 M222.9 43.4l-6.9 18.8 M227.4 45.2l-7.4 18.5 M231.9 47.1l-8.1 18.3 M236.4 49.2l-8.8 17.9 M240.7 51.4l-9.4 17.6 M249.2 56.3l-10.6 16.9 M253.3 58.9l-11.2 16.6 M257.3 61.7l-11.8 16.2 M261.2 64.7l-12.3 15.7 M265 67.8l-12.9 15.3 M268.7 71l-13.4 14.8 M272.3 74.3l-13.9 14.4 M275.7 77.7l-14.4 13.9 M279 81.3l-14.8 13.4 M282.2 85l-15.3 12.9 M285.3 88.8l-15.7 12.3 M288.3 92.7l-16.2 11.8 M291.1 96.7l-16.6 11.2 M293.7 100.8l-16.9 10.6 M298.6 109.3l-17.6 9.4 M300.8 113.6l-17.9 8.8 M302.9 118.1l-18.3 8.1 M304.8 122.6l-18.5 7.4 M306.6 127.1l-18.8 6.9 M308.1 131.7l-19 6.2 M309.6 136.4l-19.2 5.5 M310.8 141.1l-19.4 4.9 M311.9 145.9l-19.5 4.2 M312.9 150.7l-19.7 3.5 M313.6 155.5l-19.8 2.8 M314.2 160.4l-19.9 2.1 M314.7 165.2l-20 1.4 M314.9 170.1l-20 0.7 M314.9 179.9l-20-0.7 M314.7 184.8l-20-1.4 M314.2 189.6l-19.9-2.1 M313.6 194.5l-19.8-2.8 M312.9 199.3l-19.7-3.5 M311.9 204.1l-19.5-4.2 M310.8 208.9l-19.4-4.9 M309.6 213.6l-19.2-5.5 M308.1 218.3l-19-6.2 M306.6 222.9l-18.8-6.9 M304.8 227.4l-18.5-7.4 M302.9 231.9l-18.3-8.1 M300.8 236.4l-17.9-8.8 M298.6 240.7l-17.6-9.4 M293.7 249.2l-16.9-10.6 M291.1 253.3l-16.6-11.2 M288.3 257.3l-16.2-11.8 M285.3 261.2l-15.7-12.3 M282.2 265l-15.3-12.9 M279 268.7l-14.8-13.4 M275.7 272.3l-14.4-13.9 M272.3 275.7l-13.9-14.4 M268.7 279l-13.4-14.8 M265 282.2l-12.9-15.3 M261.2 285.3l-12.3-15.7 M257.3 288.3l-11.8-16.2 M253.3 291.1l-11.2-16.6 M249.2 293.7l-10.6-16.9 M240.7 298.6l-9.4-17.6 M236.4 300.8l-8.8-17.9 M231.9 302.9l-8.1-18.3 M227.4 304.8l-7.4-18.5 M222.9 306.6l-6.9-18.8 M218.3 308.1l-6.2-19 M213.6 309.6l-5.5-19.2 M208.9 310.8l-4.9-19.4 M204.1 311.9l-4.2-19.5 M199.3 312.9l-3.5-19.7 M194.5 313.6l-2.8-19.8 M189.6 314.2l-2.1-19.9 M184.8 314.7l-1.4-20 M179.9 314.9l-0.7-20 M170.1 314.9l0.7-20 M165.2 314.7l1.4-20 M160.4 314.2l2.1-19.9 M155.5 313.6l2.8-19.8 M150.7 312.9l3.5-19.7 M145.9 311.9l4.2-19.5 M141.1 310.8l4.9-19.4 M136.4 309.6l5.5-19.2 M131.7 308.1l6.2-19 M127.1 306.6l6.9-18.8 M122.6 304.8l7.4-18.5 M118.1 302.9l8.1-18.3 M113.6 300.8l8.8-17.9 M109.3 298.6l9.4-17.6 M100.8 293.7l10.6-16.9 M96.7 291.1l11.2-16.6 M92.7 288.3l11.8-16.2 M88.8 285.3l12.3-15.7 M85 282.2l12.9-15.3 M81.3 279l13.4-14.8 M77.7 275.7l13.9-14.4 M74.3 272.3l14.4-13.9 M71 268.7l14.8-13.4 M67.8 265l15.3-12.9 M64.7 261.2l15.7-12.3 M61.7 257.3l16.2-11.8 M58.9 253.3l16.6-11.2 M56.3 249.2l16.9-10.6 M51.4 240.7l17.6-9.4 M49.2 236.4l17.9-8.8 M47.1 231.9l18.3-8.1 M45.2 227.4l18.5-7.4 M43.4 222.9l18.8-6.9 M41.9 218.3l19-6.2 M40.4 213.6l19.2-5.5 M39.2 208.9l19.4-4.9 M38.1 204.1l19.5-4.2 M37.1 199.3l19.7-3.5 M36.4 194.5l19.8-2.8 M35.8 189.6l19.9-2.1 M35.3 184.8l20-1.4 M35.1 179.9l20-0.7 M35.1 170.1l20 0.7 M35.3 165.2l20 1.4 M35.8 160.4l19.9 2.1 M36.4 155.5l19.8 2.8 M37.1 150.7l19.7 3.5 M38.1 145.9l19.5 4.2 M39.2 141.1l19.4 4.9 M40.4 136.4l19.2 5.5 M41.9 131.7l19 6.2 M43.4 127.1l18.8 6.9 M45.2 122.6l18.5 7.4 M47.1 118.1l18.3 8.1 M49.2 113.6l17.9 8.8 M51.4 109.3l17.6 9.4 M56.3 100.8l16.9 10.6 M58.9 96.7l16.6 11.2 M61.7 92.7l16.2 11.8 M64.7 88.8l15.7 12.3 M67.8 85l15.3 12.9 M71 81.3l14.8 13.4 M74.3 77.7l14.4 13.9 M77.7 74.3l13.9 14.4 M81.3 71l13.4 14.8 M85 67.8l12.9 15.3 M88.8 64.7l12.3 15.7 M92.7 61.7l11.8 16.2 M96.7 58.9l11.2 16.6 M100.8 56.3l10.6 16.9 M109.3 51.4l9.4 17.6 M113.6 49.2l8.8 17.9 M118.1 47.1l8.1 18.3 M122.6 45.2l7.4 18.5 M127.1 43.4l6.9 18.8 M131.7 41.9l6.2 19 M136.4 40.4l5.5 19.2 M141.1 39.2l4.9 19.4 M145.9 38.1l4.2 19.5 M150.7 37.1l3.5 19.7 M155.5 36.4l2.8 19.8 M160.4 35.8l2.1 19.9 M165.2 35.3l1.4 20 M170.1 35.1l0.7 20 "></path>
+    <path
+      stroke-width="2"
+      d="M175 35l0 20 M245 53.8l-10 17.3 M296.2 105l-17.3 10 M315 175l-20 0 M296.2 245l-17.3-10 M245 296.2l-10-17.3 M175 315l0-20 M105 296.2l10-17.3 M53.8 245l17.3-10 M35 175l20 0 M53.8 105l17.3 10 M105 53.8l10 17.3"></path>
+  </g>
+
+  <g fill="white" text-anchor="middle">
+    <g class="compass__directions">
+      <text
+        *ngFor="let direction of directions; let i = index"
+        alignment-baseline="central"
+        [attr.x]="175 + direction.x"
+        [attr.y]="175 + direction.y"
+        [attr.transform]="this.initialDirectionTransformations[i]">
+        {{ direction.label }}
+      </text>
+    </g>
+    <g class="compass__angle-labels">
+      <text
+        *ngFor="let angleLabel of angleLabels; let i = index"
+        alignment-baseline="central"
+        [attr.x]="175 + angleLabel.x"
+        [attr.y]="175 + angleLabel.y"
+        [attr.transform]="this.initialAngleLabelTransformations[i]">
+        {{ angleLabel.label }}
+      </text>
+    </g>
+  </g>
+
+  <g class="compass__not-moving" stroke="white">
+    <path d="M 175 95 v 160 M 95 175 h 160" stroke-width="0.7"></path>
+    <path d="M 175 20 v 35" stroke-width="2" />
+  </g>
+</svg>

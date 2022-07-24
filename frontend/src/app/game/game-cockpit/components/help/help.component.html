@@ -1,6 +1,6 @@
 <pg-card class="help">
   <h2>Help and FAQ</h2>
-  <div class="help__content">
+  <div class="help__content" (wheel)="$event.stopPropagation()">
     <pg-game-description></pg-game-description>
     <pg-controls-info></pg-controls-info>
   </div>

@@ -1,6 +1,6 @@
 <pg-card class="airport-main-panel">
   <h2>Welcome to {{ airport.full_name }} ({{ airport.elevation * 1000 }} m.a.s.l.)</h2>
-  <div class="airport-main-panel__content">
+  <div class="airport-main-panel__content" (wheel)="$event.stopPropagation()">
     <p class="airport-main-panel__description">{{ airport.description }}</p>
     <p>Fuel price: {{ airport.fuel_price }}$/l</p>
     <div class="airport-main-panel__packages-container packages-container">

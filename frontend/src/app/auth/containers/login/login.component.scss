@@ -8,10 +8,10 @@
 .start {
   display: flex;
   flex-direction: column;
-  height: min(90vh, 220px);
+  height: min(90vh, 16rem);
   justify-content: center;
   padding: 30px;
-  width: min(90vw, 250px);
+  width: min(90vw, 18rem);
 }
 
 .input-wrapper {
