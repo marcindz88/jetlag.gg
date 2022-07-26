@@ -102,6 +102,7 @@ export class KeyboardAndTouchControlsService {
                 this.touchCancelEvent$.pipe(filterByTouchId(touch.identifier)),
                 // End only if moved so that it is outside of required area
                 this.touchMoveEvent$.pipe(
+                  filterByTouchId(touch.identifier),
                   mapToTouch(location),
                   filter(touch => !touch)
                 )
