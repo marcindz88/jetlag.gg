@@ -23,5 +23,5 @@
       [playerTankLevel]="player.lastPosition.tank_level"
       [playerScore]="player.score"></pg-game-airport-panel>
   </ng-template>
-  <pg-help class="help-container" *ngIf="showHelp"></pg-help>
+  <pg-help class="help-container" *ngIf="showHelp" (closed)="showHelp = false"></pg-help>
 </div>

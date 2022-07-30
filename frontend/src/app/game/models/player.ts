@@ -42,6 +42,7 @@ export class Player {
     shipment$: new Subject<void>(),
     velocityOrBearing$: new Subject<void>(),
     blocked$: new Subject<void>(),
+    focus$: new Subject<void>(),
   };
 
   lastPosition!: PlaneExtendedPosition;
@@ -62,14 +63,6 @@ export class Player {
     this.setPositionFromEvent(player.position);
     this.updatePlanePositionInstantly();
     this.setPositionUpdater();
-  }
-
-  get currentPosition(): PlaneExtendedPosition {
-    return calculatePositionAfterTimeInterval(
-      this.lastPosition,
-      CONFIG.FLIGHT_ALTITUDE_SCALED,
-      this.clockService.getCurrentTime()
-    );
   }
 
   updatePlanePositionInstantly() {
@@ -106,6 +99,11 @@ export class Player {
   startCrashingPlane() {
     if (document.hasFocus()) {
       this.isCrashing = true;
+
+      if (this.isMyPlayer) {
+        this.focus();
+      }
+
       // After 10s if animation did not end crash plane instantly
       setTimeout(() => {
         this.endCrashingPlane();
@@ -123,6 +121,10 @@ export class Player {
     this.isCrashed = true;
     this.isCrashing = false;
     this.destroy();
+  }
+
+  focus() {
+    this.changeNotifiers.focus$.next();
   }
 
   accelerate() {
@@ -194,7 +196,7 @@ export class Player {
       });
   }
 
-  updateLastPosition(position: PlanePosition = this.lastPosition) {
+  private updateLastPosition(position: PlanePosition = this.lastPosition) {
     this.lastPosition = calculatePositionAfterTimeInterval(
       position,
       CONFIG.FLIGHT_ALTITUDE_SCALED,

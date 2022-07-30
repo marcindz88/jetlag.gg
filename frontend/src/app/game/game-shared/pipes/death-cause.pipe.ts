@@ -50,7 +50,7 @@ export class DeathCausePipe implements PipeTransform {
           case DeathCauseEnum.SPEED_TOO_LOW:
             return 'Next time better accelerate!';
           case DeathCauseEnum.DISCONNECTED:
-            return 'This plane had no autopilot!';
+            return 'You got disconnected!';
           case DeathCauseEnum.EXITED:
             return 'You left the game';
         }
@@ -62,7 +62,7 @@ export class DeathCausePipe implements PipeTransform {
           case DeathCauseEnum.SPEED_TOO_LOW:
             return 'tried to land with no landing gear';
           case DeathCauseEnum.DISCONNECTED:
-            return 'forgot his plane has no autopilot';
+            return 'got disconnected';
           case DeathCauseEnum.EXITED:
             return 'left the game';
         }

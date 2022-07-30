@@ -3,11 +3,15 @@
 }
 
 .score {
-  min-width: 3.5rem;
+  min-width: 4rem;
 }
 
 .my-player-row {
   background-color: var(--accent-darker-color) !important;
   color: var(--button-text-color);
   font-weight: bold;
+}
+
+tr {
+  cursor: pointer;
 }

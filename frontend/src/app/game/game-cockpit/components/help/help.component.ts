@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 
 @Component({
   selector: 'pg-help',
@@ -6,4 +6,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrls: ['help.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HelpComponent {}
+export class HelpComponent {
+  @Output() closed = new EventEmitter<void>();
+}

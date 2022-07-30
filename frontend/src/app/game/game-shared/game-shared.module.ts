@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ControlsInfoComponent } from '@pg/game/game-shared/components/controls-info/controls-info.component';
 import { GameDescriptionComponent } from '@pg/game/game-shared/components/game-description/game-description.component';
@@ -9,6 +10,7 @@ const EXPORTED_DECLARATIONS = [NicknamePipe, DeathCausePipe, ControlsInfoCompone
 @NgModule({
   declarations: [EXPORTED_DECLARATIONS],
   exports: [EXPORTED_DECLARATIONS],
+  imports: [CommonModule],
   providers: [DeathCausePipe, NicknamePipe],
 })
 export class GameSharedModule {}

@@ -24,6 +24,7 @@ export class PlayersService {
   playersSorted$ = new BehaviorSubject<Player[]>([]);
   myPlayer: Player | null = null;
   changed$ = new ReplaySubject<void>();
+  playerFocus$ = new ReplaySubject<string>();
   reset$ = new Subject<void>();
 
   private disconnectedNotificationRef?: QueueBarRef<NotificationComponent>;
@@ -102,6 +103,10 @@ export class PlayersService {
       const isMyPlayer = myUserId === player.id;
       const newPlayer = new Player(player, isMyPlayer, this.clockService);
       this.players.set(player.id, newPlayer);
+
+      newPlayer.changeNotifiers.focus$
+        .pipe(takeUntil(this.reset$))
+        .subscribe(() => this.playerFocus$.next(newPlayer.id));
 
       if (isMyPlayer) {
         this.myPlayer = newPlayer;

@@ -1,7 +1,9 @@
 <pg-card
   class="notification"
   [class.notification--warn]="data.style === 'warn'"
-  [class.notification--error]="data.style === 'error'">
+  [class.notification--error]="data.style === 'error'"
+  [class.notification--clickable]="!!data.clickAction"
+  (click)="handleClicked($event)">
   <span class="notification__icon icon icon--medium icon--mr" *ngIf="data.icon as icon">{{ icon }}</span>
   <p class="notification__text" *ngIf="data.text as text" [innerHTML]="text"></p>
 </pg-card>

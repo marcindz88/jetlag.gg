@@ -21,4 +21,8 @@
   &--error {
     background-color: var(--error-background-color);
   }
+
+  &--clickable {
+    cursor: pointer;
+  }
 }
