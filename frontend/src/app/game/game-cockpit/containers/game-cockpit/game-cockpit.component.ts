@@ -86,11 +86,7 @@ export class GameCockpitComponent implements OnInit {
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.BACKWARD, this, () => this.player.decelerate());
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.FORWARD, this, () => this.player.accelerate());
 
-    this.keyboardControlsService.setupKeyEvent(
-      KeyEventEnum.LAND_OR_TAKE_OFF,
-      this,
-      this.startLandingProcedure.bind(this)
-    );
+    this.keyboardControlsService.setupKeyEvent(KeyEventEnum.LAND, this, this.startLandingProcedure.bind(this));
     this.keyboardControlsService.setupKeyEvent(KeyEventEnum.HELP, this, () => {
       this.showHelp = !this.showHelp;
       this.cdr.markForCheck();

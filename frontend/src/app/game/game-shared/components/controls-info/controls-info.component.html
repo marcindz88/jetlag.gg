@@ -2,9 +2,9 @@
   <h3>Controls</h3>
   <button class="button--small" (click)="isDesktopMode = !isDesktopMode">
     <ng-container *ngIf="!isDesktopMode; else mobileButton"
-      >Desktop version <span class="icon">computer</span></ng-container
+      >Physical Keyboard<span class="icon">computer</span></ng-container
     >
-    <ng-template #mobileButton>Mobile version <span class="icon">smartphone</span></ng-template>
+    <ng-template #mobileButton>Touchscreen<span class="icon">smartphone</span></ng-template>
   </button>
 </div>
 <div class="controls-container" *ngIf="isDesktopMode; else mobileDescription">
@@ -42,7 +42,8 @@
 <ng-template #mobileDescription>
   <div class="controls-container">
     <div>
-      <h4>Plane steering (Touch and hold part of screen)</h4>
+      <h4>Plane steering</h4>
+      <p>Touch and hold part of screen</p>
       <p>
         Accelerate - upper-center part of screen<br />
         Decelerate - bottom-center part of screen<br />

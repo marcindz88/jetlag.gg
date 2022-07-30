@@ -32,7 +32,8 @@ export class KeyboardAndTouchControlsService {
     this.handleKeyEvent(KeyEventEnum.PLAYER_FOCUS_NEXT, ['>', '.']);
     this.handleKeyEvent(KeyEventEnum.PLAYER_SELF_FOCUS, ['m', 'M']);
     this.handleKeyEvent(KeyEventEnum.CAMERA, ['c', 'C']);
-    this.handleKeyEvent(KeyEventEnum.LAND_OR_TAKE_OFF, ['f', 'F']);
+    this.handleKeyEvent(KeyEventEnum.LAND, ['f', 'F']);
+    this.handleKeyEvent(KeyEventEnum.TAKE_OFF, ['f', 'F']);
     this.handleKeyEvent(KeyEventEnum.ENTER, ['Enter']);
     this.handleKeyEvent(KeyEventEnum.FUEL, ['x', 'X']);
     this.handleKeyEvent(KeyEventEnum.HELP, ['h', 'H']);
@@ -44,7 +45,7 @@ export class KeyboardAndTouchControlsService {
     this.handleTouchEvents(KeyEventEnum.BACKWARD, 200);
     this.handleTouchEvents(KeyEventEnum.TURN_LEFT, 200);
     this.handleTouchEvents(KeyEventEnum.TURN_RIGHT, 200);
-    this.handleTouchEvents(KeyEventEnum.LAND_OR_TAKE_OFF);
+    this.handleTouchEvents(KeyEventEnum.LAND);
   }
 
   setupKeyEvent<T>(type: KeyEventEnum, destroyBase: T, handleFunction: () => void) {

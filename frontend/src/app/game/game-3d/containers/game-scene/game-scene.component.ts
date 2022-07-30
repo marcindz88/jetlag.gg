@@ -151,14 +151,17 @@ export class GameSceneComponent {
   }
 
   private setupCameraLight() {
-    this.ngtStore.camera$.pipe(take(1), untilDestroyed(this)).subscribe(camera => {
-      this.camera = camera as PerspectiveCamera;
-      const light = new DirectionalLight('#f0f4ff', 3);
-      light.position.z = 20;
-      light.position.y = 10;
-      this.camera.add(light);
-      this.ngtStore.get(s => s.scene).add(this.camera);
-    });
+    this.ngtStore
+      .select(state => state.camera)
+      .pipe(take(1), untilDestroyed(this))
+      .subscribe(camera => {
+        this.camera = camera as PerspectiveCamera;
+        const light = new DirectionalLight('#f0f4ff', 3);
+        light.position.z = 20;
+        light.position.y = 10;
+        this.camera.add(light);
+        this.ngtStore.get(s => s.scene).add(this.camera);
+      });
   }
 
   private setupZoomHandler() {
