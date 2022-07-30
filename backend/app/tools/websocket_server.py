@@ -33,10 +33,10 @@ class WebSocketSession:
         return self._connection
 
     def close_connection(self, code=1000, reason=""):
+        self._is_closed = True
         connection = self.get_connection()
         if not connection:
             return
-        self._is_closed = True
         coroutine = connection.close(code=code, reason=reason)
         self._loop.create_task(coroutine)
 
