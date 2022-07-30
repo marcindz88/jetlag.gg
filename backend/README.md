@@ -1,15 +1,31 @@
-## Prerequisites
+# jetlag.gg 3D Multiplayer Angular Game - backend part
+[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
+
+This readme provides information about the backend part of the jetlag.gg game.
+
+## Table of Contents
+* [How to run?](#how-to-run)
+* [Production Setup](#production-setup)
+* [Ports](#ports)
+* [Endpoints](#endpoints)
+* [Websocket communication](#websocket-communication)
+* [Contact](#contact)
+* [License](#license)
+
+
+## How to run?
+
+### Prerequisites
 
 - Windows - https://docs.docker.com/desktop/windows/install/
 - Linux - https://docs.docker.com/desktop/linux/install/ 
 
-## How to run?
-
+### Server startup
 > ./start.sh
 >
 It kills all existing containers, rebuilds images and starts new containers
 
-## Production
+## Production Setup
 
 ### Running redis
 
@@ -77,11 +93,13 @@ only 1 connection per user at a time is allowed
 ## Websocket communication
 
 ### Format
-> {<br>
-> created: integer timestamp (in milliseconds)<br>
-> data: json<br>
-> type: str event type<br>
-> }
+```json
+{
+    created: integer timestamp (in milliseconds),
+    data: json,
+    type: str event type
+}
+```
 
 ### Event types emitted by the server:
 * 'player.list'
@@ -144,3 +162,14 @@ sample:
 sample:
 > ws.send("test123")
 > > {t: 1653085964101, ref: "test123"}
+
+
+## Contact
+Created by [@decomorreno](https://github.com/decomorreno) - feel free to contact me!
+
+
+## License
+
+The project is provided as is and can be used within the bounds of [GPLv3 licence](/LICENSE).
+
+However please do contact us before you fork or copy the project as we would rather have the improvements of any kind implemented within this project, and you are free to submit pull requests with fixes and new features.
