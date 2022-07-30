@@ -86,8 +86,10 @@ class StarletteWebsocketConnectionHandler:
                 return
             await ws_session._connection.accept(subprotocol=ws_session.token)
             ws_session.send(data={
-                "ping_interval": self.ping_interval,
-                "max_pong_awaiting_time": self.max_pong_awaiting_time,
+                "config": {
+                    "ping_interval": self.ping_interval,
+                    "max_pong_awaiting_time": self.max_pong_awaiting_time,
+                }
             })
             thread = threading.Thread(target=self.on_connect, args=(ws_session,))
             self._thread_manager.add_thread(str(ws_session.id), thread)
