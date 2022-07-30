@@ -3,12 +3,11 @@ import { Logger } from '@shared/services/logger.service';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 
-import { ClientMessage, ServerMessage } from '../models/wss.types';
+import { ClientMessage, ServerMessage, WSSConfig, WSSConfigServerMessage } from '../models/wss.types';
 import { EndpointsService } from './endpoints.service';
 
 const PING_MESSAGE = 'ping';
 const PONG_MESSAGE = 'pong';
-const MAX_PING_AWAITING_TIME = 4000;
 
 @Injectable()
 export abstract class AbstractWebsocketService<S extends ServerMessage, C extends ClientMessage> implements OnDestroy {
@@ -17,7 +16,7 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
   error$ = new Subject<number>();
 
   protected url = 'ws';
-  protected reconnectTime: number | null = null;
+  protected timeToReconnect?: number;
 
   private webSocket: WebSocketSubject<S | C | string> | null = null;
   private webSocketSubscription: Subscription | null = null;
@@ -30,6 +29,10 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
   private pingTimeout?: number;
   private reconnectTimeout?: number;
   private maxReconnectTimeout?: number;
+  private config: WSSConfig = {
+    max_pong_awaiting_time: null,
+    ping_interval: null,
+  };
 
   constructor(protected es: EndpointsService) {}
 
@@ -151,8 +154,17 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
   private nextHandler(message: S | C | string): void {
     this.closedCounter = 0; // reset closed counter as message successfully came
 
+    if (!message) {
+      return;
+    }
+
     if (typeof message === 'string' && message === PING_MESSAGE) {
       this.handlePingMessage();
+      return;
+    }
+
+    if (typeof message === 'object' && message.hasOwnProperty('config')) {
+      this.config = (message as WSSConfigServerMessage).config;
       return;
     }
 
@@ -164,12 +176,14 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
     this.closedCounter = 0;
     this.sendWSSMessage(PONG_MESSAGE);
 
-    this.pingTimeout = setTimeout(() => {
-      Logger.warn(this.class, `WSS PING timeout occurred - disconnecting`);
+    if (this.config.ping_interval) {
+      this.pingTimeout = setTimeout(() => {
+        Logger.warn(this.class, `WSS PING timeout occurred - disconnecting`);
 
-      this.webSocket?.error({ code: 3005, wasClean: false, reason: 'Disconnected due to lack of ping' });
-      this.isConnected$.next(false);
-    }, MAX_PING_AWAITING_TIME);
+        this.webSocket?.error({ code: 3005, wasClean: false, reason: 'Disconnected due to lack of ping' });
+        this.isConnected$.next(false);
+      }, this.config.ping_interval * 1.5);
+    }
   }
 
   private clearPingTimeout() {
@@ -217,10 +231,10 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
   }
 
   private setMaxReconnectTimeHandler() {
-    if (this.reconnectTime && !this.maxReconnectTimeout) {
+    if (this.timeToReconnect && !this.maxReconnectTimeout) {
       this.maxReconnectTimeout = setTimeout(() => {
         this.handleUnableToConnect();
-      }, this.reconnectTime);
+      }, this.timeToReconnect);
     }
   }
 

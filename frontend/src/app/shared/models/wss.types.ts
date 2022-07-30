@@ -19,7 +19,9 @@ export type ClockClientMessage = number;
 
 export type ClockServerMessage = { t: number; ref: number };
 
-export type ServerMessage = MainMessage | ClockServerMessage;
+export type WSSConfigServerMessage = { config: WSSConfig };
+
+export type ServerMessage = MainMessage | ClockServerMessage | WSSConfigServerMessage;
 
 export type ClientMessage = MainMessage<MessageDataType, ClientMessageTypeEnum> | ClockClientMessage;
 
@@ -30,6 +32,11 @@ export type MainMessage<
   type: K;
   data: T;
   created: number;
+};
+
+export type WSSConfig = {
+  max_pong_awaiting_time: number | null;
+  ping_interval: number | null;
 };
 
 export enum ServerMessageTypeEnum {
