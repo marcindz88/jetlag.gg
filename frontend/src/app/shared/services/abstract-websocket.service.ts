@@ -16,7 +16,6 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
   error$ = new Subject<number>();
 
   protected url = 'ws';
-  protected timeToReconnect?: number;
 
   private webSocket: WebSocketSubject<S | C | string> | null = null;
   private webSocketSubscription: Subscription | null = null;
@@ -28,7 +27,6 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
   private isClosedCleanly = false;
   private pingTimeout?: number;
   private reconnectTimeout?: number;
-  private maxReconnectTimeout?: number;
   private config: WSSConfig = {
     max_pong_awaiting_time: null,
     ping_interval: null,
@@ -200,11 +198,6 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = undefined;
     }
-
-    if (this.maxReconnectTimeout !== undefined) {
-      clearTimeout(this.maxReconnectTimeout);
-      this.maxReconnectTimeout = undefined;
-    }
   }
 
   private closeConnection(): void {
@@ -218,7 +211,6 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
 
   private tryToReconnect(): void {
     if (!this.isClosedCleanly) {
-      this.setMaxReconnectTimeHandler();
       this.reconnectTimeout = setTimeout(() => {
         if (!this.isClosedCleanly) {
           Logger.warn(this.class, `WSS Trying to reconnect try no. ${++this.closedCounter}`);
@@ -227,14 +219,6 @@ export abstract class AbstractWebsocketService<S extends ServerMessage, C extend
           this.createWSSConnection();
         }
       }, 2000);
-    }
-  }
-
-  private setMaxReconnectTimeHandler() {
-    if (this.timeToReconnect && !this.maxReconnectTimeout) {
-      this.maxReconnectTimeout = setTimeout(() => {
-        this.handleUnableToConnect();
-      }, this.timeToReconnect);
     }
   }
 

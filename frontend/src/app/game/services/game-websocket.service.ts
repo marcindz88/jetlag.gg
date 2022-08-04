@@ -3,7 +3,6 @@ import { AirportList, AirportUpdate, Shipment } from '@pg/game/models/airport.ty
 import { OtherPlayer, PlayerList, PlayerPositionUpdate } from '@pg/game/models/player.types';
 import { ClientMessageTypeEnum, MainMessage, MessageDataType, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { AbstractWebsocketService } from '@shared/services/abstract-websocket.service';
-import { CONFIG } from '@shared/services/config.service';
 import { Subject } from 'rxjs';
 
 @Injectable()
@@ -14,8 +13,6 @@ export class GameWebsocketService extends AbstractWebsocketService<
   airportMessages$: Subject<MainMessage<AirportList | AirportUpdate | Shipment>> = new Subject();
   playerMessages$: Subject<MainMessage<PlayerList | OtherPlayer>> = new Subject();
   playerPositionMessages$: Subject<MainMessage<PlayerPositionUpdate>> = new Subject();
-
-  protected override timeToReconnect = CONFIG.PLAYER_TIME_TO_CONNECT;
 
   get class(): { name: string } {
     return GameWebsocketService;
