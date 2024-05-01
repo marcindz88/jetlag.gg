@@ -5,6 +5,8 @@ on:
       - 'frontend/**'
     branches:
       - deploy
+  workflow_dispatch:
+
 defaults:
   run:
     working-directory: frontend

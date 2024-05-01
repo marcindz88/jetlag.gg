@@ -5,6 +5,7 @@ on:
       - 'backend/**'
     branches:
       - deploy
+  workflow_dispatch:
 
 jobs:
   docker:
