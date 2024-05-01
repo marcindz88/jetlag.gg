@@ -32,7 +32,7 @@ jobs:
         context: backend/
         push: false
         load: true
-        tags: planegame_backend
+        tags: ghcr.io/marcindz88/jetlag/jetlag-core:latest
         platforms: linux/amd64
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
@@ -45,16 +45,19 @@ jobs:
         rm -rf /tmp/.buildx-cache
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache
     -
-      name: Push docker image to the server
-      run: |    
-        echo "$SERVER_SSH_KEY" > private.key
-        chmod 400 private.key
-        docker save planegame_backend | ssh -i private.key -o StrictHostKeyChecking=no -C root@162.55.208.248 docker load
+      name: Push docker image to registry
+      run: |
+        docker login ghcr.io -u marcindz88 --password ${{GH_TOKEN}}
+        docker push ghcr.io/marcindz88/jetlag/jetlag-core:latest
       env:
         SERVER_SSH_KEY: ${{secrets.SERVER_SSH_KEY}}
+        GH_TOKEN: ${{secrets.GH_TOKEN}}
     -
-      name: Restart image on the server
-      run: |    
-        ssh -i private.key -o StrictHostKeyChecking=no root@162.55.208.248 "docker rm -f backend; docker run --rm -d --name backend -p 80:9999 --network game_net --env GAME_REDIS_HOST=redis planegame_backend"
+      name: Rollout restart image on the server
+      run: |
+        echo "$SERVER_SSH_KEY" > private.key
+        chmod 400 private.key
+        ssh -i private.key -o StrictHostKeyChecking=no root@${{secrets.SERVER_IP}} "kubectl rollout restart deployment/jetlag-core -n jetlag"
       env:
+        SERVER_IP: ${{secrets.SERVER_IP}}
         SERVER_SSH_KEY: ${{secrets.SERVER_SSH_KEY}}

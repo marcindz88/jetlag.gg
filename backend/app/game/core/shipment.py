@@ -25,7 +25,7 @@ class Shipment:
         self.name = random.choice(Shipment.shipment_names())
         self._origin = origin
         self._destination = destination
-        self.time_to_deliver = random.randint(50, 90) * 1000
+        self.time_to_deliver = random.randint(90, 150) * 1000
         self.award = self._get_random_award()
         self.valid_till = timestamp_now() + self.time_to_deliver
         self.player_id = None

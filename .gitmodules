@@ -1,0 +1,3 @@
+[submodule "kubernetes"]
+	path = kubernetes
+	url = https://github.com/marcindz88/jetlag.gg-kubernetes.git
