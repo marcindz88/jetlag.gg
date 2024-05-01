@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { GameWebsocketService } from '@pg/game/services/game-websocket.service';
-import { PlayersService } from '@pg/game/services/players.service';
 import { ClientMessageTypeEnum, ServerMessageTypeEnum } from '@shared/models/wss.types';
 import { ClockService } from '@shared/services/clock.service';
 import { NotificationService } from '@shared/services/notification.service';
@@ -20,7 +19,6 @@ export class AirportsService {
   constructor(
     private mainWebsocketService: GameWebsocketService,
     private clockService: ClockService,
-    private playersService: PlayersService,
     private notificationService: NotificationService
   ) {}
 

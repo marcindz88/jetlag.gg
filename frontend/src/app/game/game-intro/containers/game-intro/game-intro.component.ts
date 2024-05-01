@@ -10,6 +10,7 @@ import { MainGameService } from '@pg/game/services/main-game.service';
 import { PlayersService } from '@pg/game/services/players.service';
 import { ROUTES_URLS } from '@shared/constants/routes';
 import { enableLoader } from '@shared/operators/operators';
+import { NotificationService } from '@shared/services/notification.service';
 import { filter } from 'rxjs';
 
 @UntilDestroy()
@@ -31,7 +32,8 @@ export class GameIntroComponent {
     private userService: UserService,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private matDialog: MatDialog
+    private matDialog: MatDialog,
+    private notificationService: NotificationService
   ) {}
 
   joinTheGame() {
@@ -52,35 +54,44 @@ export class GameIntroComponent {
               void this.router.navigateByUrl(ROUTES_URLS.game_cockpit, { replaceUrl: true });
             });
         },
-        error: err => {
-          if (err instanceof HttpErrorResponse) {
-            switch (err.status) {
-              case HttpStatusCode.Conflict:
-                this.serverError = 'lobby_full';
-                break;
-              case HttpStatusCode.Forbidden:
-                this.serverError = 'already_in_game';
-                break;
-              default:
-                this.serverError = 'unknown_error';
-                break;
-            }
-            this.cdr.markForCheck();
-          }
-        },
+        error: this.handleJoinError.bind(this),
       });
+  }
+
+  private handleJoinError(err: any) {
+    if (err instanceof HttpErrorResponse) {
+      switch (err.status) {
+        case HttpStatusCode.Conflict:
+          this.serverError = 'lobby_full';
+          break;
+        case HttpStatusCode.Forbidden:
+          this.serverError = 'already_in_game';
+          break;
+        case HttpStatusCode.BadRequest:
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          if (err.error['detail'] == 'Invalid token') {
+            this.notificationService.openNotification({ text: 'You have been logged out :(', style: 'error' });
+            this.resetAndLogout();
+          }
+          break;
+        default:
+          this.serverError = 'unknown_error';
+          break;
+      }
+      this.cdr.markForCheck();
+    }
   }
 
   logout() {
     this.matDialog
       .open(ConfirmLogoutDialogComponent)
       .afterClosed()
-      .pipe(untilDestroyed(this))
-      .subscribe(result => {
-        if (result) {
-          this.userService.resetUser();
-          void this.router.navigateByUrl(ROUTES_URLS.login, { replaceUrl: true });
-        }
-      });
+      .pipe(untilDestroyed(this), filter(Boolean))
+      .subscribe(this.resetAndLogout.bind(this));
+  }
+
+  private resetAndLogout() {
+    this.userService.resetUser();
+    void this.router.navigateByUrl(ROUTES_URLS.login, { replaceUrl: true });
   }
 }
